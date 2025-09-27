@@ -192,12 +192,11 @@ const checkBackendConnection = async () => {
       return true;
     } else {
       const errorText = await response.text();
-<<<<<<< HEAD
       console.error('❌ Erreur HTTP:', response.status, response.statusText);
       console.error('Corps de l\'erreur:', errorText);
-=======
+
    
->>>>>>> 125fee7e2fbf800efe5c018d61d93e53e2ddc4eb
+
       setBackendConnected(false);
       return false;
     }
