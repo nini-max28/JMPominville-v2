@@ -3122,12 +3122,9 @@ Merci de votre patience!
   }}>
     {backendConnected ? 
       '🟡 Backend connecté - Fonctionnalités en cours d\'activation' : 
-<<<<<<< HEAD
       '🔴 Backend disponible'
-    }
-=======
+
     '🔴 Backend disponible'    }
->>>>>>> 125fee7e2fbf800efe5c018d61d93e53e2ddc4eb
   </div>
 )}
 
