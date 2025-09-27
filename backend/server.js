@@ -42,15 +42,17 @@ app.post('/api/sync', (req, res) => {
   res.json({ success: true, message: 'Données synchronisées' });
 });
 
-app.post('/api/notifications/send', (req, res) => {
+app.post('/api/notifications/send', async (req, res) => {
   console.log('Notification request:', req.body);
+  const smsResult = await send RealSMS(req.body);
+  const emailResult = await sendRealEmail(req.body);
   res.json({
     success: true,
     message: 'Notification simulée envoyée',
     results: {
-      sms: { success: true },
-      email: { success: true }
-    }
+      sms: { success: smsResult,
+      email: emailResult }
+    
   });
 });
 
