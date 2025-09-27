@@ -1557,11 +1557,8 @@ Merci de votre patience!
         alert('✅ Backend connecté avec succès !');
       } else {
         const errorText = await response.text();
-<<<<<<< HEAD
         console.error('❌ Erreur:', response.status, errorText);
-=======
        
->>>>>>> 125fee7e2fbf800efe5c018d61d93e53e2ddc4eb
         setBackendConnected(false);
         alert(`❌ Erreur HTTP: ${response.status}`);
       }
