@@ -3122,7 +3122,7 @@ Merci de votre patience!
   }}>
     {backendConnected ? 
       '🟡 Backend connecté - Fonctionnalités en cours d\'activation' : 
-      '🔴 Backend disponible'
+  
 
     '🔴 Backend disponible'    }
   </div>
