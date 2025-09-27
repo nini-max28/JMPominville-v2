@@ -1,0 +1,49 @@
+{
+  "name": "JM Pominville - Service de Déneigement",
+  "short_name": "JM Pominville",
+  "description": "Application de gestion pour JM Pominville - Services de déneigement",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#2196f3",
+  "background_color": "#ffffff",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-180x180.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot1.png",
+      "sizes": "390x844",
+      "type": "image/png"
+    }
+  ],
+  "categories": ["business", "productivity"],
+  "shortcuts": [
+    {
+      "name": "Géolocalisation",
+      "short_name": "GPS",
+      "url": "/?action=gps",
+      "icons": [
+        {
+          "src": "icon-192x192.png",
+          "sizes": "192x192"
+        }
+      ]
+    }
+  ]
+}
