@@ -49,7 +49,7 @@ app.post('/api/sync', (req, res) => {
 
 app.post('/api/notifications/send', async (req, res) => {
   console.log('Notification request:', req.body);
-  const smsResult = await send RealSMS(req.body);
+  const smsResult = await sendRealSMS(req.body);
   const emailResult = await sendRealEmail(req.body);
   res.json({
     success: true,
