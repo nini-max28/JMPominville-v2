@@ -53,8 +53,7 @@ app.post('/api/location/share', (req, res) => {
   });
 });
 
-// ========== STATIC FILES ET CATCH-ALL APRÈS ==========
-app.use(express.static(path.join(__dirname, 'build')));
+
 
 app.get('/track/:token', (req, res) => {
   const { token } = req.params;
@@ -75,10 +74,7 @@ app.get('/track/:token', (req, res) => {
   `);
 });
 
-// Catch-all handler (ABSOLUMENT À LA FIN)
-app.use((req, res) => {
-  res.sendFile(path.join(__dirname, 'build', 'index.html'));
-});
+
 
 // Gestion des erreurs
 app.use((err, req, res, next) => {
