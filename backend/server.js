@@ -15,6 +15,18 @@ app.use(cors({
 
 app.use(express.json());
 
+app.get('/', (req, res) => {
+    res.json({
+        message: 'Backend JM Pominville API',
+        status: 'Active',
+        endpoints: [
+            '/api/test',
+            '/api/sync', 
+            '/api/notifications/send',
+            '/track/:token'
+        ]
+    });
+});
 // ========== ROUTES API FIRST (TRÈS IMPORTANT) ==========
 app.get('/api/test', (req, res) => {
   console.log('Route /api/test appelée');
