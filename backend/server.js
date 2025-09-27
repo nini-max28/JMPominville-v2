@@ -7,7 +7,7 @@ const PORT = process.env.PORT || 10000;
 
 // Configuration CORS
 app.use(cors({
-  origin: ['https://jmpominville-v2.onrender.com, 'http://localhost:3000'],
+  origin: ['https://jmpominville-v2.onrender.com', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
