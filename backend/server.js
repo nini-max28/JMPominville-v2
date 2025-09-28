@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 10000;
 
 // Configuration des services (à ajouter dans les variables d'environnement Render)
 const twilioClient = twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN);
-const emailTransporter = nodemailer.createTransporter({
+const emailTransporter = nodemailer.createTransport({
   service: 'gmail', // ou autre service
   auth: {
     user: process.env.EMAIL_USER,
