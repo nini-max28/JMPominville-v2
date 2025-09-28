@@ -45,8 +45,9 @@ app.get('/api/test', (req, res) => {
 
 app.post('/api/sync', (req, res) => {
   console.log('Données reçues pour sync:', Object.keys(req.body));
-  res.json({ success: true, message: 'Données synchronisées' });
-});
+  res.json({ success: true, message: 'Données synchronisées'
+           });
+
 
 app.post('/api/notifications/send', async (req, res) => {
   console.log('Notification request:', req.body);
