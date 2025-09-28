@@ -18,10 +18,25 @@ const emailTransporter = nodemailer.createTransport({
 
 // Configuration CORS
 app.use(cors({
-  origin: ['https://backend-1-ohz7.onrender.com', 'http://localhost:3000'],
-  credentials: true
+  origin: [
+    'https://jmpominville-v2.onrender.com',  // Votre frontend sur Render
+    'http://localhost:3000',                 // Pour le développement local
+    'https://localhost:3000'                 // Au cas où
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
+// Middleware pour gérer les requêtes OPTIONS (preflight)
+app.options('*', cors());
 
+// Headers additionnels pour CORS
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://jmpominville-v2.onrender.com');
+  res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, Accept');
+  next();
+});
 app.use(express.json());
 
 // Route de test
