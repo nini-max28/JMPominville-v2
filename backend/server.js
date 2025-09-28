@@ -60,7 +60,6 @@ app.post('/api/notifications/send', async (req, res) => {
       email: emailResult }
     
   });
-});
 
 app.post('/api/location/share', (req, res) => {
   const token = 'track-' + Date.now();
