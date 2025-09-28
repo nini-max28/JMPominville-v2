@@ -8,7 +8,7 @@ const PORT = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors({
-  origin: ['https://jm-pominville.onrender.com', 'http://localhost:3000'],
+  origin: ['https://jm-pominville-v2.onrender.com', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
