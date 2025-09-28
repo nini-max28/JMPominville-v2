@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const nodemailer = require('nodemailer');
-const twilio = require('twilio');
+const twilio = require('twilio');             
 const app = express();
 const PORT = process.env.PORT || 10000;
 
@@ -72,7 +72,6 @@ async function sendRealSMS(data) {
     return { success: false, error: error.message };
   }
 }
-
 async function sendRealEmail(data) {
   try {
     await emailTransporter.sendMail({
@@ -86,7 +85,8 @@ async function sendRealEmail(data) {
     console.error('Erreur Email:', error);
     return { success: false, error: error.message };
   }
-}app.post('/api/location/share', (req, res) => {
+}
+app.post('/api/location/share', (req, res) => {
     const token = 'track-' + Date.now();
     const trackingUrl = `https://backend-k97v.onrender.com/track/${token}`;
     
