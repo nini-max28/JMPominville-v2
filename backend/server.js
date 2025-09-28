@@ -59,8 +59,8 @@ app.post('/api/notifications/send', async (req, res) => {
     results: {
       sms: { success: smsResult,
       email: emailResult }
-    
-  };
+    }
+  }};
 
 app.post('/api/location/share', (req, res) => {
   const token = 'track-' + Date.now();
@@ -70,7 +70,7 @@ app.post('/api/location/share', (req, res) => {
     success: true,
     token: token,
     trackingUrl: trackingUrl
-  });
+
 });
 
 app.get('/track/:token', (req, res) => {
