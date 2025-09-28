@@ -64,7 +64,7 @@ async function sendRealSMS(data) {
     const message = await twilioClient.messages.create({
       body: `Notification JM Pominville: ${data.message || 'Nouvelle notification'}`,
       from: process.env.TWILIO_PHONE_NUMBER,
-      to: data.phone || '+1234567890' // Remplacez par le numéro réel
+      to: data.phone || '+17622460623' // Remplacez par le numéro réel
     });
     return { success: true, messageId: message.sid };
   } catch (error) {
@@ -76,7 +76,7 @@ async function sendRealEmail(data) {
   try {
     await emailTransporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: data.email || 'destinataire@example.com', // Remplacez par l'email réel
+      to: data.email || 'jmpominvilledeneigement@gmail.com', // Remplacez par l'email réel
       subject: 'Notification JM Pominville',
       text: data.message || 'Nouvelle notification'
     });
