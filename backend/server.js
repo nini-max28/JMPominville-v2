@@ -90,7 +90,7 @@ app.get('/track/:token', (req, res) => {
 // Gestion des erreurs
 app.use((err, req, res, next) => {
   console.error('Erreur serveur:', err);
-  res.status(500).json({ error: 'Erreur interne du serveur' 
+  res.status(500).json({ error: 'Erreur interne du serveur' });
 });
 
 app.listen(PORT, '0.0.0.0', () => {
