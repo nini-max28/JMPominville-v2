@@ -47,32 +47,27 @@ app.post('/api/sync', (req, res) => {
   console.log('Données reçues pour sync:', Object.keys(req.body));
   res.json({ success: true, message: 'Données synchronisées'
            });
-
-
 app.post('/api/notifications/send', async (req, res) => {
-  console.log('Notification request:',req.body);
-  const smsResult = await sendRealSMS(req.body);    
-  const emailResult = await sendRealEmail(req.body);
-  res.json({
-    success: true,
-    message: 'Notification simulée envoyée',
-    results: {
-      sms: { success: smsResult,
-      email: emailResult }
-    
-  }};
-
+    console.log('Notification request:', req.body);
+    const smsResult = await sendRealSMS(req.body);
+    const emailResult = await sendRealEmail(req.body);
+    res.json({
+        success: true,
+        message: 'Notification simulée envoyée',
+        results: {
+            sms: { success: smsResult,
+            email: emailResult }
+        }
+    });
 app.post('/api/location/share', (req, res) => {
-  const token = 'track-' + Date.now();
-  const trackingUrl = `https://backend-k97v.onrender.com/track/${token}`;
-  
-  res.json({
-    success: true,
-    token: token,
-    trackingUrl: trackingUrl
-
-});
-
+    const token = 'track-' + Date.now();
+    const trackingUrl = `https://backend-k97v.onrender.com/track/${token}`;
+    
+    res.json({
+        success: true,
+        token: token,
+        trackingUrl: trackingUrl
+    });
 app.get('/track/:token', (req, res) => {
   const { token } = req.params;
   res.send(`
