@@ -15,7 +15,38 @@ app.use(cors({
 }));
 
 app.use(express.json());
-// Configuration Gmail
+
+// Routes API
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Backend connecté!',
+    timestamp: new Date().toISOString()
+  });
+});
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'JM Pominville Backend API',
+    status: 'active',
+    endpoints: ['/api/test', '/api/sync', '/api/notifications/send']
+  });
+});app.post('/api/sync', (req, res) => {
+  res.json({ success: true, message: 'Données synchronisées' });
+});
+
+app.post('/api/notifications/send', async (req, res) => {
+    console.log('Notification request:', req.body);
+    const smsResult = await sendRealSMS(req.body);
+    const emailResult = await sendRealEmail(req.body);
+    res.json({
+        success: true,
+        message: 'Notification envoyée',
+        results: {
+            sms: { success: smsResult,
+            email: emailResult }
+        }
+    });
+  // Configuration Gmail
 const emailTransporter = nodemailer.createTransporter({
   service: 'gmail',
   auth: {
@@ -55,37 +86,7 @@ async function sendRealEmail(data) {
     console.error('Erreur Email:', error);
     return { success: false, error: error.message };
   }
-}// Routes API
-app.get('/api/test', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Backend connecté!',
-    timestamp: new Date().toISOString()
-  });
-});
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'JM Pominville Backend API',
-    status: 'active',
-    endpoints: ['/api/test', '/api/sync', '/api/notifications/send']
-  });
-});app.post('/api/sync', (req, res) => {
-  res.json({ success: true, message: 'Données synchronisées' });
-});
-
-app.post('/api/notifications/send', async (req, res) => {
-    console.log('Notification request:', req.body);
-    const smsResult = await sendRealSMS(req.body);
-    const emailResult = await sendRealEmail(req.body);
-    res.json({
-        success: true,
-        message: 'Notification envoyée',
-        results: {
-            sms: { success: smsResult,
-            email: emailResult }
-        }
-    });
-app.post('/api/location/share', (req, res) => {
+}app.post('/api/location/share', (req, res) => {
     const token = 'track-' + Date.now();
     const trackingUrl = `https://backend-k97v.onrender.com/track/${token}`;
     
