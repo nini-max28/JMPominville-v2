@@ -69,24 +69,22 @@ app.post('/api/location/share', (req, res) => {
         trackingUrl: trackingUrl
     });
 app.get('/track/:token', (req, res) => {
-  const { token } = req.params;
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>Suivi JM Pominville</title>
-      <meta charset="utf-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-    </head>
-    <body>
-      <h1>Équipe JM Pominville - Suivi en Temps Réel</h1>
-      <p>Token: ${token}</p>
-      <p>Suivi activé - Page en développement</p>
-    </body>
-    </html>
-  `);
-});
-
+    const { token } = req.params;
+    res.send(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Suivi JM Pominville</title>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+        </head>
+        <body>
+            <h1>Équipe JM Pominville - Suivi en Temps Réel</h1>
+            <p>Token: ${token}</p>
+            <p>Suivi activé - Page en développement</p>
+        </body>
+        </html>
+    `);
 // Gestion des erreurs
 app.use((err, req, res, next) => {
   console.error('Erreur serveur:', err);
