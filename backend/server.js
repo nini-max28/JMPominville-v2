@@ -106,4 +106,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`Serveur backend démarré sur le port ${PORT}`);
   console.log(`URL: https://backend-k97v.onrender.com`);
   console.log(`Test: https://backend-k97v.onrender.com/api/test`);
-});module.exports = app;
+});
+  module.exports = app;
