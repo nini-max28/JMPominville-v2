@@ -82,7 +82,7 @@ app.post('/api/location/share', (req, res) => {
   res.json({
     success: true,
     token: token,
-    trackingUrl: `https://backend-k97v.onrender.com/track/${token}`
+    trackingUrl: `https://backend-1-ohz7.onrender.com/track/${token}`
   });
 });
 
