@@ -54,7 +54,13 @@ async function sendRealEmail(data) {
 }
 
 // Routes
-app.get('/', (req, res) => {
+app.get('/api/debug', (req, res) => {
+  res.json({
+    hasEmailUser: !!process.env.EMAIL_USER,
+    hasTwilioSid: !!process.env.TWILIO_ACCOUNT_SID,
+    hasEmailPassword: !!process.env.EMAIL_PASSWORD
+  });
+});app.get('/', (req, res) => {
   res.json({ message: 'JM Pominville Backend API', status: 'active' });
 });
 
