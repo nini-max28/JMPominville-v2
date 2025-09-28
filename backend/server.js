@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
-
+const nodemailer = require('nodemailer');
+const twilio = require('twilio');
 const app = express();
 const PORT = process.env.PORT || 10000;
 
@@ -14,8 +15,47 @@ app.use(cors({
 }));
 
 app.use(express.json());
+// Configuration Gmail
+const emailTransporter = nodemailer.createTransporter({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASSWORD
+  }
+});
 
-// Routes API
+// Configuration Twilio
+const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+// Fonctions réelles
+async function sendRealSMS(data) {
+  try {
+    const message = await twilioClient.messages.create({
+      body: `Notification JM Pominville: ${data.message || 'Nouvelle notification'}`,
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to: data.phone || '+1234567890' // Remplacez par le numéro réel
+    });
+    return { success: true, messageId: message.sid };
+  } catch (error) {
+    console.error('Erreur SMS:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+async function sendRealEmail(data) {
+  try {
+    await emailTransporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: data.email || 'destinataire@example.com', // Remplacez par l'email réel
+      subject: 'Notification JM Pominville',
+      text: data.message || 'Nouvelle notification'
+    });
+    return { success: true };
+  } catch (error) {
+    console.error('Erreur Email:', error);
+    return { success: false, error: error.message };
+  }
+}// Routes API
 app.get('/api/test', (req, res) => {
   res.json({
     success: true,
