@@ -1,3 +1,4 @@
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
@@ -16,37 +17,7 @@ app.use(cors({
 
 app.use(express.json());
 
-// Routes API
-app.get('/api/test', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Backend connecté!',
-    timestamp: new Date().toISOString()
-  });
-});
-app.get('/', (req, res) => {
-  res.json({ 
-    message: 'JM Pominville Backend API',
-    status: 'active',
-    endpoints: ['/api/test', '/api/sync', '/api/notifications/send']
-  });
-});app.post('/api/sync', (req, res) => {
-  res.json({ success: true, message: 'Données synchronisées' });
-});
-
-app.post('/api/notifications/send', async (req, res) => {
-    console.log('Notification request:', req.body);
-    const smsResult = await sendRealSMS(req.body);
-    const emailResult = await sendRealEmail(req.body);
-    res.json({
-        success: true,
-        message: 'Notification envoyée',
-        results: {
-            sms: { success: smsResult,
-            email: emailResult }
-        }
-    });
-  // Configuration Gmail
+// Configuration Gmail
 const emailTransporter = nodemailer.createTransporter({
   service: 'gmail',
   auth: {
@@ -64,7 +35,7 @@ async function sendRealSMS(data) {
     const message = await twilioClient.messages.create({
       body: `Notification JM Pominville: ${data.message || 'Nouvelle notification'}`,
       from: process.env.TWILIO_PHONE_NUMBER,
-      to: data.phone || '+17622460623' // Remplacez par le numéro réel
+      to: data.phone || '+17622460623'
     });
     return { success: true, messageId: message.sid };
   } catch (error) {
@@ -72,11 +43,12 @@ async function sendRealSMS(data) {
     return { success: false, error: error.message };
   }
 }
+
 async function sendRealEmail(data) {
   try {
     await emailTransporter.sendMail({
       from: process.env.EMAIL_USER,
-      to: data.email || 'jmpominvilledeneigement@gmail.com', // Remplacez par l'email réel
+      to: data.email || 'jmpominvilledeneigement@gmail.com',
       subject: 'Notification JM Pominville',
       text: data.message || 'Nouvelle notification'
     });
@@ -86,15 +58,53 @@ async function sendRealEmail(data) {
     return { success: false, error: error.message };
   }
 }
+
+// Routes API
+app.get('/api/test', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Backend connecté!',
+    timestamp: new Date().toISOString()
+  });
+});
+
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'JM Pominville Backend API',
+    status: 'active',
+    endpoints: ['/api/test', '/api/sync', '/api/notifications/send']
+  });
+});
+
+app.post('/api/sync', (req, res) => {
+  res.json({ success: true, message: 'Données synchronisées' });
+});
+
+app.post('/api/notifications/send', async (req, res) => {
+  console.log('Notification request:', req.body);
+  const smsResult = await sendRealSMS(req.body);
+  const emailResult = await sendRealEmail(req.body);
+  res.json({
+    success: true,
+    message: 'Notification envoyée',
+    results: {
+      sms: smsResult,
+      email: emailResult
+    }
+  });
+});
+
 app.post('/api/location/share', (req, res) => {
-    const token = 'track-' + Date.now();
-    const trackingUrl = `https://backend-k97v.onrender.com/track/${token}`;
-    
-    res.json({
-        success: true,
-        token: token,
-        trackingUrl: trackingUrl
-    });
+  const token = 'track-' + Date.now();
+  const trackingUrl = `https://backend-k97v.onrender.com/track/${token}`;
+
+  res.json({
+    success: true,
+    token: token,
+    trackingUrl: trackingUrl
+  });
+});
+
 // Servir les fichiers statiques
 app.use(express.static(path.join(__dirname, 'build')));
 
@@ -108,4 +118,5 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`URL: https://backend-k97v.onrender.com`);
   console.log(`Test: https://backend-k97v.onrender.com/api/test`);
 });
-  module.exports = app;
+
+module.exports = app;
