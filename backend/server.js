@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const twilio = rquire('twilio');
-const nodemailer = rquire('nodemailer');
+
 const path = require('path');
 const nodemailer = require('nodemailer');
 const app = express();
@@ -15,14 +15,7 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-app.use(express.json());
-const emailTransporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
-  }
-});
+
 app.get('/', (req, res) => {
     res.json({
         message: 'Backend JM Pominville API',
