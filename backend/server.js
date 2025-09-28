@@ -18,7 +18,7 @@ const emailTransporter = nodemailer.createTransporter({
 
 // Configuration CORS
 app.use(cors({
-  origin: ['https://your-frontend-url.vercel.app', 'http://localhost:3000'],
+  origin: ['https://backend-1-ohz7.onrender.com', 'http://localhost:3000'],
   credentials: true
 }));
 
