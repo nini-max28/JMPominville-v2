@@ -69,7 +69,7 @@ app.post('/api/sync', (req, res) => {
 
 app.post('/api/notifications/send', async (req, res) => {
   const smsResult = await sendRealSMS(req.body);
-  const emailResult = await sendRealEmail(req.body);
+  const emailResult = await sendRealEmail(req.body); 
   res.json({
     success: true,
     message: 'Notifications envoyées',
