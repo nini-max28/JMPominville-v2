@@ -33,23 +33,27 @@ app.get('/', (req, res) => {
   res.json({ success: true, message: 'Données synchronisées' });
 });
 
-app.post('/api/notifications/send', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Notification simulée',
-    results: { sms: { success: true }, email: { success: true } }
-  });
-});
-
+app.post('/api/notifications/send', async (req, res) => {
+    console.log('Notification request:', req.body);
+    const smsResult = await sendRealSMS(req.body);
+    const emailResult = await sendRealEmail(req.body);
+    res.json({
+        success: true,
+        message: 'Notification envoyée',
+        results: {
+            sms: { success: smsResult,
+            email: emailResult }
+        }
+    });
 app.post('/api/location/share', (req, res) => {
-  const token = 'track-' + Date.now();
-  res.json({
-    success: true,
-    token: token,
-    trackingUrl: `https://backend-k97v.onrender.com/track/${token}`
-  });
-});
-
+    const token = 'track-' + Date.now();
+    const trackingUrl = `https://backend-k97v.onrender.com/track/${token}`;
+    
+    res.json({
+        success: true,
+        token: token,
+        trackingUrl: trackingUrl
+    });
 // Servir les fichiers statiques
 app.use(express.static(path.join(__dirname, 'build')));
 
