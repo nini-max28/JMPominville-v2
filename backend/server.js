@@ -23,8 +23,13 @@ app.get('/api/test', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
-
-app.post('/api/sync', (req, res) => {
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'JM Pominville Backend API',
+    status: 'active',
+    endpoints: ['/api/test', '/api/sync', '/api/notifications/send']
+  });
+});app.post('/api/sync', (req, res) => {
   res.json({ success: true, message: 'Données synchronisées' });
 });
 
