@@ -370,75 +370,60 @@ const sendNotification = async (clientId, type, customMessage = '') => {
 };
 
   // PARTAGE DE LOCALISATION AVEC BACKEND
-  const shareLocationWithClientsBackend = async () => {
-    let positionToShare = gpsPosition;
-    
-    if (!positionToShare) {
-      alert('Obtenez d\'abord votre position GPS');
-      return;
+const shareLocationWithClientsBackend = async () => {  // ← IMPORTANT: async ici
+  let positionToShare = gpsPosition;
+  
+  if (!positionToShare) {
+    alert('Obtenez d\'abord votre position GPS');
+    return;
+  }
+  
+  try {
+    // Vérification de la connexion backend
+    if (!backendConnected) {
+      const isConnected = await checkBackendConnection();
+      if (!isConnected) {
+        alert('❌ Erreur: Backend non disponible\n\nImpossible de créer la page de suivi.\nVérifiez que le serveur est accessible.');
+        return;
+      }
     }
- try {
-    // Appel réel au backend
-    const response = await fetch('https://backend-1-ohz7.onrender.com/api/notifications/send', {
+
+    const trackingData = {
+      position: positionToShare,
+      teamName: 'Équipe JM Pominville',
+      lastUpdate: new Date().toISOString(),
+      active: true,
+      fallbackMode: positionToShare.method === 'fallback'
+    };
+
+    console.log('=== CRÉATION PAGE DE SUIVI ===');
+    console.log('URL backend:', `${API_BASE_URL}/api/location/share`);
+
+    const response = await fetch(`${API_BASE_URL}/api/location/share`, {
       method: 'POST',
-      headers: {
+      headers: { 
         'Content-Type': 'application/json',
+        'Accept': 'application/json'
       },
-      body: JSON.stringify({
-        clients: clientsWithActiveContracts,
-        position: positionToShare,
-        teamName: 'Équipe JM Pominville',
-        message: 'Votre équipe est en route!'
-      })
+      body: JSON.stringify(trackingData)
     });
 
-    const result = await response.json();
-    
-    if (result.success) {
-      alert(`✅ Notifications envoyées à ${clientsWithActiveContracts.length} clients`);
-    } else {
-      alert('❌ Erreur lors de l\'envoi des notifications');
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}\n${errorText}`);
     }
-  } catch (error) {
-    console.error('Erreur:', error);
-    alert('Erreur de connexion au backend');
-  }
-};      const trackingData = {
-        position: positionToShare,
-        teamName: 'Équipe JM Pominville',
-        lastUpdate: new Date().toISOString(),
-        active: true,
-        fallbackMode: positionToShare.method === 'fallback'
-      };
 
-      console.log('=== CRÉATION PAGE DE SUIVI ===');
-      console.log('URL backend:', `${API_BASE_URL}/api/location/share`);
+    const result = await response.json();
 
-      const response = await fetch(`${API_BASE_URL}/api/location/share`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify(trackingData)
-      });
+    if (!result.success) {
+      throw new Error(result.error || 'Erreur inconnue du serveur');
+    }
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}\n${errorText}`);
-      }
+    const trackingUrl = result.trackingUrl;
+    setShareToken(result.token);
+    setIsLocationShared(true);
 
-      const result = await response.json();
-
-      if (!result.success) {
-        throw new Error(result.error || 'Erreur inconnue du serveur');
-      }
-
-      const trackingUrl = result.trackingUrl;
-      setShareToken(result.token);
-      setIsLocationShared(true);
-
-      const message = `🚛 Équipe JM Pominville - Suivi en Temps Réel
+    const message = `🚛 Équipe JM Pominville - Suivi en Temps Réel
 
 Bonjour! Notre équipe de déneigement a commencé sa tournée.
 
@@ -453,47 +438,47 @@ Cette page vous montrera:
 Merci de votre patience!
 - Équipe JM Pominville`;
 
-      const clientsWithActiveContracts = clients.filter(client => {
-        const contract = contracts.find(c =>
-          c.clientId === client.id &&
-          c.status === 'actif' &&
-          !c.archived
-        );
-        return contract;
-      });
-
-      if (clientsWithActiveContracts.length === 0) {
-        alert(`✅ Page de suivi créée avec succès!\n\nLien: ${trackingUrl}\n\n⚠️ Aucun client avec contrat actif trouvé.`);
-        return;
-      }
-
-      const confirmSend = window.confirm(
-        `✅ Page de suivi créée avec succès!\n\nLien: ${trackingUrl}\n\nEnvoyer le lien à ${clientsWithActiveContracts.length} clients avec contrat actif?`
+    const clientsWithActiveContracts = clients.filter(client => {
+      const contract = contracts.find(c =>
+        c.clientId === client.id &&
+        c.status === 'actif' &&
+        !c.archived
       );
+      return contract;
+    });
 
-      if (confirmSend) {
-        let successCount = 0;
-        let failureCount = 0;
+    if (clientsWithActiveContracts.length === 0) {
+      alert(`✅ Page de suivi créée avec succès!\n\nLien: ${trackingUrl}\n\n⚠️ Aucun client avec contrat actif trouvé.`);
+      return;
+    }
 
-        for (const client of clientsWithActiveContracts) {
-          try {
-            await new Promise(resolve => setTimeout(resolve, 2000));
-            await sendNotificationViaBackend(client.id, 'custom', message);
-            successCount++;
-          } catch (error) {
-            console.error(`Erreur envoi à ${client.name}:`, error);
-            failureCount++;
-          }
+    const confirmSend = window.confirm(
+      `✅ Page de suivi créée avec succès!\n\nLien: ${trackingUrl}\n\nEnvoyer le lien à ${clientsWithActiveContracts.length} clients avec contrat actif?`
+    );
+
+    if (confirmSend) {
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (const client of clientsWithActiveContracts) {
+        try {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+          await sendNotificationViaBackend(client.id, 'custom', message);
+          successCount++;
+        } catch (error) {
+          console.error(`Erreur envoi à ${client.name}:`, error);
+          failureCount++;
         }
-
-        alert(`📱 Notifications envoyées!\n\nSuccès: ${successCount}\nÉchecs: ${failureCount}\n\n🔗 Lien de suivi: ${trackingUrl}`);
       }
 
-    } catch (error) {
-      console.error('Erreur partage localisation:', error);
-      alert('Erreur lors du partage de localisation: ' + error.message);
+      alert(`📱 Notifications envoyées!\n\nSuccès: ${successCount}\nÉchecs: ${failureCount}\n\n🔗 Lien de suivi: ${trackingUrl}`);
     }
-  };
+
+  } catch (error) {
+    console.error('Erreur partage localisation:', error);
+    alert('Erreur lors du partage de localisation: ' + error.message);
+  }
+};  
 
   // FONCTIONS UTILITAIRES
   const syncData = () => {
