@@ -377,17 +377,33 @@ const sendNotification = async (clientId, type, customMessage = '') => {
       alert('Obtenez d\'abord votre position GPS');
       return;
     }
-    
-    try {
-      if (!backendConnected) {
-        const isConnected = await checkBackendConnection();
-        if (!isConnected) {
-          alert('❌ Erreur: Backend non disponible\n\nImpossible de créer la page de suivi.\nVérifiez que le serveur est accessible.');
-          return;
-        }
-      }
+ try {
+    // Appel réel au backend
+    const response = await fetch('https://backend-1-ohz7.onrender.com/api/notifications/send', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        clients: clientsWithActiveContracts,
+        position: positionToShare,
+        teamName: 'Équipe JM Pominville',
+        message: 'Votre équipe est en route!'
+      })
+    });
 
-      const trackingData = {
+    const result = await response.json();
+    
+    if (result.success) {
+      alert(`✅ Notifications envoyées à ${clientsWithActiveContracts.length} clients`);
+    } else {
+      alert('❌ Erreur lors de l\'envoi des notifications');
+    }
+  } catch (error) {
+    console.error('Erreur:', error);
+    alert('Erreur de connexion au backend');
+  }
+};      const trackingData = {
         position: positionToShare,
         teamName: 'Équipe JM Pominville',
         lastUpdate: new Date().toISOString(),
