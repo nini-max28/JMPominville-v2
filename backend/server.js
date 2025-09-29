@@ -7,8 +7,8 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 
 // Configuration Twilio (SMS)
-const twilioClient = process.env.TWILIO_SID && process.env.TWILIO_AUTH_TOKEN 
-  ? twilio(process.env.TWILIO_SID, process.env.TWILIO_AUTH_TOKEN)
+const twilioClient = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN 
+  ? twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
   : null;
 
 // Configuration Nodemailer (Email)
@@ -21,7 +21,10 @@ const emailTransporter = process.env.EMAIL_USER && process.env.EMAIL_PASSWORD
       }
     })
   : null;
-
+console.log('Debug Environment Variables:');
+console.log('TWILIO_ACCOUNT_SID:', process.env.TWILIO_ACCOUNT_SID ? 'EXISTS' : 'MISSING');
+console.log('TWILIO_AUTH_TOKEN:', process.env.TWILIO_AUTH_TOKEN ? 'EXISTS' : 'MISSING');
+console.log('EMAIL_USER:', process.env.EMAIL_USER ? 'EXISTS' : 'MISSING');
 // Middleware
 app.use(cors({
   origin: '*',
