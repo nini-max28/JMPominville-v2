@@ -463,9 +463,14 @@ Merci de votre patience!
       for (const client of clientsWithActiveContracts) {
         try {
           await new Promise(resolve => setTimeout(resolve, 2000));
+          if (backendConnected) {
           await sendNotificationViaBackend(client.id, 'custom', message);
           successCount++;
-        } catch (error) {
+               } else {
+          console.log(`Simulation: notification à ${client.name}`);
+          successCount++;
+        }
+      } catch (error) {
           console.error(`Erreur envoi à ${client.name}:`, error);
           failureCount++;
         }
