@@ -869,7 +869,7 @@ Merci de votre patience!
   };
 
   // FONCTIONS DE RECHERCHE ET FILTRAGE
-  const getAdvancedFilteredContracts = () => {
+  const getFilteredContracts = () => {
     if (!clientSearch.trim()) return clients;
     return clients.filter(client =>
       client.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
