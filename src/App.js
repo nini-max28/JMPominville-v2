@@ -995,8 +995,38 @@ Merci de votre patience!
   };
 
   const getAdvancedFilteredContracts = () => {
-    return contracts.filter(contract => showArchived ? contract.archived : !contract.archived);
-  };
+  let filtered = contracts.filter(contract => 
+    showArchived ? contract.archived : !contract.archived
+  );
+
+  // Appliquer les filtres de recherche
+  if (contractSearchFilters.searchTerm) {
+    filtered = filtered.filter(contract => {
+      const client = clients.find(c => c.id === contract.clientId);
+      return client?.name.toLowerCase().includes(contractSearchFilters.searchTerm.toLowerCase());
+    });
+  }
+
+  if (contractSearchFilters.type) {
+    filtered = filtered.filter(contract => 
+      contract.type === contractSearchFilters.type
+    );
+  }
+
+  if (contractSearchFilters.status) {
+    filtered = filtered.filter(contract => 
+      contract.status === contractSearchFilters.status
+    );
+  }
+
+  if (contractSearchFilters.year) {
+    filtered = filtered.filter(contract => 
+      new Date(contract.startDate).getFullYear() === parseInt(contractSearchFilters.year)
+    );
+  }
+
+  return filtered;
+};
 
   // Fonction de recherche avancée pour clients
   const getAdvancedFilteredClients = () => {
