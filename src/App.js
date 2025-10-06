@@ -2448,7 +2448,7 @@ Merci de votre patience!
                         maxHeight: '200px', overflowY: 'auto', zIndex: 10,
                         boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                       }}>
-                        {getFilteredClients().map(client => (
+                        {getAdvancedFilteredClients().map(client => (
                           <div
                             key={client.id} onClick={() => handleClientSelect(client)}
                             style={{ padding: '10px 15px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
