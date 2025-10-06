@@ -869,7 +869,7 @@ Merci de votre patience!
   };
 
   // FONCTIONS DE RECHERCHE ET FILTRAGE
-  const getFilteredClients = () => {
+  {getAdvancedFilteredContracts()=> {
     if (!clientSearch.trim()) return clients;
     return clients.filter(client =>
       client.name.toLowerCase().includes(clientSearch.toLowerCase()) ||
@@ -884,7 +884,7 @@ Merci de votre patience!
     setShowClientSuggestions(false);
   };
 
-  const getFilteredContracts = () => {
+  const getAdvancedFilteredContracts = () => {
     return contracts.filter(contract => showArchived ? contract.archived : !contract.archived);
   };
 
@@ -2331,6 +2331,94 @@ Merci de votre patience!
                 Archives ({contracts.filter(c => c.archived).length})
               </button>
             </div>
+{/* NOUVELLE SECTION DE RECHERCHE POUR CONTRATS */}
+    <div style={{
+      background: '#f8f9fa', padding: '20px', borderRadius: '12px',
+      marginBottom: '20px', border: '1px solid #dee2e6'
+    }}>
+      <h4 style={{ color: '#495057', marginBottom: '15px' }}>🔍 Recherche de Contrats</h4>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
+            Nom du client
+          </label>
+          <input
+            type="text"
+            placeholder="Rechercher par nom..."
+            value={contractSearchFilters.searchTerm}
+            onChange={(e) => setContractSearchFilters({ ...contractSearchFilters, searchTerm: e.target.value })}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          />
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
+            Type de contrat
+          </label>
+          <select
+            value={contractSearchFilters.type}
+            onChange={(e) => setContractSearchFilters({ ...contractSearchFilters, type: e.target.value })}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          >
+            <option value="">Tous les types</option>
+            <option value="saisonnier">Saisonnier</option>
+            <option value="par-service">Par service</option>
+            <option value="mensuel">Mensuel</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
+            Statut
+          </label>
+          <select
+            value={contractSearchFilters.status}
+            onChange={(e) => setContractSearchFilters({ ...contractSearchFilters, status: e.target.value })}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          >
+            <option value="">Tous les statuts</option>
+            <option value="actif">Actif</option>
+            <option value="suspendu">Suspendu</option>
+            <option value="terminé">Terminé</option>
+          </select>
+        </div>
+
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', fontSize: '14px' }}>
+            Année
+          </label>
+          <select
+            value={contractSearchFilters.year}
+            onChange={(e) => setContractSearchFilters({ ...contractSearchFilters, year: e.target.value })}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          >
+            <option value="">Toutes les années</option>
+            {Array.from(new Set(contracts.map(c => new Date(c.startDate).getFullYear())))
+              .sort((a, b) => b - a)
+              .map(year => (
+                <option key={year} value={year}>{year}</option>
+              ))
+            }
+          </select>
+        </div>
+      </div>
+
+      <div style={{ marginTop: '15px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+        <button
+          onClick={() => setContractSearchFilters({ searchTerm: '', type: '', status: '', year: '' })}
+          style={{
+            padding: '8px 16px', background: '#6c757d', color: 'white',
+            border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+          }}
+        >
+          Réinitialiser
+        </button>
+        <div style={{ color: '#666', fontSize: '14px' }}>
+          Résultats: {getAdvancedFilteredContracts().length} contrat(s) trouvé(s)
+        </div>
+      </div>
+    </div>
 
             {/* Formulaire de contrat (seulement si pas en mode archivé) */}
             {!showArchived && (
