@@ -44,7 +44,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   // États pour la recherche avancée
   const [clientSearchFilters, setClientSearchFilters] = useState({
     searchTerm: '',
-    type: '',
+    type: '', 
     paymentStatus: '',
     streetName: ''
   });
@@ -107,6 +107,8 @@ useEffect(() => {
     
     setTimeout(() => { 
       archiveOldContracts();
+            // Vérifier les paiements à marquer automatiquement
+      checkAndMarkPaymentsReceived();
     }, 1000);
   };    
 
@@ -261,6 +263,114 @@ const checkBackendConnection = async () => {
       throw error;
     }
   };
+  // FONCTION POUR VÉRIFIER ET MARQUER AUTOMATIQUEMENT LES PAIEMENTS REÇUS
+const checkAndMarkPaymentsReceived = () => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Reset l'heure pour comparer seulement les dates
+  
+  let updatedPayments = false;
+  const newPayments = [...payments];
+  const newInvoices = [...invoices];
+
+  clients.forEach(client => {
+    const contract = contracts.find(c => c.clientId === client.id && !c.archived);
+    if (!contract) return;
+
+    // Vérifier le 1er paiement
+    if (client.firstPaymentDate && client.firstPaymentMethod) {
+      const firstPaymentDate = new Date(client.firstPaymentDate);
+      firstPaymentDate.setHours(0, 0, 0, 0);
+      
+      const alreadyReceived = newPayments.some(p => 
+        p.clientId === client.id && 
+        p.paymentNumber === 1 && 
+        p.received
+      );
+
+      // Si la date est arrivée/passée ET le paiement n'est pas encore marqué comme reçu
+      if (firstPaymentDate <= today && !alreadyReceived) {
+        const amount = contract.amount / (client.paymentStructure === '1' ? 1 : 2);
+        
+        const payment = {
+          id: Date.now() + Math.random(),
+          clientId: client.id,
+          paymentNumber: 1,
+          amount: parseFloat(amount),
+          date: client.firstPaymentDate,
+          paymentMethod: client.firstPaymentMethod,
+          received: true,
+          recordedAt: new Date().toISOString(),
+          autoMarked: true
+        };
+        newPayments.push(payment);
+
+        const invoice = {
+          id: Date.now() + Math.random() + 1,
+          clientId: client.id,
+          amount: parseFloat(amount),
+          date: client.firstPaymentDate,
+          type: 'revenu',
+          description: `1er versement - ${client.name} (${client.firstPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant'})`
+        };
+        newInvoices.push(invoice);
+        
+        updatedPayments = true;
+        console.log(`✅ Paiement auto-marqué: ${client.name} - 1er versement`);
+      }
+    }
+
+    // Vérifier le 2e paiement
+    if (client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentMethod) {
+      const secondPaymentDate = new Date(client.secondPaymentDate);
+      secondPaymentDate.setHours(0, 0, 0, 0);
+      
+      const alreadyReceived = newPayments.some(p => 
+        p.clientId === client.id && 
+        p.paymentNumber === 2 && 
+        p.received
+      );
+
+      if (secondPaymentDate <= today && !alreadyReceived) {
+        const amount = contract.amount / 2;
+        
+        const payment = {
+          id: Date.now() + Math.random() + 2,
+          clientId: client.id,
+          paymentNumber: 2,
+          amount: parseFloat(amount),
+          date: client.secondPaymentDate,
+          paymentMethod: client.secondPaymentMethod,
+          received: true,
+          recordedAt: new Date().toISOString(),
+          autoMarked: true
+        };
+        newPayments.push(payment);
+
+        const invoice = {
+          id: Date.now() + Math.random() + 3,
+          clientId: client.id,
+          amount: parseFloat(amount),
+          date: client.secondPaymentDate,
+          type: 'revenu',
+          description: `2e versement - ${client.name} (${client.secondPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant'})`
+        };
+        newInvoices.push(invoice);
+        
+        updatedPayments = true;
+        console.log(`✅ Paiement auto-marqué: ${client.name} - 2e versement`);
+      }
+    }
+  });
+
+  if (updatedPayments) {
+    setPayments(newPayments);
+    setInvoices(newInvoices);
+    saveToStorage('payments', newPayments);
+    saveToStorage('invoices', newInvoices);
+    return true;
+  }
+  return false;
+};
 // ENVOI NOTIFICATIONS VIA BACKEND
 const sendNotificationViaBackend = async (clientId, type, customMessage = '') => {
   const client = clients.find(c => c.id === clientId);
