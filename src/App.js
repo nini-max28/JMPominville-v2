@@ -1618,13 +1618,14 @@ Merci de votre patience!
   };
 
   // RENDU DE L'INTERFACE PRINCIPALE
-  return (
-    <div style={{ fontFamily: 'Arial, sans-serif', minHeight: '100vh', background: '#f5f5f5' }}>
-      {/* En-tête */}
-      <header style={{
-        background: 'linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%)',
-        color: 'white', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
-      }}>
+ return (
+  <div style={{ 
+    fontFamily: 'Arial, sans-serif', 
+    minHeight: '100vh', 
+    background: '#f5f5f5',
+    width: '100%',
+    position: 'relative'
+  }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <div>
