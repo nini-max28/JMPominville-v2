@@ -3355,6 +3355,7 @@ Merci de votre patience!
               )}
             </div>
           </div>
+                </div>
         )}
 
         {/* SECTION NOTIFICATIONS */}
