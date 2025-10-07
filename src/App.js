@@ -3355,7 +3355,7 @@ Merci de votre patience!
               )}
             </div>
           </div>
-                </div> 
+                
         )}
 
         {/* SECTION NOTIFICATIONS */}
@@ -3746,8 +3746,10 @@ Merci de votre patience!
     <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
       Backend non connecté. L'historique n'est pas disponible.
     </div>
+    </div>
+    </div>
   )}
-</div>
+
 
 
       {/* Modal de paiement */}
