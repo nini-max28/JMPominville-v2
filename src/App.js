@@ -2673,7 +2673,7 @@ Merci de votre patience!
             )}
 
             {/* Liste des contrats */}
-            {getFilteredContracts().length > 0 && (
+            {getAdvancedFilteredContracts().length > 0 && (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{
                   width: '100%', borderCollapse: 'collapse',
@@ -2691,7 +2691,7 @@ Merci de votre patience!
                     </tr>
                   </thead>
                   <tbody>
-                    {getFilteredContracts().map(contract => {
+                    {getAdvancedFilteredContracts().map(contract => {
                       const client = clients.find(c => c.id === contract.clientId);
                       return (
                         <tr key={contract.id} style={{ borderBottom: '1px solid #dee2e6' }}>
