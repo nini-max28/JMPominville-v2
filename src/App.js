@@ -3603,43 +3603,59 @@ Merci de votre patience!
               </div>
 
               {/* Boutons d'action */}
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                <button
-                  onClick={() => {
-                    if (selectedStreets.length === 0) {
-                      alert('Veuillez sélectionner au moins une rue');
-                      return;
-                    }
+              <div style={{ display: 'flex', gap: '10px', flexWrap: '<button
+  onClick={async () => {
+    if (selectedStreets.length === 0) {
+      alert('Veuillez sélectionner au moins une rue');
+      return;
+    }
 
-                    const streetGroups = groupClientsByStreet(clients.filter(client => {
-                      const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-                      return contract;
-                    }));
+    const streetGroups = groupClientsByStreet(clients.filter(client => {
+      const contract = contracts.find(c => c.clientId === client.id && !c.archived);
+      return contract;
+    }));
 
-                    let totalClients = 0;
-                    selectedStreets.forEach(street => {
-                      const streetClients = streetGroups[street] || [];
-                      totalClients += streetClients.length;
-                    });
+    let clientsToNotify = [];
+    selectedStreets.forEach(street => {
+      const streetClients = streetGroups[street] || [];
+      clientsToNotify = [...clientsToNotify, ...streetClients];
+    });
 
-                    const confirmMessage = `Simuler l'envoi de notifications "${bulkNotificationType}" à ${totalClients} clients sur ${selectedStreets.length} rue${selectedStreets.length !== 1 ? 's' : ''} ?\n\nRues sélectionnées:\n${selectedStreets.join('\n')}`;
+    const confirmMessage = `Envoyer notifications "${bulkNotificationType}" à ${clientsToNotify.length} clients sur ${selectedStreets.length} rue${selectedStreets.length !== 1 ? 's' : ''} ?\n\nRues sélectionnées:\n${selectedStreets.join('\n')}`;
 
-                    if (window.confirm(confirmMessage)) {
-                      alert(`📱 Simulation d'envoi groupé!\n\n${totalClients} clients auraient été notifiés sur ${selectedStreets.length} rue${selectedStreets.length !== 1 ? 's' : ''}.\n\n💡 Les vraies notifications seront activées avec le backend.`);
-                      setSelectedStreets([]);
-                    }
-                  }}
-                  disabled={isSendingBulk || selectedStreets.length === 0}
-                  style={{
-                    padding: '10px 20px',
-                    background: isSendingBulk || selectedStreets.length === 0 ? '#6c757d' : '#28a745',
-                    color: 'white', border: 'none', borderRadius: '8px',
-                    cursor: isSendingBulk || selectedStreets.length === 0 ? 'not-allowed' : 'pointer',
-                    fontWeight: 'bold'
-                  }}
-                >
-                  {isSendingBulk ? '⏳ Envoi...' : `📤 Envoyer à ${selectedStreets.length} rue${selectedStreets.length !== 1 ? 's' : ''}`}
-                </button>
+    if (window.confirm(confirmMessage)) {
+      setIsSendingBulk(true);
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (const client of clientsToNotify) {
+        try {
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Pause 2 sec entre chaque
+          await sendNotificationViaBackend(client.id, bulkNotificationType, bulkCustomMessage);
+          successCount++;
+        } catch (error) {
+          console.error(`Erreur envoi à ${client.name}:`, error);
+          failureCount++;
+        }
+      }
+
+      setIsSendingBulk(false);
+      alert(`📱 Envoi terminé!\n\nSuccès: ${successCount}\nÉchecs: ${failureCount}`);
+      setSelectedStreets([]);
+    }
+  }}
+  disabled={isSendingBulk || selectedStreets.length === 0}
+  style={{
+    padding: '10px 20px',
+    background: isSendingBulk || selectedStreets.length === 0 ? '#6c757d' : '#28a745',
+    color: 'white', border: 'none', borderRadius: '8px',
+    cursor: isSendingBulk || selectedStreets.length === 0 ? 'not-allowed' : 'pointer',
+    fontWeight: 'bold'
+  }}
+>
+  {isSendingBulk ? '⏳ Envoi...' : `📤 Envoyer à ${selectedStreets.length} rue${selectedStreets.length !== 1 ? 's' : ''}`}
+</button>   
+          
 
                 <button
                   onClick={() => setSelectedStreets([])}
