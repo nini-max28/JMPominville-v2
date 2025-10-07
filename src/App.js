@@ -497,7 +497,7 @@ const sendNotification = async (clientId, type, customMessage = '') => {
 
 
 
-  PARTAGE DE LOCALISATION AVEC BACKEND
+//  PARTAGE DE LOCALISATION AVEC BACKEND
 const shareLocationWithClientsBackend = async () => {  // ← IMPORTANT: async ici
   let positionToShare = gpsPosition;
   
