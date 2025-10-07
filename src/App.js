@@ -6,7 +6,7 @@ function App() {
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz7.onrender.com';
   console.log('https://backend-1-ohz7.onrender.com:' ,API_BASE_URL);
 
-  const [backendConnected, setBackendConnected] = useState([]);
+  const [backendConnected, setBackendConnected] = useState(false);
   const [activeTab, setActiveTab] = useState('dashboard');
   const [clients, setClients] = useState([]);
   const [contracts, setContracts] = useState([]);
