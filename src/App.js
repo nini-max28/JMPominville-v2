@@ -371,7 +371,7 @@ const checkAndMarkPaymentsReceived = () => {
   }
   return false;
 };
-// ENVOI NOTIFICATIONS VIA BACKEND
+  // ENVOI NOTIFICATIONS VIA BACKEND
 const sendNotificationViaBackend = async (clientId, type, customMessage = '') => {
   const client = clients.find(c => c.id === clientId);
   if (!client) {
@@ -385,11 +385,26 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     return cleaned.length === 10 || (cleaned.length === 11 && cleaned.startsWith('1'));
   };
 
+  // ✅ CORRECTION : Ajouter le formatage du numéro et l'email
+  const formatPhoneForTwilio = (phone) => {
+    if (!phone) return null;
+    const cleaned = phone.replace(/\D/g,'');
+    // Si le numéro commence par 1 et a 11 chiffres, on le garde
+    if (cleaned.length === 11 && cleaned.startsWith('1')) {
+      return '+' + cleaned;
+    }
+    // Si le numéro a 10 chiffres, on ajoute +1
+    if (cleaned.length === 10) {
+      return '+1' + cleaned;
+    }
+    return null;
+  };
+
   const notificationData = {
     clientId: client.id,
     clientName: client.name,
-    clientPhone: client.phone && validateCanadianPhone(client.phone) ? client.phone : null,
-    clientEmail: client.email || null,
+    clientPhone: formatPhoneForTwilio(client.phone), // ✅ Format Twilio
+    clientEmail: client.email || null, // ✅ AJOUT de l'email
     type: type,
     customMessage: customMessage
   };
@@ -401,6 +416,8 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
 
   console.log('=== ENVOI NOTIFICATION ===');
   console.log('Client:', client.name);
+  console.log('Téléphone formaté:', notificationData.clientPhone);
+  console.log('Email:', notificationData.clientEmail);
   console.log('Type notification:', type);
   console.log('URL backend:', `${API_BASE_URL}/api/notifications/send`);
 
@@ -460,7 +477,6 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     } else {
       errorMessage = `❌ Erreur: ${error.message}`;
     }
-
     alert(errorMessage);
   }
 };
@@ -479,7 +495,9 @@ const sendNotification = async (clientId, type, customMessage = '') => {
   }
 };
 
-  // PARTAGE DE LOCALISATION AVEC BACKEND
+
+
+  PARTAGE DE LOCALISATION AVEC BACKEND
 const shareLocationWithClientsBackend = async () => {  // ← IMPORTANT: async ici
   let positionToShare = gpsPosition;
   
