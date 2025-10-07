@@ -3712,43 +3712,21 @@ Merci de votre patience!
                 </div>
               </div>
             </div>
-     {/* Historique des notifications */}
-<div style={{
-  background: '#f8f9fa', padding: '20px', borderRadius: '12px'
-}}>
-  <h4 style={{ color: '#1a4d1a', marginBottom: '15px' }}>📜 Historique des Notifications</h4>
-  
-  {backendConnected ? (
-    <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
-      {notificationsHistory.length === 0 ? (
-        <div>
-          Aucune notification envoyée pour le moment.
-          <br />
-          <small>Les notifications envoyées apparaîtront ici.</small>
-        </div>
-      ) : (
-        <div>
-          {notificationsHistory.map((notif, index) => (
-            <div key={index} style={{
-              background: 'white', padding: '10px', marginBottom: '10px',
-              borderRadius: '8px', textAlign: 'left', border: '1px solid #dee2e6'
+
+            {/* Historique des notifications (simulé) */}
+            <div style={{
+              background: '#f8f9fa', padding: '20px', borderRadius: '12px'
             }}>
-              <div><strong>{notif.clientName}</strong></div>
-              <div style={{ fontSize: '12px', color: '#666' }}>
-                Type: {notif.type} - {notif.date}
+              <h4 style={{ color: '#1a4d1a', marginBottom: '15px' }}>📜 Historique des Notifications</h4>
+              <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
+                L'historique des notifications sera disponible une fois le backend intégré.
+                <br />
+                <small>Les notifications envoyées et leur statut apparaîtront ici.</small>
               </div>
             </div>
-          ))}
-        </div>
-      )}
-    </div>
-  ) : (
-    <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
-      Backend non connecté. L'historique n'est pas disponible.
-    </div>
-    </div>
-    </div>
-  )}
+          </div>
+        )}
+
 
 
 
