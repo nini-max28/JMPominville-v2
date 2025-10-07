@@ -3711,8 +3711,7 @@ Merci de votre patience!
                 </div>
               </div>
             </div>
-
-      {/* Historique des notifications */}
+     {/* Historique des notifications */}
 <div style={{
   background: '#f8f9fa', padding: '20px', borderRadius: '12px'
 }}>
@@ -3721,14 +3720,13 @@ Merci de votre patience!
   {backendConnected ? (
     <div style={{ textAlign: 'center', color: '#666', padding: '20px' }}>
       {notificationsHistory.length === 0 ? (
-        <>
+        <div>
           Aucune notification envoyée pour le moment.
           <br />
           <small>Les notifications envoyées apparaîtront ici.</small>
-        </>
+        </div>
       ) : (
         <div>
-          {/* Affichage de l'historique */}
           {notificationsHistory.map((notif, index) => (
             <div key={index} style={{
               background: 'white', padding: '10px', marginBottom: '10px',
@@ -3748,6 +3746,7 @@ Merci de votre patience!
       Backend non connecté. L'historique n'est pas disponible.
     </div>
   )}
+</div>
 
 
       {/* Modal de paiement */}
