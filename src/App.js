@@ -3603,7 +3603,8 @@ Merci de votre patience!
               </div>
 
               {/* Boutons d'action */}
-              <div style={{ display: 'flex', gap: '10px', flexWrap: '<button
+              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <button
   onClick={async () => {
     if (selectedStreets.length === 0) {
       alert('Veuillez sélectionner au moins une rue');
