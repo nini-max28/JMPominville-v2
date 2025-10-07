@@ -3748,7 +3748,7 @@ Merci de votre patience!
       Backend non connecté. L'historique n'est pas disponible.
     </div>
   )}
-</div>
+
 
       {/* Modal de paiement */}
       {paymentModal.isOpen && (
