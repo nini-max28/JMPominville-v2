@@ -41,7 +41,7 @@ const [streetSearchTerm, setStreetSearchTerm] = useState('');
 const [needsBackup, setNeedsBackup] = useState(false);
 const [notificationsHistory, setNotificationsHistory] = useState([]);
 const [notificationLogs, setNotificationLogs] = useState([]);
-  // États pour la recherche avancée
+  const [selectedContracts, setSelectedContracts] = useState([]);  // États pour la recherche avancée
   const [clientSearchFilters, setClientSearchFilters] = useState({
     searchTerm: '',
     type: '', 
@@ -981,8 +981,137 @@ const renewMultipleContracts = () => {
       amount: '', status: 'actif', notes: ''
     });
   };
+  
+// FONCTION POUR IMPRIMER PLUSIEURS CONTRATS
+const printMultipleContracts = () => {
+  if (selectedContracts.length === 0) {
+    alert('Aucun contrat sélectionné');
+    return;
+  }
 
-  // FONCTIONS FACTURES
+  const confirmPrint = window.confirm(
+    `Imprimer ${selectedContracts.length} contrat(s) ?\n\n` +
+    `Tous les contrats seront générés dans une seule fenêtre d'impression.`
+  );
+
+  if (!confirmPrint) return;
+
+  // Générer tous les contrats HTML
+  let allContractsHTML = '';
+
+  selectedContracts.forEach((contractId, index) => {
+    const contract = contracts.find(c => c.id === contractId);
+    const client = clients.find(c => c.id === contract?.clientId);
+
+    if (!contract || !client) return;
+
+    const paymentStructure = client.paymentStructure || '2';
+    const firstPayment = paymentStructure === '1' ? contract.amount : contract.amount / 2;
+    const secondPayment = paymentStructure === '2' ? contract.amount / 2 : 0;
+    const today = new Date().toLocaleDateString('fr-CA');
+
+    // Utilise le même template que generateContract
+    const contractHTML = `
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; font-size: 12px; page-break-after: always;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="color: #000; margin-bottom: 8px; font-size: 20px; font-weight: bold;">CONTRAT DE SERVICE DE DÉNEIGEMENT</h1>
+          <h2 style="color: #000; margin-bottom: 4px; font-size: 16px; font-weight: bold;">JM Pominville</h2>
+          <p style="font-style: italic; color: #000; margin-bottom: 15px; font-size: 12px;">Service fiable et rapide</p>
+          <p style="color: #000; margin-bottom: 4px; font-size: 12px;"><strong>Maxim Pominville</strong></p>
+          <p style="color: #000; margin-bottom: 15px; font-size: 12px;"><strong>Téléphone: 514-444-6324</strong></p>
+          <p style="color: #000; margin-bottom: 15px; font-size: 12px;"><strong>Adresse: 10330 Du Plein-air, Mirabel, Québec, J7J-1S8</strong></p>
+          <hr style="border: 1px solid #000; margin: 20px 0;">
+        </div>
+        
+        <div style="margin-bottom: 25px;">
+          <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Informations du Client :</h3>
+          <p style="margin: 8px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
+          <p style="margin: 8px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
+          <p style="margin: 8px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
+          ${client.email ? `<p style="margin: 8px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
+        </div>
+        
+        <hr style="border: 1px solid #000; margin: 25px 0;">
+        
+        <div style="margin-bottom: 25px;">
+          <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Conditions Générales du Service :</h3>
+          <p style="margin-bottom: 15px;">Le présent contrat établit les termes et conditions du service de déneigement fourni par JM Pominville au client susmentionné pour la saison hivernale.</p>
+          <p style="margin: 12px 0;"><strong>1. Déclenchement du Service :</strong> Le service de déneigement débutera lorsque l'accumulation de neige atteindra un minimum de cinq (5) centimètres.</p>
+          <p style="margin: 12px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement.</p>
+          <p style="margin: 12px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile avant chaque intervention de déneigement.</p>
+          <p style="margin: 12px 0;"><strong>4. Déplacement des Véhicules :</strong> Les véhicules doivent être retirés des entrées de stationnement avant 9h00 du matin le lendemain de la tempête pour permettre le déneigement complet. <strong style="color: #d32f2f;">Des frais supplémentaires de 30$ seront facturés si nous devons ressortir en raison de véhicules non déplacés ou d'obstacles non prévus.</strong></p>
+          <p style="margin: 12px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
+        </div>
+        
+        ${contract.notes ? `
+        <hr style="border: 1px solid #000; margin: 25px 0;">
+        <div style="margin-bottom: 25px;">
+          <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Notes Spéciales :</h3>
+          <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin: 12px 0;">
+            <p style="margin: 0; font-style: italic; color: #495057;">${contract.notes}</p>
+          </div>
+        </div>
+        ` : ''}
+      
+        <hr style="border: 1px solid #000; margin: 25px 0;">
+
+        <div style="margin-bottom: 25px;">
+          <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Période de Validité :</h3>
+          <p style="margin: 12px 0;">Le présent contrat entre en vigueur le <strong>${contract.startDate}</strong> et demeure valide jusqu'au <strong>${contract.endDate || '31 mars ' + (new Date().getFullYear() + 1)}</strong>.</p>
+        </div>
+
+        <hr style="border: 1px solid #000; margin: 25px 0;">
+
+        <div style="margin-bottom: 25px;">
+          <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Modalités de Tarification et de Paiement :</h3>
+          <p style="margin: 12px 0;">Le tarif pour la saison de déneigement est fixe et établi comme suit :</p>
+          <p style="margin: 15px 0; font-size: 14px;"><strong>• Montant Total du Contrat :</strong> ${contract.amount.toFixed(2)} $</p>
+          
+          ${paymentStructure === '1' ? `
+            <p style="margin: 15px 0;">Le paiement s'effectuera en un versement unique :</p>
+            <div style="margin: 15px 0;">
+              <p style="margin: 8px 0;"><strong>• Paiement Unique :</strong></p>
+              <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
+              <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${firstPayment.toFixed(2)} $</p>
+              ${client.firstPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.firstPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
+            </div>
+          ` : `
+            <p style="margin: 15px 0;">Le paiement s'effectuera selon les modalités suivantes :</p>
+            <div style="margin: 15px 0;">
+              <p style="margin: 8px 0;"><strong>• 1er Versement :</strong></p>
+              <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
+              <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${firstPayment.toFixed(2)} $</p>
+              ${client.firstPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.firstPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
+            </div>
+            <div style="margin: 15px 0;">
+              <p style="margin: 8px 0;"><strong>• 2e Versement :</strong></p>
+              <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.secondPaymentDate || 'À déterminer'}</p>
+              <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${secondPayment.toFixed(2)} $</p>
+              ${client.secondPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.secondPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
+            </div>
+          `}
+        </div>
+        
+        <hr style="border: 1px solid #000; margin: 25px 0;">
+        
+        <div style="margin-bottom: 25px;">
+          <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Acceptation du Contrat :</h3>
+          <p style="margin: 12px 0;">En signant ci-dessous, le client et le représentant de JM Pominville reconnaissent avoir lu, compris et accepté l'intégralité des clauses et conditions énoncées dans le présent contrat.</p>
+        </div>
+        
+        <div style="margin-top: 40px; display: flex; justify-content: space-between;">
+          <div style="width: 45%;">
+            <p style="margin: 5px 0; font-weight: bold;">Signature du Client :</p>
+            <hr style="border: none; border-top: 1px solid #000; margin: 30px 0;">
+            <p style="margin: 5px 0;">(Signature)</p>
+            <hr style="border: none; border-top: 1px solid #000; margin: 20px 0;">
+            <p style="margin: 5px 0;">(Nom en lettres moulées)</p>
+            <p style="margin: 15px 0;"><strong>Date :</strong> ${today}</p>
+          </div>
+          <div style="width: 45%;">
+            <p style="margin: 5px 0; font-weight: bold;">Signature du Représentant de JM Pominville :</p>
+            <div style="margin: 20px 0; height: 60px; display: flex; align-items: center;">
+              <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAK4AAAB9CAYAAAA7plhvAAABdWlDQ1BrQ0dDb2xvclNwYWNlRGlzcGxheVAzAAAokXWQvUvDUBTFT6tS0DqIDh0cMolD1NIKdnFoKxRFMFQFq1OafgltfCQpUnETVyn4H1jBWXCwiFRwcXAQRAcR3Zw6KbhoeN6XVNoi3sfl/Ticc7lcwBtQGSv2AijplpFMxKS11Lrke4OHnlOqZrKooiwK/v276/PR9d5PiFlNu3YQ2U9cl84ul3aeAlN//V3Vn8maGv3f1EGNGRbgkYmVbYsJ3iUeMWgp4qrgvMvHgtMunzuelWSc+JZY0gpqhrhJLKc79HwHl4plrbWD2N6f1VeXxRzqUcxhEyYYilBRgQQF4X/8044/ji1yV2BQLo8CLMpESRETssTz0KFhEjJxCEHqkLhz634PrfvJbW3vFZhtcM4v2tpCAzidoZPV29p4BBgaAG7qTDVUR+qh9uZywPsJMJgChu8os2HmwiF3e38M6Hvh/GMM8B0CdpXzryPO7RqFn4Er/QcXKWq8UwZBywAAAARjSUNQDA0AAW4D4+8AAACoZVhJZk1NACoAAAAIAAUBEgADAAAAAQABAAABGgAFAAAAAQAAAEoBGwAFAAAAAQAAAFIBKAADAAAAAQACAACHaQAEAAAAAQAAAFoAAAAAAAAA2AAAAAEAAADYAAAAAQAGkAAABwAAAAQwMjIxkQEABwAAAAQBAgMAoAAABwAAAAQwMTAwoAIABAAAAAEAAACuoAMABAAAAAEAAAB9pAYAAwAAAAEAAAAAAAAAAIzjB0AAAAAJcEhZcwAAITgAACE4AUWWMWAAAAR6aVRYdFhNTDpjb20uYWRvYmUueG1wAAAAAAA8eDp4bXBtZXRhIHhtbG5zOng9ImFkb2JlOm5zOm1ldGEvIiB4OnhtcHRrPSJYTVAgQ29yZSA2LjAuMCI+CiAgIDxyZGY6UkRGIHhtbG5zOnJkZj0iaHR0cDovL3d3dy53My5vcmcvMTk5OS8wMi8yMi1yZGYtc3ludGF4LW5zIyI+CiAgICAgIDxyZGY6RGVzY3JpcHRpb24gcmRmOmFib3V0PSIiCiAgICAgICAgICAgIHhtbG5zOmV4aWY9Imh0dHA6Ly9ucy5hZG9iZS5jb20vZXhpZi8xLjAvIgogICAgICAgICAgICB4bWxuczp0aWZmPSJodHRwOi8vbnMuYWRvYmUuY29tL3RpZmYvMS4wLyI+CiAgICAgICAgIDxleGlmOkNvbG9yU3BhY2U+MTwvZXhpZjpDb2xvclNwYWNlPgogICAgICAgICA8ZXhpZjpQaXhlbFhEaW1lbnNpb24+NTc0PC9leGlmOlBpeGVsWERpbWVuc2lvbj4KICAgICAgICAgPGV4aWY6U2NlbmVDYXB0dXJlVHlwZT4wPC9leGlmOlNjZW5lQ2FwdHVyZVR5cGU+CiAgICAgICAgIDxleGlmOkV4aWZWZXJzaW9uPjAyMjE8L2V4aWY6RXhpZlZlcnNpb24+CiAgICAgICAgIDxleGlmOkZsYXNoUGl4VmVyc2lvbj4wMTAwPC9leGlmOkZsYXNoUGl4VmVyc2lvbj4KICAgICAgICAgPGV4aWY6UGl4ZWxZRGltZW5zaW9uPjI4MDwvZXhpZjpQaXhlbFlEaW1lbnNpb24+CiAgICAgICAgIDxleGlmOkNvbXBvbmVudHNDb25maWd1cmF0aW9uPgogICAgICAgICAgICA8cmRmOlNlcT4KICAgICAgICAgICAgICAgPHJkZjpsaT4xPC9yZGY6bGk+CiAgICAgICAgICAgICAgIDxyZGY6bGk+MjwvcmRmOmxpPgogICAgICAgICAgICAgICA8cmRmOmxpPjM8L3JkZjpsaT4KICAgICAgICAgICAgICAgPHJkZjpsaT4wPC9yZGY6bGk+CiAgICAgICAgICAgIDwvcmRmOlNlcT4KICAgICAgICAgPC9leGlmOkNvbXBvbmVudHNDb25maWd1cmF0aW9uPgogICAgICAgICA8dGlmZjpSZXNvbHV0aW9uVW5pdD4yPC90aWZmOlJlc29sdXRpb25Vbml0PgogICAgICAgICA8dGlmZjpPcmllbnRhdGlvbj4xPC90aWZmOk9yaWVudGF0aW9uPgogICAgICAgICA8dGlmZjpYUmVzb2x1dGlvbj4yMTY8L3RpZmY6WFJlc29sdXRpb24+CiAgICAgICAgIDx0aWZmOllSZXNvbHV0aW9uPjIxNjwvdGlmZjpZUmVzb2x1dGlvbj4KICAgICAgPC9yZGY6RGVzY3JpcHRpb24+CiAgIDwvcmRmOlJERj4KPC94OnhtcG1ldGE+CgXxCbMAAEAASURBVHgB7Z0HvFXFtf+Hy0V6L1IELk2aoqKAoogUUVFRVOw9liR/U0zy8k97Sd776S/1H2N6YgVLVOyKCEgT6dJFeu+91///vu/ZZh3H7zuWiFCPO/Zy7t5ZtbNmzexZs2bNmzexWCwrbdO0OZwsKwY8eOSO UlpXvvNo9+7dYd++faFMmTKhXOEJRM0G0uzds8eeES/sC6F0qVKhQoUK2Th82bx9q8XZl5CyZwWKx+89SleuXLmwZ+/ewL3SpUuHvfpO4DtlKKX73Es/83u7KMPKS/D48XfqVLZs2Ww+BQUF9p10lJ9n1JHyFYomgd8EaBLIlzJ6oKxxPsczfdrBeeG8cj5xdd7u2imMCUd8Yl7SBqQ/4YQTrJ3Jr5R+w2PDlfKw/HWPsF9tY982bdoUSusrDUmwBPrumXvB7GHm36ZtWywDQL5r1y5r/P2l9ocy5cvG0ew7BYWwBwgDEq4Udtu2bdlCGpgyjIBuYUFhtlyAh3z48IzAPQ+khUkAlec7xSieU0aCx6VefAdsgJYQdyq7kflHPPIiX/gCsMuWOcHKwD3Pk+jHK30DlXhD2LNnn8C21wAHn+GRtaP4dkKG19yHj/ATXvIcoHq7WUb6B2gdOwgQhBwg53spMX7/Hv3Yvn17EEqyACMRhFwCnSAAxWHXvgQkLqU8gBXLlo+jBQCORPVCeGdw0NLYAIhCE49yVKxQMezYuSPbA2Op53Qgwn2YVrpAUnpfwqQyhWUEwn2S/Lq3f68xhThO1+tDeWBWLCnJE+kOGKFDiBsFBvs9nnvdj3f68AI+IYBGjRoV3n///XDllVeGWnXqhBMyQgO+EhBygNH5zz3A6+Xn9O01bLR1YCcEfhJcnVV0GDi0BiY9KqwAX/RNHDqaZZr11G/gUofBWD5vYN4TQJMsv53vcS8PNH6gUVpxfA+4xIdX3v9I1z9u3FhzEK6jY4vOPf+8UFbnOHCSYq9evUKXrl3tCM0u3bt7T6hdp7bxmHZ2YFIGvkObeIQYtzMQ4TNt4O1CWm8TH/0MGOD1YQWC09I5hxXQVYECWgr4NcT1IQoZpO9UvvTxfr1qwv0jpctIWhQOPB1LxKP7Hpe0Ho/0xKdsbA8c59y5c8Njjz4WlixeEjZv3BzmyJnJwez4xScf/rj/M+q3ZssWLcOKFSu0cLFHHUgSFGmNR/CJe+A/V6s7eQB07lEWcESgDFxJAx7s3m+upGeeN52Gk8b+0X2UqozyZF2G9d+7Zjv9r7k+gxCn4T/+sEIBHzjRV7/ylfA+9dtyTRo3CS+++GJYv36ddI0C+5DG68WVPPw39cqCP/0vW69kO+3Zu9fs7C5M0D6kt08p/SZQPwLY9kDP6dXZ36QhPmUucIa+zjeeMy4QLIEKAw4vHPkQIIgBwRu+dJwKeDwviJN5n8aVJzhx+O1X8vG4/tuucZ4ej3t8Z2LH0FxaHxgop79RwwbavgvCqlUrwxqd+cBOCE​​​​​​​​​​​​​​​​  // FONCTIONS FACTURES
   const addInvoice = () => {
     if (!invoiceForm.type || !invoiceForm.amount || !invoiceForm.date) {
       alert('Veuillez remplir tous les champs obligatoires.');
@@ -2904,15 +3033,58 @@ Merci de votre patience!
         📦 Archives ({contracts.filter(c => c.archived).length})
       </button>
     </div>
-
-    {/* GARDE la section de recherche avancée */}
-    <div style={{
-      background: '#f8f9fa', padding: '20px', borderRadius: '12px',
-      marginBottom: '20px', border: '1px solid #dee2e6'
-    }}>
-      <h4 style={{ color: '#495057', marginBottom: '15px' }}>🔍 Recherche de Contrats</h4>
-      {/* ... le reste du code de recherche reste identique ... */}
+{/* Boutons de sélection et impression multiple */}
+{!showArchived && (
+  <div style={{ 
+    background: '#f8f9fa', padding: '15px', borderRadius: '12px', 
+    marginBottom: '20px', border: '1px solid #dee2e6',
+    display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap'
+  }}>
+    <div style={{ flex: 1 }}>
+      <strong>🖨️ Impression de contrats</strong>
+      <div style={{ fontSize: '13px', color: '#666', marginTop: '3px' }}>
+        {selectedContracts.length > 0 
+          ? `${selectedContracts.length} contrat(s) sélectionné(s)` 
+          : 'Sélectionnez des contrats à imprimer'}
+      </div>
     </div>
+    
+    <button
+      onClick={() => {
+        const activeContracts = getAdvancedFilteredContracts().filter(c => !c.archived);
+        if (selectedContracts.length === activeContracts.length) {
+          setSelectedContracts([]);
+        } else {
+          setSelectedContracts(activeContracts.map(c => c.id));
+        }
+      }}
+      style={{
+        padding: '8px 16px', background: '#6c757d', color: 'white',
+        border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+      }}
+    >
+      {selectedContracts.length === getAdvancedFilteredContracts().filter(c => !c.archived).length 
+        ? '❌ Tout désélectionner' 
+        : '✅ Tout sélectionner'}
+    </button>
+    
+    <button
+      onClick={() => printMultipleContracts()}
+      disabled={selectedContracts.length === 0}
+      style={{
+        padding: '8px 16px', 
+        background: selectedContracts.length === 0 ? '#ccc' : '#28a745', 
+        color: 'white',
+        border: 'none', borderRadius: '6px', 
+        cursor: selectedContracts.length === 0 ? 'not-allowed' : 'pointer', 
+        fontWeight: 'bold'
+      }}
+    >
+      🖨️ Imprimer sélection ({selectedContracts.length})
+    </button>
+  </div>
+)}
+
     {/* NOUVELLE SECTION DE RECHERCHE POUR CONTRATS */}
     <div style={{
       background: '#f8f9fa', padding: '20px', borderRadius: '12px',
@@ -3137,7 +3309,23 @@ Merci de votre patience!
                       const client = clients.find(c => c.id === contract.clientId);
                       return (
                         <tr key={contract.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                          <td style={{ padding: '15px' }}>
+                  {/* ✅ Colonne Checkbox (seulement pour actifs) */}
+        {!showArchived && (
+          <td style={{ padding: '15px', textAlign: 'center' }}>
+            <input
+              type="checkbox"
+              checked={selectedContracts.includes(contract.id)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setSelectedContracts([...selectedContracts, contract.id]);
+                } else {
+                  setSelectedContracts(selectedContracts.filter(id => id !== contract.id));
+                }
+              }}
+              style={{ transform: 'scale(1.2)', cursor: 'pointer' }}
+            />
+          </td>
+        )}                          <td style={{ padding: '15px' }}>
                             <strong style={{ color: '#1a4d1a' }}>{client ? client.name : 'Client supprimé'}</strong>
                             {client && <><br /><small style={{ color: '#666' }}>{client.address}</small></>}
                           </td>
