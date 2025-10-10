@@ -697,6 +697,13 @@ const addClient = () => {
     firstPaymentMethod: '', secondPaymentMethod: ''
   });
 };
+  const deleteClient = (id) => {
+  if (window.confirm('Supprimer ce client ?')) {
+    const newClients = clients.filter(client => client.id !== id);
+    setClients(newClients);
+    saveToStorage('clients', newClients);
+  }
+};
  const startEditClient = (client) => {
     setEditingClient(client.id);
     setEditClientForm({
