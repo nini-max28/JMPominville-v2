@@ -785,38 +785,137 @@ const addClient = () => {
       firstPaymentMethod: '', secondPaymentMethod: ''
     });
   }; 
-  
-const renewContract = (oldContract) => {
+// FONCTION DE RENOUVELLEMENT AUTOMATIQUE DE CONTRAT
+const renewContract = (oldContractId) => {
+  const oldContract = contracts.find(c => c.id === oldContractId);
+  if (!oldContract) {
+    alert('Contrat introuvable');
+    return;
+  }
+
   const client = clients.find(c => c.id === oldContract.clientId);
-  if (!client) return;
+  if (!client) {
+    alert('Client introuvable');
+    return;
+  }
 
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
 
+  // Calculer les nouvelles dates
+  const startDate = `${currentYear}-11-01`; // 1er novembre
+  const endDate = `${nextYear}-03-31`; // 31 mars prochain
+
+  // Demander confirmation avec le montant
+  const confirmRenewal = window.confirm(
+    `Renouveler le contrat pour ${client.name}?\n\n` +
+    `Ancien contrat: ${oldContract.startDate} au ${oldContract.endDate}\n` +
+    `Nouveau contrat: ${startDate} au ${endDate}\n\n` +
+    `Montant: ${oldContract.amount.toFixed(2)}$ (modifiable après création)\n` +
+    `Type: ${oldContract.type}`
+  );
+
+  if (!confirmRenewal) return;
+
+  // Créer le nouveau contrat
   const newContract = {
     id: Date.now(),
     clientId: oldContract.clientId,
     type: oldContract.type,
-    startDate: `${currentYear}-11-01`, // 1er novembre
-    endDate: `${nextYear}-03-31`, // 31 mars prochain
-    amount: oldContract.amount, // Même montant (tu pourras le modifier)
+    startDate: startDate,
+    endDate: endDate,
+    amount: oldContract.amount,
     status: 'actif',
-    notes: oldContract.notes,
+    notes: oldContract.notes || '',
     createdAt: new Date().toISOString(),
-    renewedFrom: oldContract.id
+    renewedFrom: oldContract.id, // Pour traçabilité
+    archived: false
   };
 
-  // Archiver l'ancien
+  // Archiver l'ancien contrat
   const updatedContracts = contracts.map(c =>
-    c.id === oldContract.id ? { ...c, archived: true, yearArchived: currentYear } : c
+    c.id === oldContract.id 
+      ? { ...c, archived: true, yearArchived: currentYear, status: 'terminé' }
+      : c
   );
 
-  // Ajouter le nouveau
+  // Ajouter le nouveau contrat
   const newContracts = [...updatedContracts, newContract];
+  
   setContracts(newContracts);
   saveToStorage('contracts', newContracts);
 
-  alert(`✅ Contrat renouvelé pour ${client.name}!\n\nNouvelle période: ${newContract.startDate} au ${newContract.endDate}`);
+  alert(
+    `✅ Contrat renouvelé avec succès!\n\n` +
+    `Client: ${client.name}\n` +
+    `Période: ${startDate} au ${endDate}\n` +
+    `Montant: ${newContract.amount.toFixed(2)}$\n\n` +
+    `L'ancien contrat a été archivé.`
+  );
+};
+
+// FONCTION DE RENOUVELLEMENT EN MASSE
+const renewMultipleContracts = () => {
+  const activeContracts = contracts.filter(c => !c.archived && c.status === 'actif');
+  
+  if (activeContracts.length === 0) {
+    alert('Aucun contrat actif à renouveler');
+    return;
+  }
+
+  const confirmBulk = window.confirm(
+    `Renouveler TOUS les contrats actifs?\n\n` +
+    `${activeContracts.length} contrats seront renouvelés pour la prochaine saison.\n\n` +
+    `⚠️ Cette action archivera tous les contrats actuels et en créera de nouveaux.`
+  );
+
+  if (!confirmBulk) return;
+
+  let renewedCount = 0;
+  const currentYear = new Date().getFullYear();
+  const nextYear = currentYear + 1;
+  const startDate = `${currentYear}-11-01`;
+  const endDate = `${nextYear}-03-31`;
+
+  let updatedContracts = [...contracts];
+
+  activeContracts.forEach(oldContract => {
+    // Créer nouveau contrat
+    const newContract = {
+      id: Date.now() + renewedCount,
+      clientId: oldContract.clientId,
+      type: oldContract.type,
+      startDate: startDate,
+      endDate: endDate,
+      amount: oldContract.amount,
+      status: 'actif',
+      notes: oldContract.notes || '',
+      createdAt: new Date().toISOString(),
+      renewedFrom: oldContract.id,
+      archived: false
+    };
+
+    // Archiver l'ancien
+    updatedContracts = updatedContracts.map(c =>
+      c.id === oldContract.id
+        ? { ...c, archived: true, yearArchived: currentYear, status: 'terminé' }
+        : c
+    );
+
+    // Ajouter le nouveau
+    updatedContracts.push(newContract);
+    renewedCount++;
+  });
+
+  setContracts(updatedContracts);
+  saveToStorage('contracts', updatedContracts);
+
+  alert(
+    `✅ Renouvellement en masse terminé!\n\n` +
+    `${renewedCount} contrat(s) renouvelé(s)\n` +
+    `Nouvelle période: ${startDate} au ${endDate}\n\n` +
+    `Les anciens contrats ont été archivés.`
+  );
 };
   // FONCTIONS CONTRATS
   const addContract = () => {
@@ -2709,35 +2808,112 @@ Merci de votre patience!
           </div>
         )}
         {/* SECTION CONTRATS */}
-        {activeTab === 'contracts' && (
-          <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
-            <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>📋 Gestion des Contrats</h2>
+       {activeTab === 'contracts' && (
+  <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+    <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>📋 Consultation des Contrats</h2>
 
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-              <button
-                onClick={() => setShowArchived(false)}
-                style={{
-                  padding: '10px 15px',
-                  background: !showArchived ? '#1a4d1a' : '#6c757d',
-                  color: 'white', border: 'none', borderRadius: '8px',
-                  cursor: 'pointer', fontWeight: 'bold'
-                }}
-              >
-                Contrats Actifs
-              </button>
-              <button
-                onClick={() => setShowArchived(true)}
-                style={{
-                  padding: '10px 15px',
-                  background: showArchived ? '#1a4d1a' : '#6c757d',
-                  color: 'white', border: 'none', borderRadius: '8px',
-                  cursor: 'pointer', fontWeight: 'bold'
-                }}
-              >
-                Archives ({contracts.filter(c => c.archived).length})
-              </button>
-            </div>
-{/* NOUVELLE SECTION DE RECHERCHE POUR CONTRATS */}
+    {/* Message informatif */}
+    <div style={{ 
+      background: '#e3f2fd', padding: '15px', borderRadius: '12px', 
+      marginBottom: '20px', border: '2px solid #2196f3'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <span style={{ fontSize: '24px' }}>ℹ️</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 'bold', color: '#1976d2', marginBottom: '5px' }}>
+            Les contrats sont créés automatiquement avec les clients
+          </div>
+          <div style={{ fontSize: '13px', color: '#555' }}>
+            Pour créer un nouveau contrat, allez dans <strong>"👥 Clients"</strong> → Ajouter un client. 
+            Cette section permet de consulter, renouveler et générer les PDF.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Statistiques rapides */}
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+      <div style={{ background: '#d4edda', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+        <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#155724' }}>
+          {contracts.filter(c => !c.archived).length}
+        </div>
+        <div style={{ fontSize: '13px', color: '#155724' }}>Contrats Actifs</div>
+      </div>
+      
+      <div style={{ background: '#fff3cd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+        <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#856404' }}>
+          {contracts.filter(c => !c.archived).reduce((sum, c) => sum + c.amount, 0).toFixed(0)}$
+        </div>
+        <div style={{ fontSize: '13px', color: '#856404' }}>Revenus Prévus</div>
+      </div>
+      
+      <div style={{ background: '#f8d7da', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+        <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#721c24' }}>
+          {contracts.filter(c => c.archived).length}
+        </div>
+        <div style={{ fontSize: '13px', color: '#721c24' }}>Contrats Archivés</div>
+      </div>
+    </div>
+
+    {/* Bouton de renouvellement en masse */}
+    <div style={{ 
+      background: '#fff3cd', padding: '15px', borderRadius: '12px', 
+      marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center',
+      border: '2px solid #ffc107'
+    }}>
+      <div style={{ flex: 1 }}>
+        <strong style={{ color: '#856404', fontSize: '15px' }}>🔄 Renouvellement de saison</strong>
+        <div style={{ fontSize: '13px', color: '#666', marginTop: '5px' }}>
+          Créez automatiquement tous les nouveaux contrats pour la prochaine saison d'un seul clic
+        </div>
+      </div>
+      <button
+        onClick={renewMultipleContracts}
+        style={{
+          padding: '12px 20px', background: '#ffc107', color: '#000',
+          border: 'none', borderRadius: '8px', cursor: 'pointer', 
+          fontWeight: 'bold', fontSize: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+        }}
+      >
+        🔄 Renouveler TOUS
+      </button>
+    </div>
+
+    {/* Boutons Actifs/Archives */}
+    <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+      <button
+        onClick={() => setShowArchived(false)}
+        style={{
+          padding: '10px 15px',
+          background: !showArchived ? '#1a4d1a' : '#6c757d',
+          color: 'white', border: 'none', borderRadius: '8px',
+          cursor: 'pointer', fontWeight: 'bold'
+        }}
+      >
+        📋 Contrats Actifs ({contracts.filter(c => !c.archived).length})
+      </button>
+      <button
+        onClick={() => setShowArchived(true)}
+        style={{
+          padding: '10px 15px',
+          background: showArchived ? '#1a4d1a' : '#6c757d',
+          color: 'white', border: 'none', borderRadius: '8px',
+          cursor: 'pointer', fontWeight: 'bold'
+        }}
+      >
+        📦 Archives ({contracts.filter(c => c.archived).length})
+      </button>
+    </div>
+
+    {/* GARDE la section de recherche avancée */}
+    <div style={{
+      background: '#f8f9fa', padding: '20px', borderRadius: '12px',
+      marginBottom: '20px', border: '1px solid #dee2e6'
+    }}>
+      <h4 style={{ color: '#495057', marginBottom: '15px' }}>🔍 Recherche de Contrats</h4>
+      {/* ... le reste du code de recherche reste identique ... */}
+    </div>
+    {/* NOUVELLE SECTION DE RECHERCHE POUR CONTRATS */}
     <div style={{
       background: '#f8f9fa', padding: '20px', borderRadius: '12px',
       marginBottom: '20px', border: '1px solid #dee2e6'
@@ -2984,47 +3160,64 @@ Merci de votre patience!
                               {contract.status}
                             </span>
                           </td>
-                          <td style={{ padding: '15px' }}>
-                            <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
-                              <button
-                                onClick={() => generateContract(contract.id)}
-                                style={{
-                                  padding: '5px 10px', fontSize: '12px', background: '#17a2b8', color: 'white',
-                                  border: 'none', borderRadius: '4px', cursor: 'pointer'
-                                }}
-                              >
-                                📄 Contrat PDF
-                              </button>
-                              <button
-                                onClick={() => startEditContract(contract)}
-                                style={{
-                                  padding: '5px 10px', fontSize: '12px', background: '#007bff', color: 'white',
-                                  border: 'none', borderRadius: '4px', cursor: 'pointer'
-                                }}
-                              >
-                                ✏️ Modifier
-                              </button>
-                              <button
-                                onClick={() => deleteContract(contract.id)}
-                                style={{
-                                  padding: '5px 10px', fontSize: '12px', background: '#dc3545', color: 'white',
-                                  border: 'none', borderRadius: '4px', cursor: 'pointer'
-                                }}
-                              >
-                                🗑️ Supprimer
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        )}
-
+<td style={{ padding: '15px' }}>
+  <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+    {!contract.archived && (
+      <button
+        onClick={() => renewContract(contract.id)}
+        style={{
+          padding: '5px 10px', fontSize: '12px', background: '#ffc107', 
+          color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer',
+          fontWeight: 'bold'
+        }}
+      >
+        🔄 Renouveler
+      </button>
+    )}
+    
+    <button
+      onClick={() => generateContract(contract.id)}
+      style={{
+        padding: '5px 10px', fontSize: '12px', background: '#17a2b8', color: 'white',
+        border: 'none', borderRadius: '4px', cursor: 'pointer'
+      }}
+    >
+      📄 Contrat PDF
+    </button>
+    
+    {!contract.archived && (
+      <>
+        <button
+          onClick={() => startEditContract(contract)}
+          style={{
+            padding: '5px 10px', fontSize: '12px', background: '#007bff', color: 'white',
+            border: 'none', borderRadius: '4px', cursor: 'pointer'
+          }}
+        >
+          ✏️ Modifier
+        </button>
+        <button
+          onClick={() => deleteContract(contract.id)}
+          style={{
+            padding: '5px 10px', fontSize: '12px', background: '#dc3545', color: 'white',
+            border: 'none', borderRadius: '4px', cursor: 'pointer'
+          }}
+        >
+          🗑️ Supprimer
+        </button>
+      </>
+    )}
+    
+    {contract.archived && (
+      <span style={{
+        padding: '5px 10px', fontSize: '11px', background: '#6c757d', 
+        color: 'white', borderRadius: '4px', textAlign: 'center'
+      }}>
+        📦 Archivé {contract.yearArchived || ''}
+      </span>
+    )}
+  </div>
+</td>
         {/* SECTION COMPTABILITÉ */}
         {activeTab === 'accounting' && (
           <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
