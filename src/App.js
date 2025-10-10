@@ -58,11 +58,16 @@ const [notificationLogs, setNotificationLogs] = useState([]);
 
   // FORMULAIRES
   const [clientForm, setClientForm] = useState({
-    name: '', phone: '', email: '', type: '', address: '',
-    paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
-    firstPaymentMethod: '', secondPaymentMethod: ''
-  });
-
+  name: '', phone: '', email: '', type: '', address: '',
+  paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
+  firstPaymentMethod: '', secondPaymentMethod: '',
+  // ✅ NOUVEAUX CHAMPS POUR LE CONTRAT
+  contractType: 'saisonnier',
+  contractAmount: '',
+  startDate: '',
+  endDate: '',
+  contractNotes: ''
+});
   const [editClientForm, setEditClientForm] = useState({
     name: '', phone: '', email: '', type: '', address: '',
     paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
@@ -654,11 +659,19 @@ Merci de votre patience!
 
   // FONCTIONS CLIENTS
 const addClient = () => {
+  // Validations client
   if (!clientForm.name || !clientForm.phone || !clientForm.address) {
     alert('Veuillez remplir au moins le nom, le téléphone et l\'adresse.');
     return;
   }
 
+  // Validations contrat
+  if (!clientForm.contractType || !clientForm.contractAmount || !clientForm.startDate) {
+    alert('Veuillez remplir les informations du contrat (type, montant, date de début).');
+    return;
+  }
+
+  // Validations paiements
   if (clientForm.paymentStructure === '1' && !clientForm.firstPaymentDate) {
     alert('Veuillez spécifier la date de paiement.');
     return;
@@ -669,7 +682,6 @@ const addClient = () => {
     return;
   }
 
-  // ✅ NOUVEAU: Vérifier les méthodes de paiement
   if (!clientForm.firstPaymentMethod) {
     alert('Veuillez sélectionner la méthode du 1er paiement.');
     return;
@@ -680,22 +692,59 @@ const addClient = () => {
     return;
   }
 
+  const clientId = Date.now();
+
+  // ✅ CRÉER LE CLIENT
   const client = {
-    id: Date.now(),
-    ...clientForm,
+    id: clientId,
+    name: clientForm.name,
+    phone: clientForm.phone,
+    email: clientForm.email,
+    type: clientForm.type,
+    address: clientForm.address,
+    paymentStructure: clientForm.paymentStructure,
+    firstPaymentDate: clientForm.firstPaymentDate,
     secondPaymentDate: clientForm.paymentStructure === '1' ? '' : clientForm.secondPaymentDate,
+    firstPaymentMethod: clientForm.firstPaymentMethod,
     secondPaymentMethod: clientForm.paymentStructure === '1' ? '' : clientForm.secondPaymentMethod
   };
 
+  // ✅ CRÉER LE CONTRAT AUTOMATIQUEMENT
+  const contract = {
+    id: clientId + 1,
+    clientId: clientId,
+    type: clientForm.contractType,
+    startDate: clientForm.startDate,
+    endDate: clientForm.endDate || `${new Date().getFullYear() + 1}-03-31`, // Par défaut: 31 mars prochain
+    amount: parseFloat(clientForm.contractAmount),
+    status: 'actif',
+    notes: clientForm.contractNotes,
+    createdAt: new Date().toISOString()
+  };
+
+  // Sauvegarder
   const newClients = [...clients, client];
-  setClients(newClients);
-  saveToStorage('clients', newClients);
+  const newContracts = [...contracts, contract];
   
+  setClients(newClients);
+  setContracts(newContracts);
+  
+  saveToStorage('clients', newClients);
+  saveToStorage('contracts', newContracts);
+  
+  // Réinitialiser le formulaire
   setClientForm({
     name: '', phone: '', email: '', type: '', address: '',
     paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
-    firstPaymentMethod: '', secondPaymentMethod: ''
+    firstPaymentMethod: '', secondPaymentMethod: '',
+    contractType: 'saisonnier',
+    contractAmount: '',
+    startDate: '',
+    endDate: '',
+    contractNotes: ''
   });
+
+  alert(`✅ Client "${client.name}" et contrat créés avec succès!\n\nMontant: ${contract.amount.toFixed(2)}$\nDébut: ${contract.startDate}\nFin: ${contract.endDate}`);
 };
   const deleteClient = (id) => {
   if (window.confirm('Supprimer ce client ?')) {
@@ -736,7 +785,39 @@ const addClient = () => {
       firstPaymentMethod: '', secondPaymentMethod: ''
     });
   }; 
+  
+const renewContract = (oldContract) => {
+  const client = clients.find(c => c.id === oldContract.clientId);
+  if (!client) return;
 
+  const currentYear = new Date().getFullYear();
+  const nextYear = currentYear + 1;
+
+  const newContract = {
+    id: Date.now(),
+    clientId: oldContract.clientId,
+    type: oldContract.type,
+    startDate: `${currentYear}-11-01`, // 1er novembre
+    endDate: `${nextYear}-03-31`, // 31 mars prochain
+    amount: oldContract.amount, // Même montant (tu pourras le modifier)
+    status: 'actif',
+    notes: oldContract.notes,
+    createdAt: new Date().toISOString(),
+    renewedFrom: oldContract.id
+  };
+
+  // Archiver l'ancien
+  const updatedContracts = contracts.map(c =>
+    c.id === oldContract.id ? { ...c, archived: true, yearArchived: currentYear } : c
+  );
+
+  // Ajouter le nouveau
+  const newContracts = [...updatedContracts, newContract];
+  setContracts(newContracts);
+  saveToStorage('contracts', newContracts);
+
+  alert(`✅ Contrat renouvelé pour ${client.name}!\n\nNouvelle période: ${newContract.startDate} au ${newContract.endDate}`);
+};
   // FONCTIONS CONTRATS
   const addContract = () => {
     if (!contractForm.clientId || !contractForm.type || !contractForm.startDate || !contractForm.amount) {
@@ -2229,141 +2310,169 @@ Merci de votre patience!
               </div>
             </div>
 
-            {/* Formulaire d'ajout de client */}
-            <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '25px' }}>
-              <h4 style={{ marginBottom: '15px' }}>Ajouter un nouveau client</h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nom du client</label>
-                  <input
-                    type="text" value={clientForm.name}
-                    onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
-                    placeholder="Ex: Jean Dupont"
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone</label>
-                  <input
-                    type="tel" value={clientForm.phone}
-                    onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })}
-                    placeholder="514-555-0123"
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Email</label>
-                  <input
-                    type="email" value={clientForm.email}
-                    onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
-                    placeholder="client@example.com"
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                  />
-                </div>
-                <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type</label>
-                  <select
-                    value={clientForm.type}
-                    onChange={(e) => setClientForm({ ...clientForm, type: e.target.value })}
-                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                  >
-                    <option value="">Sélectionner...</option>
-                    <option value="résidentiel">Résidentiel</option>
-                    <option value="commercial">Commercial</option>
-                    <option value="industriel">Industriel</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Adresse complète</label>
-                <textarea
-                  rows="2" value={clientForm.address}
-                  onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })}
-                  placeholder="123 Rue Example, Ville, Province, Code postal"
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                />
-              </div>
+        {/* Formulaire d'ajout de client */}
+<div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '25px' }}>
+  <h4 style={{ marginBottom: '20px', color: '#1a4d1a' }}>
+    ➕ Ajouter un nouveau client (avec contrat automatique)
+  </h4>
 
+  {/* SECTION 1: Informations client */}
+  <div style={{ 
+    background: '#fff', padding: '15px', borderRadius: '8px', 
+    marginBottom: '20px', border: '2px solid #1a4d1a'
+  }}>
+    <h5 style={{ color: '#1a4d1a', marginBottom: '15px' }}>👤 Informations du Client</h5>
+    
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nom du client *</label>
+        <input
+          type="text" value={clientForm.name}
+          onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
+          placeholder="Ex: Jean Dupont"
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone *</label>
+        <input
+          type="tel" value={clientForm.phone}
+          onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })}
+          placeholder="514-555-0123"
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Email</label>
+        <input
+          type="email" value={clientForm.email}
+          onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
+          placeholder="client@example.com"
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type *</label>
+        <select
+          value={clientForm.type}
+          onChange={(e) => setClientForm({ ...clientForm, type: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        >
+          <option value="">Sélectionner...</option>
+          <option value="résidentiel">Résidentiel</option>
+          <option value="commercial">Commercial</option>
+          <option value="industriel">Industriel</option>
+        </select>
+      </div>
+    </div>
+    
+    <div style={{ marginBottom: '15px' }}>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Adresse complète *</label>
+      <textarea
+        rows="2" value={clientForm.address}
+        onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })}
+        placeholder="123 Rue Example, Ville, Province, Code postal"
+        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      />
+    </div>
+  </div>
+
+  {/* SECTION 2: Contrat */}
+  <div style={{ 
+    background: '#fff3cd', padding: '15px', borderRadius: '8px', 
+    marginBottom: '20px', border: '2px solid #ffc107'
+  }}>
+    <h5 style={{ color: '#856404', marginBottom: '15px' }}>📋 Contrat de Déneigement</h5>
+    
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
-  <div>
-    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Structure de paiement</label>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type de contrat *</label>
+        <select
+          value={clientForm.contractType}
+          onChange={(e) => setClientForm({ ...clientForm, contractType: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        >
+          <option value="">Sélectionner...</option>
+          <option value="saisonnier">Saisonnier</option>
+          <option value="par-service">Par service</option>
+          <option value="mensuel">Mensuel</option>
+        </select>
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Montant total ($) *</label>
+        <input
+          type="number" min="0" step="0.01" value={clientForm.contractAmount}
+          onChange={(e) => setClientForm({ ...clientForm, contractAmount: e.target.value })}
+          placeholder="500.00"
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date de début *</label>
+        <input
+          type="date" value={clientForm.startDate}
+          onChange={(e) => setClientForm({ ...clientForm, startDate: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date de fin</label>
+        <input
+          type="date" value={clientForm.endDate}
+          onChange={(e) => setClientForm({ ...clientForm, endDate: e.target.value })}
+          placeholder="Auto: 31 mars prochain"
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+    </div>
+
+    <div style={{ marginBottom: '15px' }}>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Notes spéciales</label>
+      <textarea
+        rows="2" value={clientForm.contractNotes}
+        onChange={(e) => setClientForm({ ...clientForm, contractNotes: e.target.value })}
+        placeholder="Ex: Accès par l'arrière, attention aux arbustes..."
+        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      />
+    </div>
+  </div>
+
+  {/* SECTION 3: Paiements */}
+  <div style={{ marginBottom: '15px' }}>
+    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>💳 Structure de paiement *</label>
     <select
       value={clientForm.paymentStructure}
       onChange={(e) => setClientForm({ ...clientForm, paymentStructure: e.target.value })}
-      style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      style={{ width: '100%', maxWidth: '300px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
     >
       <option value="1">1 versement unique</option>
       <option value="2">2 versements</option>
     </select>
   </div>
-</div>
 
-{/* Bloc 1er paiement */}
-<div style={{ 
-  background: '#e8f5e8', padding: '15px', borderRadius: '8px', 
-  marginBottom: '15px', border: '2px solid #1a4d1a'
-}}>
-  <h5 style={{ color: '#1a4d1a', marginBottom: '10px', fontSize: '14px' }}>
-    📅 Premier Versement
-  </h5>
-  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-    <div>
-      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 1er versement *</label>
-      <input
-        type="date" 
-        value={clientForm.firstPaymentDate}
-        onChange={(e) => setClientForm({ ...clientForm, firstPaymentDate: e.target.value })}
-        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-      />
-    </div>
-    <div>
-      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode de paiement *</label>
-      <select
-        value={clientForm.firstPaymentMethod}
-        onChange={(e) => setClientForm({ ...clientForm, firstPaymentMethod: e.target.value })}
-        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-      >
-        <option value="">Sélectionner...</option>
-        <option value="cheque">📄 Chèque post-daté</option>
-        <option value="comptant">💰 Argent comptant</option>
-      </select>
-    </div>
-  </div>
-  {clientForm.firstPaymentMethod === 'cheque' && (
-    <div style={{ 
-      marginTop: '10px', padding: '8px', background: '#fff3cd', 
-      borderRadius: '6px', fontSize: '12px', color: '#856404'
-    }}>
-      💡 Ce chèque sera automatiquement marqué comme reçu à la date indiquée
-    </div>
-  )}
-</div>
-
-{/* Bloc 2e paiement (si structure = 2) */}
-{clientForm.paymentStructure === '2' && (
+  {/* Bloc 1er paiement */}
   <div style={{ 
-    background: '#e3f2fd', padding: '15px', borderRadius: '8px', 
-    marginBottom: '15px', border: '2px solid #007bff'
+    background: '#e8f5e8', padding: '15px', borderRadius: '8px', 
+    marginBottom: '15px', border: '2px solid #1a4d1a'
   }}>
-    <h5 style={{ color: '#007bff', marginBottom: '10px', fontSize: '14px' }}>
-      📅 Deuxième Versement
+    <h5 style={{ color: '#1a4d1a', marginBottom: '10px', fontSize: '14px' }}>
+      📅 Premier Versement {clientForm.paymentStructure === '1' ? '(Unique)' : ''}
     </h5>
     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
       <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 2e versement *</label>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 1er versement *</label>
         <input
           type="date" 
-          value={clientForm.secondPaymentDate}
-          onChange={(e) => setClientForm({ ...clientForm, secondPaymentDate: e.target.value })}
+          value={clientForm.firstPaymentDate}
+          onChange={(e) => setClientForm({ ...clientForm, firstPaymentDate: e.target.value })}
           style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
         />
       </div>
       <div>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode de paiement *</label>
         <select
-          value={clientForm.secondPaymentMethod}
-          onChange={(e) => setClientForm({ ...clientForm, secondPaymentMethod: e.target.value })}
+          value={clientForm.firstPaymentMethod}
+          onChange={(e) => setClientForm({ ...clientForm, firstPaymentMethod: e.target.value })}
           style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
         >
           <option value="">Sélectionner...</option>
@@ -2372,7 +2481,7 @@ Merci de votre patience!
         </select>
       </div>
     </div>
-    {clientForm.secondPaymentMethod === 'cheque' && (
+    {clientForm.firstPaymentMethod === 'cheque' && (
       <div style={{ 
         marginTop: '10px', padding: '8px', background: '#fff3cd', 
         borderRadius: '6px', fontSize: '12px', color: '#856404'
@@ -2380,17 +2489,69 @@ Merci de votre patience!
         💡 Ce chèque sera automatiquement marqué comme reçu à la date indiquée
       </div>
     )}
+    {clientForm.contractAmount && (
+      <div style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+        Montant du versement: <strong>{(parseFloat(clientForm.contractAmount || 0) / (clientForm.paymentStructure === '1' ? 1 : 2)).toFixed(2)} $</strong>
+      </div>
+    )}
   </div>
-)}
 
-              <button onClick={addClient} style={{
-                padding: '12px 24px', background: '#28a745', color: 'white',
-                border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
-              }}>
-                Ajouter Client
-              </button>
-            </div>
+  {/* Bloc 2e paiement (si structure = 2) */}
+  {clientForm.paymentStructure === '2' && (
+    <div style={{ 
+      background: '#e3f2fd', padding: '15px', borderRadius: '8px', 
+      marginBottom: '15px', border: '2px solid #007bff'
+    }}>
+      <h5 style={{ color: '#007bff', marginBottom: '10px', fontSize: '14px' }}>
+        📅 Deuxième Versement
+      </h5>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 2e versement *</label>
+          <input
+            type="date" 
+            value={clientForm.secondPaymentDate}
+            onChange={(e) => setClientForm({ ...clientForm, secondPaymentDate: e.target.value })}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          />
+        </div>
+        <div>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode de paiement *</label>
+          <select
+            value={clientForm.secondPaymentMethod}
+            onChange={(e) => setClientForm({ ...clientForm, secondPaymentMethod: e.target.value })}
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          >
+            <option value="">Sélectionner...</option>
+            <option value="cheque">📄 Chèque post-daté</option>
+            <option value="comptant">💰 Argent comptant</option>
+          </select>
+        </div>
+      </div>
+      {clientForm.secondPaymentMethod === 'cheque' && (
+        <div style={{ 
+          marginTop: '10px', padding: '8px', background: '#fff3cd', 
+          borderRadius: '6px', fontSize: '12px', color: '#856404'
+        }}>
+          💡 Ce chèque sera automatiquement marqué comme reçu à la date indiquée
+        </div>
+      )}
+      {clientForm.contractAmount && (
+        <div style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
+          Montant du versement: <strong>{(parseFloat(clientForm.contractAmount || 0) / 2).toFixed(2)} $</strong>
+        </div>
+      )}
+    </div>
+  )}
 
+  <button onClick={addClient} style={{
+    padding: '12px 24px', background: '#28a745', color: 'white',
+    border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
+    fontSize: '16px'
+  }}>
+    ✅ Créer Client + Contrat
+  </button>
+</div>
             {/* Liste des clients avec méthodes de paiement */}
             {getAdvancedFilteredClients().length > 0 ? (
               <div style={{ overflowX: 'auto' }}>
