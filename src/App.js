@@ -3218,6 +3218,15 @@ Merci de votre patience!
     )}
   </div>
 </td>
+  </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        )}
         {/* SECTION COMPTABILITÉ */}
         {activeTab === 'accounting' && (
           <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
