@@ -263,10 +263,10 @@ const checkBackendConnection = async () => {
       throw error;
     }
   };
-  // FONCTION POUR VÉRIFIER ET MARQUER AUTOMATIQUEMENT LES PAIEMENTS REÇUS
+// FONCTION AMÉLIORÉE POUR MARQUER AUTOMATIQUEMENT LES PAIEMENTS
 const checkAndMarkPaymentsReceived = () => {
   const today = new Date();
-  today.setHours(0, 0, 0, 0); // Reset l'heure pour comparer seulement les dates
+  today.setHours(0, 0, 0, 0);
   
   let updatedPayments = false;
   const newPayments = [...payments];
@@ -277,7 +277,7 @@ const checkAndMarkPaymentsReceived = () => {
     if (!contract) return;
 
     // Vérifier le 1er paiement
-    if (client.firstPaymentDate && client.firstPaymentMethod) {
+    if (client.firstPaymentDate && client.firstPaymentMethod === 'cheque') { // ← IMPORTANT: Seulement pour les chèques
       const firstPaymentDate = new Date(client.firstPaymentDate);
       firstPaymentDate.setHours(0, 0, 0, 0);
       
@@ -287,7 +287,6 @@ const checkAndMarkPaymentsReceived = () => {
         p.received
       );
 
-      // Si la date est arrivée/passée ET le paiement n'est pas encore marqué comme reçu
       if (firstPaymentDate <= today && !alreadyReceived) {
         const amount = contract.amount / (client.paymentStructure === '1' ? 1 : 2);
         
@@ -297,7 +296,7 @@ const checkAndMarkPaymentsReceived = () => {
           paymentNumber: 1,
           amount: parseFloat(amount),
           date: client.firstPaymentDate,
-          paymentMethod: client.firstPaymentMethod,
+          paymentMethod: 'cheque',
           received: true,
           recordedAt: new Date().toISOString(),
           autoMarked: true
@@ -310,17 +309,17 @@ const checkAndMarkPaymentsReceived = () => {
           amount: parseFloat(amount),
           date: client.firstPaymentDate,
           type: 'revenu',
-          description: `1er versement - ${client.name} (${client.firstPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant'})`
+          description: `1er versement - ${client.name} (Chèque - Auto-marqué)`
         };
         newInvoices.push(invoice);
         
         updatedPayments = true;
-        console.log(`✅ Paiement auto-marqué: ${client.name} - 1er versement`);
+        console.log(`✅ Paiement auto-marqué: ${client.name} - 1er versement (${amount}$)`);
       }
     }
 
     // Vérifier le 2e paiement
-    if (client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentMethod) {
+    if (client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentMethod === 'cheque') {
       const secondPaymentDate = new Date(client.secondPaymentDate);
       secondPaymentDate.setHours(0, 0, 0, 0);
       
@@ -339,7 +338,7 @@ const checkAndMarkPaymentsReceived = () => {
           paymentNumber: 2,
           amount: parseFloat(amount),
           date: client.secondPaymentDate,
-          paymentMethod: client.secondPaymentMethod,
+          paymentMethod: 'cheque',
           received: true,
           recordedAt: new Date().toISOString(),
           autoMarked: true
@@ -352,12 +351,12 @@ const checkAndMarkPaymentsReceived = () => {
           amount: parseFloat(amount),
           date: client.secondPaymentDate,
           type: 'revenu',
-          description: `2e versement - ${client.name} (${client.secondPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant'})`
+          description: `2e versement - ${client.name} (Chèque - Auto-marqué)`
         };
         newInvoices.push(invoice);
         
         updatedPayments = true;
-        console.log(`✅ Paiement auto-marqué: ${client.name} - 2e versement`);
+        console.log(`✅ Paiement auto-marqué: ${client.name} - 2e versement (${amount}$)`);
       }
     }
   });
@@ -367,6 +366,7 @@ const checkAndMarkPaymentsReceived = () => {
     setInvoices(newInvoices);
     saveToStorage('payments', newPayments);
     saveToStorage('invoices', newInvoices);
+    console.log('💾 Paiements sauvegardés');
     return true;
   }
   return false;
