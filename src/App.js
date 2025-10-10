@@ -697,6 +697,38 @@ const addClient = () => {
     firstPaymentMethod: '', secondPaymentMethod: ''
   });
 };
+ const startEditClient = (client) => {
+    setEditingClient(client.id);
+    setEditClientForm({
+      ...client,
+      paymentStructure: client.paymentStructure || '2',
+      firstPaymentMethod: client.firstPaymentMethod || '',
+      secondPaymentMethod: client.secondPaymentMethod || ''
+    });
+  };
+
+  const saveEditClient = () => {
+    const updatedClients = clients.map(client =>
+      client.id === editingClient ? { ...client, ...editClientForm } : client
+    );
+    setClients(updatedClients);
+    saveToStorage('clients', updatedClients);
+    setEditingClient(null);
+    setEditClientForm({
+      name: '', phone: '', email: '', type: '', address: '',
+      paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
+      firstPaymentMethod: '', secondPaymentMethod: ''
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingClient(null);
+    setEditClientForm({
+      name: '', phone: '', email: '', type: '', address: '',
+      paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
+      firstPaymentMethod: '', secondPaymentMethod: ''
+    });
+  }; 
 
   // FONCTIONS CONTRATS
   const addContract = () => {
@@ -2408,37 +2440,45 @@ Merci de votre patience!
                               </span>
                             </td>
 
-                            <td style={{ padding: '15px' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <div style={{
-                                  padding: '4px 8px', borderRadius: '8px',
-                                  background: firstPaymentReceived ? '#d4edda' : '#f8d7da',
-                                  fontSize: '11px', textAlign: 'center', position: 'relative'
-                                }}>
-                                  <div>1er: {firstPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
-                                  {firstPayment && (
-                                    <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
-                                      {firstPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
-                                    </div>
-                                  )}
-                                </div>
-                                
-                                {client.paymentStructure === '2' && (
-                                  <div style={{
-                                    padding: '4px 8px', borderRadius: '8px',
-                                    background: secondPaymentReceived ? '#d4edda' : '#f8d7da',
-                                    fontSize: '11px', textAlign: 'center'
-                                  }}>
-                                    <div>2e: {secondPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
-                                    {secondPayment && (
-                                      <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
-                                        {secondPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
+                         <td style={{ padding: '15px' }}>
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+    <div style={{
+      padding: '4px 8px', borderRadius: '8px',
+      background: firstPaymentReceived ? '#d4edda' : '#f8d7da',
+      fontSize: '11px', textAlign: 'center'
+    }}>
+      <div>1er: {firstPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+      <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+        {client.firstPaymentMethod === 'cheque' ? '📄 Chèque' : 
+         client.firstPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
+      </div>
+      {client.firstPaymentDate && (
+        <div style={{ fontSize: '8px', color: '#666' }}>
+          Date: {new Date(client.firstPaymentDate).toLocaleDateString('fr-CA')}
+        </div>
+      )}
+    </div>
+    
+    {client.paymentStructure === '2' && (
+      <div style={{
+        padding: '4px 8px', borderRadius: '8px',
+        background: secondPaymentReceived ? '#d4edda' : '#f8d7da',
+        fontSize: '11px', textAlign: 'center'
+      }}>
+        <div>2e: {secondPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+        <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+          {client.secondPaymentMethod === 'cheque' ? '📄 Chèque' : 
+           client.secondPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
+        </div>
+        {client.secondPaymentDate && (
+          <div style={{ fontSize: '8px', color: '#666' }}>
+            Date: {new Date(client.secondPaymentDate).toLocaleDateString('fr-CA')}
+          </div>
+        )}
+      </div>
+    )}
+  </div>
+</td>
 
                             <td style={{ padding: '15px' }}>
                               <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
