@@ -1117,6 +1117,7 @@ const printMultipleContracts = () => {
 </div>
 
 <p style="margin: 5px 0;">Maxim Pominville</p>
+;
           
             // Fonction Facture
   const addInvoice = () => {
