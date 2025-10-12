@@ -468,7 +468,8 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     }
 
  const result = await response.json();
-    
+    console.log('RÉPONSE BRUTE:', result);
+alert('RÉPONSE SERVEUR:\n\n' + JSON.stringify(result, null, 2));
     // 🔍 AJOUTEZ CES LOGS ICI - C'EST LA PARTIE IMPORTANTE
     console.log('=== RÉPONSE COMPLÈTE DU SERVEUR ===');
     console.log('result.success:', result.success);
