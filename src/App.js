@@ -996,7 +996,6 @@ const printMultipleContracts = () => {
 
   if (!confirmPrint) return;
 
-  // Générer tous les contrats HTML
   let allContractsHTML = '';
 
   selectedContracts.forEach((contractId, index) => {
@@ -1089,7 +1088,7 @@ const printMultipleContracts = () => {
               <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${secondPayment.toFixed(2)} $</p>
               ${client.secondPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.secondPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
             </div>
-          `}
+          
         </div>
         
         <hr style="border: 1px solid #000; margin: 25px 0;">
@@ -1117,8 +1116,31 @@ const printMultipleContracts = () => {
 </div>
 
 <p style="margin: 5px 0;">Maxim Pominville</p>
+</div>
 ;
-          
+    allContractsHTML += contractHTML;
+  });
+
+  // Ouvrir fenêtre d'impression
+  const newWindow = window.open('', '_blank');
+  newWindow.document.write(`
+    <html>
+      <head>
+        <title>Contrats JM Pominville</title>
+        <style>
+          body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+          @media print { 
+            .header-bar { display: none !important; }
+          }
+        </style>
+      </head>
+      <body>${allContractsHTML}</body>
+    </html>
+  `);
+  newWindow.document.close();
+  newWindow.print();
+};
+  
             // Fonction Facture
   const addInvoice = () => {
     if (!invoiceForm.type || !invoiceForm.amount || !invoiceForm.date) {
