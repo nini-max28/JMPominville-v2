@@ -1116,7 +1116,8 @@ const printMultipleContracts = () => {
 </div>
 
 <p style="margin: 5px 0;">Maxim Pominville</p>
-</div>
+  <p style="margin: 5px 0; font-size: 11px;">JM Pominville</p>
+  <p style="margin: 15px 0;"><strong>Date :</strong> ${today}</p></div>
 ;
     allContractsHTML += contractHTML;
   });
