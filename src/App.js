@@ -1141,7 +1141,7 @@ const printMultipleContracts = () => {
   newWindow.document.close();
   newWindow.print();
 };
-  
+    
             // Fonction Facture
   const addInvoice = () => {
     if (!invoiceForm.type || !invoiceForm.amount || !invoiceForm.date) {
@@ -1222,8 +1222,8 @@ const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMetho
       amount: parseFloat(amount),
       date: date,
       type: 'revenu',
-      description: `Paiement ${paymentNumber}${paymentNumber === 1 ? "er" : "e"} versement - ${client.name} (${paymentMethod === 'cheque' ? "Chèque" : "Comptant"})`}
-    }};
+      description: `Paiement ${paymentNumber}${paymentNumber === 1 ? "er" : "e"} versement - ${client.name} (${paymentMethod === 'cheque' ? "Chèque" : "Comptant"})`
+    };
 
     const newInvoices = [...invoices, invoice];
     setInvoices(newInvoices);
