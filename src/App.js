@@ -1137,7 +1137,7 @@ const printMultipleContracts = () => {
       </head>
       <body>${allContractsHTML}</body>
     </html>
-  ;
+  `);
   newWindow.document.close();
   newWindow.print();
 };
