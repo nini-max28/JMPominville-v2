@@ -1168,41 +1168,41 @@ const printMultipleContracts = () => {
     setPaymentModal({ isOpen: false, clientId: null, paymentNumber: null, amount: 0 });
   };
 
-  const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMethod) => {
-    const payment = {
-      id: Date.now(),
-      clientId: parseInt(clientId),
-      paymentNumber: paymentNumber,
-      amount: parseFloat(amount),
-      date: date,
-      paymentMethod: paymentMethod,
-      received: true,
-      recordedAt: new Date().toISOString()
-    };
-
-    const newPayments = [...payments, payment];
-    setPayments(newPayments);
-    saveToStorage('payments', newPayments);
-
-    const client = clients.find(c => c.id === parseInt(clientId));
-    if (client) {
-      const invoice = {
-        id: Date.now() + 1,
-        clientId: parseInt(clientId),
-        amount: parseFloat(amount),
-        date: date,
-        type: 'revenu',
-        description: `Paiement ${paymentNumber}${paymentNumber === 1 ? 'er' : 'e'} versement - ${client.name} (${paymentMethod === 'cheque' ? 'Chèque' : 'Comptant'})`
-      };
-
-      const newInvoices = [...invoices, invoice];
-      setInvoices(newInvoices);
-      saveToStorage('invoices', newInvoices);
-    }
-
-    alert(`Paiement ${paymentNumber}${paymentNumber === 1 ? 'er' : 'e'} versement marqué comme reçu (${paymentMethod === 'cheque' ? 'Chèque' : 'Comptant'}) !`);
+const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMethod) => {
+  const payment = {
+    id: Date.now(),
+    clientId: parseInt(clientId),
+    paymentNumber: paymentNumber,
+    amount: parseFloat(amount),
+    date: date,
+    paymentMethod: paymentMethod,
+    received: true,
+    recordedAt: new Date().toISOString()
   };
 
+  const newPayments = [...payments, payment];
+  setPayments(newPayments);
+  saveToStorage('payments', newPayments);
+
+  const client = clients.find(c => c.id === parseInt(clientId));
+  if (client) {
+    const invoice = {
+      id: Date.now() + 1,
+      clientId: parseInt(clientId),
+      amount: parseFloat(amount),
+      date: date,
+      type: 'revenu',
+      description: `Paiement ${paymentNumber}${paymentNumber === 1 ? "er" : "e"} versement - ${client.name} (${paymentMethod === 'cheque' ? "Chèque" : "Comptant"})`
+    };
+
+    const newInvoices = [...invoices, invoice];
+    setInvoices(newInvoices);
+    saveToStorage('invoices', newInvoices);
+  }
+
+  alert(`Paiement ${paymentNumber}${paymentNumber === 1 ? "er" : "e"} versement marqué comme reçu (${paymentMethod === 'cheque' ? "Chèque" : "Comptant"}) !`);
+};
+ 
   const deletePayment = (id) => {
     if (window.confirm('Supprimer ce paiement ?')) {
       const newPayments = payments.filter(payment => payment.id !== id);
