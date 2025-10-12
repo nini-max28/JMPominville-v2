@@ -399,8 +399,14 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
   console.log('Backend URL:', API_BASE_URL);
   console.log('URL complète:', `${API_BASE_URL}/api/notifications/send`);
 
-  const formatPhoneForTwilio = (phone) => {
-    if (!phone) return null;
+ const formattedPhone = formatPhoneForTwilio(client.phone);
+  const clientEmail = client.email?.trim() || null;
+
+  if (!formattedPhone && !clientEmail) {
+    alert(`❌ Aucun contact valide pour ${client.name}\nTéléphone: ${client.phone}\nEmail: ${client.email}`);
+    return;
+  }
+
     const cleaned = phone.replace(/\D/g,'');
     
     // Si le numéro commence par 1 et a 11 chiffres, on le garde
