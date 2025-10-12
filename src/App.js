@@ -1167,7 +1167,6 @@ const printMultipleContracts = () => {
   const closePaymentModal = () => {
     setPaymentModal({ isOpen: false, clientId: null, paymentNumber: null, amount: 0 });
   };
-
 const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMethod) => {
   const payment = {
     id: Date.now(),
@@ -1201,8 +1200,7 @@ const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMetho
   }
 
   alert(`Paiement ${paymentNumber}${paymentNumber === 1 ? "er" : "e"} versement marqué comme reçu (${paymentMethod === 'cheque' ? "Chèque" : "Comptant"}) !`);
-};
- 
+}; 
   const deletePayment = (id) => {
     if (window.confirm('Supprimer ce paiement ?')) {
       const newPayments = payments.filter(payment => payment.id !== id);
