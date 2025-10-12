@@ -1195,7 +1195,7 @@ const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMetho
       date: date,
       type: 'revenu',
       description: `Paiement ${paymentNumber}${paymentNumber === 1 ? "er" : "e"} versement - ${client.name} (${paymentMethod === 'cheque' ? "Chèque" : "Comptant"})`}
-    };
+    }};
 
     const newInvoices = [...invoices, invoice];
     setInvoices(newInvoices);
