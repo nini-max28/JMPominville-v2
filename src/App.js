@@ -467,8 +467,15 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
       throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`);
     }
 
-    const result = await response.json();
-    console.log('Réponse JSON:', result);
+ const result = await response.json();
+    
+    // 🔍 AJOUTEZ CES LOGS ICI - C'EST LA PARTIE IMPORTANTE
+    console.log('=== RÉPONSE COMPLÈTE DU SERVEUR ===');
+    console.log('result.success:', result.success);
+    console.log('result.error:', result.error);
+    console.log('result.results:', result.results);
+    console.log('Objet JSON complet:', JSON.stringify(result, null, 2));
+    console.log('=== FIN RÉPONSE SERVEUR ===');
     
     if (result.success) {
       let statusMessage = `Notification envoyée à ${client.name}\n\n`;
@@ -489,11 +496,15 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
       
       alert(statusMessage);
     } else {
+      // 🔍 ICI AUSSI - AFFICHER L'ERREUR DÉTAILLÉE
+      console.error('❌ Le serveur a retourné success: false');
+      console.error('Message d\'erreur:', result.error);
       throw new Error(result.error || 'Erreur inconnue du serveur');
     }
   } catch (error) {
     console.error('=== ERREUR NOTIFICATION ===');
     console.error('Message:', error.message);
+    console.error('Stack:', error.stack);
     
     let errorMessage = 'Erreur lors de l\'envoi de la notification';
     
@@ -506,7 +517,6 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     alert(errorMessage);
   }
 };
-
 const sendNotification = async (clientId, type, customMessage = '') => {
   console.log('🔍 État backend:', backendConnected);  // ← AJOUTEZ CECI
   console.log('🔍 API_BASE_URL:', API_BASE_URL); 
