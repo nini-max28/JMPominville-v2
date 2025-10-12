@@ -404,53 +404,64 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     return;
   }
 
-  // Vérification backend
-  if (!backendConnected) {
-    alert('❌ Backend non connecté !');
-    return;
-  }
-
   console.log('=== ENVOI NOTIFICATION ===');
-  console.log('Client:', client.name);
   console.log('Backend URL:', API_BASE_URL);
+  console.log('Backend connecté:', backendConnected);
 
+  // Formatage des données
   const formattedPhone = formatPhoneForTwilio(client.phone);
   const clientEmail = client.email?.trim() || null;
 
   if (!formattedPhone && !clientEmail) {
-    alert(`❌ Aucun contact valide pour ${client.name}\nTéléphone: ${client.phone}\nEmail: ${client.email}`);
+    alert(`❌ Aucun contact valide pour ${client.name}`);
     return;
   }
 
-  const notificationData = {
-    clientId: client.id,
-    clientName: client.name,
-    clientPhone: formattedPhone,
-    clientEmail: clientEmail,
-    type: type,
-    customMessage: customMessage
-  };
-  
-  console.log('📦 Données envoyées:', JSON.stringify(notificationData, null, 2));
-
   try {
+    const notificationData = {
+      clientId: client.id,
+      clientName: client.name,
+      clientPhone: formattedPhone,
+      clientEmail: clientEmail,
+      type: type,
+      customMessage: customMessage
+    };
+
+    console.log('📦 Envoi:', notificationData);
+
     const response = await fetch(`${API_BASE_URL}/api/notifications/send`, {
       method: 'POST',
-      headers: { 
+      headers: {
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
       body: JSON.stringify(notificationData)
     });
 
-    console.log('Statut réponse:', response.status);
+    console.log('Statut:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Erreur serveur:', errorText);
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
+    const result = await response.json();
+    console.log('✅ Résultat:', result);
+
+    // Affichage détaillé
+    let message = `Notification envoyée à ${client.name}\n\n`;
+    if (result.sms?.success) message += '✅ SMS envoyé\n';
+    if (result.sms?.error) message += `❌ SMS: ${result.sms.error}\n`;
+    if (result.email?.success) message += '✅ Email envoyé\n';
+    if (result.email?.error) message += `❌ Email: ${result.email.error}\n`;
+
+    alert(message);
+
+  } catch (error) {
+    console.error('❌ ERREUR:', error);
+    alert(`Erreur: ${error.message}`);
+  }
+};
     const result = await response.json();
     console.log('✅ Résultat:', result);
     
