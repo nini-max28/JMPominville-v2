@@ -379,6 +379,23 @@ const checkAndMarkPaymentsReceived = () => {
   }
   return false;
 };
+  // METTRE CETTE FONCTION ICI, AVANT sendNotificationViaBackend
+const formatPhoneForTwilio = (phone) => {
+  if (!phone) return null;
+  const cleaned = phone.replace(/\D/g,'');
+  
+  // Si le numéro commence par 1 et a 11 chiffres, on le garde
+  if (cleaned.length === 11 && cleaned.startsWith('1')) {
+    return '+' + cleaned;
+  }
+  // Si le numéro a 10 chiffres, on ajoute +1
+  if (cleaned.length === 10) {
+    return '+1' + cleaned;
+  }
+  
+  console.warn(`Numéro invalide pour ${phone} (nettoyé: ${cleaned})`);
+  return null;
+};
   // ENVOI NOTIFICATIONS VIA BACKEND
 const sendNotificationViaBackend = async (clientId, type, customMessage = '') => {
   const client = clients.find(c => c.id === clientId);
