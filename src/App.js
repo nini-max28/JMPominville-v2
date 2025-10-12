@@ -386,6 +386,12 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     alert('Client non trouvé');
     return;
   }
+  console.log('=== DÉBUT ENVOI NOTIFICATION ===');
+  console.log('Client:', client.name);
+  console.log('Type:', type);
+  console.log('Backend URL:', API_BASE_URL);
+  console.log('URL complète:', `${API_BASE_URL}/api/notifications/send`);
+
 
   const validateCanadianPhone = (phone) => {
     if (!phone) return false;
@@ -416,7 +422,7 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     type: type,
     customMessage: customMessage
   };
-
+  console.log('📦 Données envoyées:', notificationData);
   if (!notificationData.clientPhone && !notificationData.clientEmail) {
     alert(`Impossible d'envoyer une notification à ${client.name} : aucun téléphone ou email valide.`);
     return;
@@ -438,6 +444,7 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
       },
       body: JSON.stringify(notificationData)
     });
+    
 
     console.log('Réponse serveur status:', response.status);
 
@@ -490,6 +497,8 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
 };
 
 const sendNotification = async (clientId, type, customMessage = '') => {
+  console.log('🔍 État backend:', backendConnected);  // ← AJOUTEZ CECI
+  console.log('🔍 API_BASE_URL:', API_BASE_URL); 
   const client = clients.find(c => c.id === clientId);
   if (!client) {
     alert('Client non trouvé');
