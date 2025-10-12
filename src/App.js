@@ -387,46 +387,21 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     return;
   }
 
-  // ✅ VÉRIFICATION CONNEXION BACKEND AVANT TOUT
+  // Vérification backend
   if (!backendConnected) {
-    alert('❌ Backend non connecté !\n\nLe serveur backend n\'est pas accessible. Vérifiez que :\n1. Le serveur est démarré\n2. L\'URL est correcte\n3. Votre connexion internet fonctionne');
+    alert('❌ Backend non connecté !');
     return;
   }
 
-  console.log('=== DÉBUT ENVOI NOTIFICATION ===');
+  console.log('=== ENVOI NOTIFICATION ===');
   console.log('Client:', client.name);
-  console.log('Type:', type);
   console.log('Backend URL:', API_BASE_URL);
-  console.log('URL complète:', `${API_BASE_URL}/api/notifications/send`);
-
- const formattedPhone = formatPhoneForTwilio(client.phone);
-  const clientEmail = client.email?.trim() || null;
-
-  if (!formattedPhone && !clientEmail) {
-    alert(`❌ Aucun contact valide pour ${client.name}\nTéléphone: ${client.phone}\nEmail: ${client.email}`);
-    return;
-  }
-
-    const cleaned = phone.replace(/\D/g,'');
-    
-    // Si le numéro commence par 1 et a 11 chiffres, on le garde
-    if (cleaned.length === 11 && cleaned.startsWith('1')) {
-      return '+' + cleaned;
-    }
-    // Si le numéro a 10 chiffres, on ajoute +1
-    if (cleaned.length === 10) {
-      return '+1' + cleaned;
-    }
-    
-    console.warn(`Numéro invalide pour ${client.name}: ${phone} (nettoyé: ${cleaned})`);
-    return null;
-  };
 
   const formattedPhone = formatPhoneForTwilio(client.phone);
   const clientEmail = client.email?.trim() || null;
 
   if (!formattedPhone && !clientEmail) {
-    alert(`❌ Impossible d'envoyer une notification à ${client.name}\n\nAucun contact valide trouvé :\n- Téléphone: ${client.phone || 'non défini'}\n- Email: ${client.email || 'non défini'}\n\nVeuillez mettre à jour les coordonnées du client.`);
+    alert(`❌ Aucun contact valide pour ${client.name}\nTéléphone: ${client.phone}\nEmail: ${client.email}`);
     return;
   }
 
@@ -439,18 +414,7 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     customMessage: customMessage
   };
   
-  console.log('📦 Données à envoyer:', JSON.stringify(notificationData, null, 2));
-  if (!notificationData.clientPhone && !notificationData.clientEmail) {
-    alert(`Impossible d'envoyer une notification à ${client.name} : aucun téléphone ou email valide.`);
-    return;
-  }
-
-  console.log('=== ENVOI NOTIFICATION ===');
-  console.log('Client:', client.name);
-  console.log('Téléphone formaté:', notificationData.clientPhone);
-  console.log('Email:', notificationData.clientEmail);
-  console.log('Type notification:', type);
-  console.log('URL backend:', `${API_BASE_URL}/api/notifications/send`);
+  console.log('📦 Données envoyées:', JSON.stringify(notificationData, null, 2));
 
   try {
     const response = await fetch(`${API_BASE_URL}/api/notifications/send`, {
@@ -461,70 +425,29 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
       },
       body: JSON.stringify(notificationData)
     });
-    
 
-    console.log('Réponse serveur status:', response.status);
+    console.log('Statut réponse:', response.status);
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('=== ERREUR SERVEUR ===');
-      console.error('Status:', response.status);
-      console.error('Corps de l\'erreur:', errorText);
-      throw new Error(`Erreur HTTP ${response.status}: ${response.statusText}`);
+      console.error('Erreur serveur:', errorText);
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
 
- const result = await response.json();
-    console.log('RÉPONSE BRUTE:', result);
-alert('RÉPONSE SERVEUR:\n\n' + JSON.stringify(result, null, 2));
-    // 🔍 AJOUTEZ CES LOGS ICI - C'EST LA PARTIE IMPORTANTE
-    console.log('=== RÉPONSE COMPLÈTE DU SERVEUR ===');
-    console.log('result.success:', result.success);
-    console.log('result.error:', result.error);
-    console.log('result.results:', result.results);
-    console.log('Objet JSON complet:', JSON.stringify(result, null, 2));
-    console.log('=== FIN RÉPONSE SERVEUR ===');
+    const result = await response.json();
+    console.log('✅ Résultat:', result);
     
     if (result.success) {
-      let statusMessage = `Notification envoyée à ${client.name}\n\n`;
-      
-      if (result.results?.sms) {
-        const smsStatus = result.results.sms.success 
-          ? '📱 SMS envoyé avec succès'
-          : `📱 Échec SMS: ${result.results.sms.error}`;
-        statusMessage += smsStatus + '\n';
-      }
-      
-      if (result.results?.email) {
-        const emailStatus = result.results.email.success 
-          ? '📧 Email envoyé avec succès'
-          : `📧 Échec Email: ${result.results.email.error}`;
-        statusMessage += emailStatus + '\n';
-      }
-      
-      alert(statusMessage);
+      alert(`✅ Notification envoyée à ${client.name}`);
     } else {
-      // 🔍 ICI AUSSI - AFFICHER L'ERREUR DÉTAILLÉE
-      console.error('❌ Le serveur a retourné success: false');
-      console.error('Message d\'erreur:', result.error);
-      throw new Error(result.error || 'Erreur inconnue du serveur');
+      throw new Error(result.error || 'Erreur inconnue');
     }
   } catch (error) {
-    console.error('=== ERREUR NOTIFICATION ===');
-    console.error('Message:', error.message);
-    console.error('Stack:', error.stack);
-    
-    let errorMessage = 'Erreur lors de l\'envoi de la notification';
-    
-    if (error.message.includes('Failed to fetch')) {
-      errorMessage = `❌ Impossible de se connecter au serveur backend\n\nVérifiez que le serveur est démarré et accessible à ${API_BASE_URL}`;
-      setBackendConnected(false);
-    } else {
-      errorMessage = `❌ Erreur: ${error.message}`;
-    }
-    alert(errorMessage);
+    console.error('❌ ERREUR:', error);
+    alert(`❌ Erreur: ${error.message}`);
   }
 };
-const sendNotification = async (clientId, type, customMessage = '') => {
+  const sendNotification = async (clientId, type, customMessage = '') => {
   console.log('🔍 État backend:', backendConnected);  // ← AJOUTEZ CECI
   console.log('🔍 API_BASE_URL:', API_BASE_URL); 
   const client = clients.find(c => c.id === clientId);
