@@ -397,7 +397,6 @@ const formatPhoneForTwilio = (phone) => {
   return null;
 };
   // ENVOI NOTIFICATIONS VIA BACKEND
-
 const sendNotificationViaBackend = async (clientId, type, customMessage = '') => {
   const client = clients.find(c => c.id === clientId);
   if (!client) {
@@ -451,24 +450,8 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
       console.error('Erreur serveur:', errorText);
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-
-    const result = await response.json();
-    console.log('✅ Résultat:', result);
-    
-    // Message détaillé
-    let message = `Notification pour ${client.name}\n\n`;
-    if (result.sms?.success) message += '✅ SMS envoyé\n';
-    if (result.sms?.error) message += `❌ SMS: ${result.sms.error}\n`;
-    if (result.email?.success) message += '✅ Email envoyé\n';
-    if (result.email?.error) message += `❌ Email: ${result.email.error}\n`;
-    
-    alert(message);
-    
-  } catch (error) {
-    console.error('❌ ERREUR:', error);
-    alert(`❌ Erreur: ${error.message}`);
-  }
-};    const result = await response.json();
+ 
+  const result = await response.json();
     console.log('✅ Résultat:', result);
     
     if (result.success) {
