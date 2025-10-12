@@ -386,23 +386,23 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     alert('Client non trouvé');
     return;
   }
+
+  // ✅ VÉRIFICATION CONNEXION BACKEND AVANT TOUT
+  if (!backendConnected) {
+    alert('❌ Backend non connecté !\n\nLe serveur backend n\'est pas accessible. Vérifiez que :\n1. Le serveur est démarré\n2. L\'URL est correcte\n3. Votre connexion internet fonctionne');
+    return;
+  }
+
   console.log('=== DÉBUT ENVOI NOTIFICATION ===');
   console.log('Client:', client.name);
   console.log('Type:', type);
   console.log('Backend URL:', API_BASE_URL);
   console.log('URL complète:', `${API_BASE_URL}/api/notifications/send`);
 
-
-  const validateCanadianPhone = (phone) => {
-    if (!phone) return false;
-    const cleaned = phone.replace(/\D/g,'');
-    return cleaned.length === 10 || (cleaned.length === 11 && cleaned.startsWith('1'));
-  };
-
-  // ✅ CORRECTION : Ajouter le formatage du numéro et l'email
   const formatPhoneForTwilio = (phone) => {
     if (!phone) return null;
     const cleaned = phone.replace(/\D/g,'');
+    
     // Si le numéro commence par 1 et a 11 chiffres, on le garde
     if (cleaned.length === 11 && cleaned.startsWith('1')) {
       return '+' + cleaned;
@@ -411,18 +411,29 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     if (cleaned.length === 10) {
       return '+1' + cleaned;
     }
+    
+    console.warn(`Numéro invalide pour ${client.name}: ${phone} (nettoyé: ${cleaned})`);
     return null;
   };
+
+  const formattedPhone = formatPhoneForTwilio(client.phone);
+  const clientEmail = client.email?.trim() || null;
+
+  if (!formattedPhone && !clientEmail) {
+    alert(`❌ Impossible d'envoyer une notification à ${client.name}\n\nAucun contact valide trouvé :\n- Téléphone: ${client.phone || 'non défini'}\n- Email: ${client.email || 'non défini'}\n\nVeuillez mettre à jour les coordonnées du client.`);
+    return;
+  }
 
   const notificationData = {
     clientId: client.id,
     clientName: client.name,
-    clientPhone: formatPhoneForTwilio(client.phone), // ✅ Format Twilio
-    clientEmail: client.email || null, // ✅ AJOUT de l'email
+    clientPhone: formattedPhone,
+    clientEmail: clientEmail,
     type: type,
     customMessage: customMessage
   };
-  console.log('📦 Données envoyées:', notificationData);
+  
+  console.log('📦 Données à envoyer:', JSON.stringify(notificationData, null, 2));
   if (!notificationData.clientPhone && !notificationData.clientEmail) {
     alert(`Impossible d'envoyer une notification à ${client.name} : aucun téléphone ou email valide.`);
     return;
