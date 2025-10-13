@@ -653,12 +653,10 @@ const addClient = () => {
     alert('Veuillez spécifier la date de paiement.');
     return;
   }
-
-  if (clientForm.paymentStructure === '2' && (!clientForm.firstPaymentDate || !clientForm.secondPaymentDate)) {
-    alert('Veuillez spécifier les dates des deux versements.');
-    return;
-  }
-
+if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
+  alert('Veuillez spécifier la date du 1er versement.');
+  return;
+}
   if (!clientForm.firstPaymentMethod) {
     alert('Veuillez sélectionner la méthode du 1er paiement.');
     return;
