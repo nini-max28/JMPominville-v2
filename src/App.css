@@ -533,4 +533,32 @@ textarea:focus {
   @page {
     margin: 1cm;
   }
+  .payment-warning {
+  background-color: #fff3cd;
+  border-left: 4px solid #ffc107;
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 4px;
+  font-size: 13px;
+  color: #856404;
+}
+
+.payment-status {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.payment-complete {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.payment-incomplete {
+  background-color: #f8d7da;
+  color: #721c24;
+}
 }
