@@ -2790,7 +2790,31 @@ Merci de votre patience!
     ✅ Créer Client + Contrat
   </button>
 </div>
-            {/* Liste des clients avec méthodes de paiement */}
+{/* ALERTES DE PAIEMENT - Clients sans 2e versement */}
+{(() => {
+  const clientsWithMissingPayment = getAdvancedFilteredClients().filter(client => {
+    if (client.paymentStructure === '1') return false; // Paiement unique, pas de 2e versement
+    return !client.secondPaymentDate || client.secondPaymentDate === '';
+  });
+
+  if (clientsWithMissingPayment.length > 0) {
+    return (
+      <div className="payment-warning">
+        <strong>⚠️ {clientsWithMissingPayment.length} client(s) n'ont pas encore payé leur 2e versement :</strong>
+        <ul>
+          {clientsWithMissingPayment.map(client => (
+            <li key={client.id}>
+              <strong>{client.name}</strong> - {client.address}
+              {client.firstPaymentDate && ` (1er versement: ${client.firstPaymentDate})`}
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
+  return null;
+})()}           
+  {/* Liste des clients avec méthodes de paiement */}
             {getAdvancedFilteredClients().length > 0 ? (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{
@@ -3218,7 +3242,11 @@ Merci de votre patience!
                             style={{ padding: '10px 15px', cursor: 'pointer', borderBottom: '1px solid #eee' }}
                           >
                             <strong>{client.name}</strong><br />
-                            <small style={{ color: '#666' }}>{client.address}</small>
+                            {client.paymentStructure === '2' && (
+  <span className={!client.secondPaymentDate || client.secondPaymentDate === '' ? 'payment-status payment-incomplete' : 'payment-status payment-complete'}>
+    {!client.secondPaymentDate || client.secondPaymentDate === '' ? '⚠️ 2e versement manquant' : '✓ Payé'}
+  </span>
+)}                            <small style={{ color: '#666' }}>{client.address}</small>
                           </div>
                         ))}
                       </div>
