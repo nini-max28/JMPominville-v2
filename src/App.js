@@ -276,10 +276,11 @@ const checkAndMarkPaymentsReceived = () => {
   let updatedPayments = false;
   const newPayments = [...payments];
   const newInvoices = [...invoices];
+  const newClients = [...clients]; // ✅ AJOUT: Copie des clients pour mise à jour
 
   console.log('🔍 Vérification auto-paiements pour', clients.length, 'clients');
 
-  clients.forEach(client => {
+  newClients.forEach((client, index) => { // ✅ MODIFICATION: Utiliser newClients
     const contract = contracts.find(c => c.clientId === client.id && !c.archived);
     if (!contract) return;
 
@@ -321,13 +322,19 @@ const checkAndMarkPaymentsReceived = () => {
         };
         newInvoices.push(invoice);
         
+        // ✅ AJOUT: Mettre à jour le statut du client
+        newClients[index] = {
+          ...client,
+          firstPaymentReceived: true
+        };
+        
         updatedPayments = true;
         console.log(`✅ AUTO: ${client.name} - 1er paiement ${amount}$ marqué reçu`);
       }
     }
 
     // ✅ VÉRIFIER 2E PAIEMENT (seulement si chèque)
-    if (client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentMethod === 'cheque') {
+    if (client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentDate !== 'À venir' && client.secondPaymentMethod === 'cheque') {
       const secondPaymentDate = new Date(client.secondPaymentDate);
       secondPaymentDate.setHours(0, 0, 0, 0);
       
@@ -363,6 +370,12 @@ const checkAndMarkPaymentsReceived = () => {
         };
         newInvoices.push(invoice);
         
+        // ✅ AJOUT: Mettre à jour le statut du client
+        newClients[index] = {
+          ...newClients[index],
+          secondPaymentReceived: true
+        };
+        
         updatedPayments = true;
         console.log(`✅ AUTO: ${client.name} - 2e paiement ${amount}$ marqué reçu`);
       }
@@ -372,8 +385,10 @@ const checkAndMarkPaymentsReceived = () => {
   if (updatedPayments) {
     setPayments(newPayments);
     setInvoices(newInvoices);
+    setClients(newClients); // ✅ AJOUT: Mettre à jour les clients
     saveToStorage('payments', newPayments);
     saveToStorage('invoices', newInvoices);
+    saveToStorage('clients', newClients); // ✅ AJOUT: Sauvegarder les clients
     alert('✅ Des paiements par chèque ont été automatiquement marqués comme reçus!');
     return true;
   }
