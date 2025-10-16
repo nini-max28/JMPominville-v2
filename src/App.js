@@ -683,8 +683,7 @@ if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
     firstPaymentMethod: clientForm.firstPaymentMethod,
     secondPaymentMethod: clientForm.paymentStructure === '1' ? '' : clientForm.secondPaymentMethod,
     firstPaymentReceived: clientForm.firstPaymentDate ? true : false,
-    secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.secondPaymentDate  !== 'À venir') ? true : false
-  };
+secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.secondPaymentDate && clientForm.secondPaymentDate !== '' && clientForm.secondPaymentDate !== 'À venir') ? true : false  };
 
   // ✅ CRÉER LE CONTRAT AUTOMATIQUEMENT
   const contract = {
@@ -740,11 +739,18 @@ if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
     });
   };
 
-  const saveEditClient = () => {
-    const updatedClients = clients.map(client =>
-      client.id === editingClient ? { ...client, ...editClientForm } : client
-    );
-    setClients(updatedClients);
+const saveEditClient = () => {
+    const updatedClients = clients.map(client => {
+      if (client.id === editingClient) {
+        return {
+          ...client,
+          ...editClientForm,
+          firstPaymentReceived: editClientForm.firstPaymentDate ? true : false,
+          secondPaymentReceived: (editClientForm.paymentStructure === '2' && editClientForm.secondPaymentDate && editClientForm.secondPaymentDate !== '' && editClientForm.secondPaymentDate !== 'À venir') ? true : false
+        };
+      }
+      return client;
+    });    setClients(updatedClients);
     saveToStorage('clients', updatedClients);
     setEditingClient(null);
     setEditClientForm({
