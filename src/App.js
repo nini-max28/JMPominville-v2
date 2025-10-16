@@ -683,7 +683,7 @@ if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
     firstPaymentMethod: clientForm.firstPaymentMethod,
     secondPaymentMethod: clientForm.paymentStructure === '1' ? '' : clientForm.secondPaymentMethod,
     firstPaymentReceived: clientForm.firstPaymentDate ? true : false,
-    secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.secondPaymentDate) ? true : false
+    secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.secondPaymentDate  !== 'À venir') ? true : false
   };
 
   // ✅ CRÉER LE CONTRAT AUTOMATIQUEMENT
