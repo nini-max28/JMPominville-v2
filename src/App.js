@@ -2906,8 +2906,7 @@ Merci de votre patience!
       background: firstPaymentReceived ? '#d4edda' : '#f8d7da',
       fontSize: '11px', textAlign: 'center'
     }}>
-      <div>1er: {client.firstPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
-      <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+      <div>1er: {(client.firstPaymentReceived !== undefined ? client.firstPaymentReceived : (client.firstPaymentDate ? true : false)) ? '✅ Reçu' : '❌ En attente'}</div>      <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
         {client.firstPaymentMethod === 'cheque' ? '📄 Chèque' : 
          client.firstPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
       </div>
@@ -2924,8 +2923,7 @@ Merci de votre patience!
         background: secondPaymentReceived ? '#d4edda' : '#f8d7da',
         fontSize: '11px', textAlign: 'center'
       }}>
-        <div>2e: {client.secondPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
-        <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+        <div>2e: {(client.secondPaymentReceived !== undefined ? client.secondPaymentReceived : ((client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentDate !== 'À venir') ? true : false)) ? '✅ Reçu' : '❌ En attente'}</div>        <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
           {client.secondPaymentMethod === 'cheque' ? '📄 Chèque' : 
            client.secondPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
         </div>
