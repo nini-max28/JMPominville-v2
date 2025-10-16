@@ -2748,15 +2748,42 @@ Merci de votre patience!
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
         <div>
           <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 2e versement *</label>
-          <input
-            type="date" 
-            value={clientForm.secondPaymentDate}
-            onChange={(e) => setClientForm({ ...clientForm, secondPaymentDate: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+         <input
+  type="date" 
+  value={editClientForm.secondPaymentDate === 'À venir' ? '' : editClientForm.secondPaymentDate}
+  onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentDate: e.target.value })}
+  disabled={editClientForm.secondPaymentDate === 'À venir'}
+  style={{ 
+    width: '100%', 
+    padding: '8px 12px', 
+    borderRadius: '6px', 
+    border: '1px solid #ddd',
+    backgroundColor: editClientForm.secondPaymentDate === 'À venir' ? '#f5f5f5' : 'white',
+    cursor: editClientForm.secondPaymentDate === 'À venir' ? 'not-allowed' : 'text'
+  }}            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
           />
         </div>
         <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode de paiement *</label>
+            <div style={{ marginBottom: '15px' }}>
+  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+    <input 
+      type="checkbox"
+      checked={editClientForm.secondPaymentDate === 'À venir'}
+      onChange={(e) => {
+        setEditClientForm({ 
+          ...editClientForm, 
+          secondPaymentDate: e.target.checked ? 'À venir' : '',
+          secondPaymentMethod: e.target.checked ? '' : editClientForm.secondPaymentMethod
+        });
+      }}
+      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+    />
+    <span style={{ fontWeight: 'bold', color: '#ff9800', fontSize: '14px' }}>
+      📅 2e versement à venir (date non déterminée)
+    </span>
+  </label>
+</div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode de paiement *</label>
           <select
             value={clientForm.secondPaymentMethod}
             onChange={(e) => setClientForm({ ...clientForm, secondPaymentMethod: e.target.value })}
