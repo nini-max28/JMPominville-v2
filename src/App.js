@@ -270,34 +270,54 @@ const checkBackendConnection = async () => {
   };
 // FONCTION AMÉLIORÉE POUR MARQUER AUTOMATIQUEMENT LES PAIEMENTS
 const checkAndMarkPaymentsReceived = () => {
+  console.log('🔍 === DÉBUT VÉRIFICATION AUTO-PAIEMENTS ===');
+  
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  console.log('📅 Date du jour:', today.toLocaleDateString('fr-CA'));
   
   let updatedPayments = false;
   const newPayments = [...payments];
   const newInvoices = [...invoices];
-  const newClients = [...clients]; // ✅ AJOUT: Copie des clients pour mise à jour
+  const newClients = [...clients];
 
-  console.log('🔍 Vérification auto-paiements pour', clients.length, 'clients');
+  console.log('👥 Nombre de clients:', clients.length);
+  console.log('📋 Nombre de contrats:', contracts.length);
+  console.log('💰 Nombre de paiements existants:', payments.length);
 
-  newClients.forEach((client, index) => { // ✅ MODIFICATION: Utiliser newClients
+  newClients.forEach((client, index) => {
     const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-    if (!contract) return;
+    if (!contract) {
+      console.log(`⏭️ ${client.name}: Pas de contrat actif`);
+      return;
+    }
+
+    console.log(`\n🔍 Analyse: ${client.name}`);
+    console.log(`  - Structure: ${client.paymentStructure} versement(s)`);
+    console.log(`  - 1er paiement: ${client.firstPaymentDate} (${client.firstPaymentMethod})`);
+    console.log(`  - 2e paiement: ${client.secondPaymentDate} (${client.secondPaymentMethod})`);
 
     // ✅ VÉRIFIER 1ER PAIEMENT (seulement si chèque)
     if (client.firstPaymentDate && client.firstPaymentMethod === 'cheque') {
       const firstPaymentDate = new Date(client.firstPaymentDate);
       firstPaymentDate.setHours(0, 0, 0, 0);
       
+      console.log(`  📅 1er versement prévu: ${firstPaymentDate.toLocaleDateString('fr-CA')}`);
+      console.log(`  ⏰ Aujourd'hui: ${today.toLocaleDateString('fr-CA')}`);
+      console.log(`  ⏱️ Date passée? ${firstPaymentDate <= today}`);
+      
       const alreadyReceived = newPayments.some(p => 
         p.clientId === client.id && 
         p.paymentNumber === 1 && 
         p.received
       );
+      
+      console.log(`  ✓ Déjà reçu? ${alreadyReceived}`);
 
-      // Si la date est arrivée/passée ET le paiement n'est pas marqué
       if (firstPaymentDate <= today && !alreadyReceived) {
         const amount = contract.amount / (client.paymentStructure === '1' ? 1 : 2);
+        
+        console.log(`  💰 Création paiement automatique de ${amount}$`);
         
         const payment = {
           id: Date.now() + Math.random(),
@@ -322,15 +342,18 @@ const checkAndMarkPaymentsReceived = () => {
         };
         newInvoices.push(invoice);
         
-        // ✅ AJOUT: Mettre à jour le statut du client
         newClients[index] = {
           ...client,
           firstPaymentReceived: true
         };
         
         updatedPayments = true;
-        console.log(`✅ AUTO: ${client.name} - 1er paiement ${amount}$ marqué reçu`);
+        console.log(`  ✅ AUTO: ${client.name} - 1er paiement ${amount}$ marqué reçu`);
+      } else {
+        console.log(`  ⏭️ Conditions non remplies pour 1er paiement`);
       }
+    } else {
+      console.log(`  ⏭️ 1er paiement ignoré (pas chèque ou pas de date)`);
     }
 
     // ✅ VÉRIFIER 2E PAIEMENT (seulement si chèque)
@@ -338,14 +361,20 @@ const checkAndMarkPaymentsReceived = () => {
       const secondPaymentDate = new Date(client.secondPaymentDate);
       secondPaymentDate.setHours(0, 0, 0, 0);
       
+      console.log(`  📅 2e versement prévu: ${secondPaymentDate.toLocaleDateString('fr-CA')}`);
+      
       const alreadyReceived = newPayments.some(p => 
         p.clientId === client.id && 
         p.paymentNumber === 2 && 
         p.received
       );
+      
+      console.log(`  ✓ Déjà reçu? ${alreadyReceived}`);
 
       if (secondPaymentDate <= today && !alreadyReceived) {
         const amount = contract.amount / 2;
+        
+        console.log(`  💰 Création 2e paiement automatique de ${amount}$`);
         
         const payment = {
           id: Date.now() + Math.random() + 2,
@@ -370,28 +399,38 @@ const checkAndMarkPaymentsReceived = () => {
         };
         newInvoices.push(invoice);
         
-        // ✅ AJOUT: Mettre à jour le statut du client
         newClients[index] = {
           ...newClients[index],
           secondPaymentReceived: true
         };
         
         updatedPayments = true;
-        console.log(`✅ AUTO: ${client.name} - 2e paiement ${amount}$ marqué reçu`);
+        console.log(`  ✅ AUTO: ${client.name} - 2e paiement ${amount}$ marqué reçu`);
+      } else {
+        console.log(`  ⏭️ Conditions non remplies pour 2e paiement`);
       }
     }
   });
 
   if (updatedPayments) {
+    console.log('\n✅ === MISE À JOUR DES DONNÉES ===');
+    console.log(`Nouveaux paiements: ${newPayments.length - payments.length}`);
+    console.log(`Nouvelles factures: ${newInvoices.length - invoices.length}`);
+    
     setPayments(newPayments);
     setInvoices(newInvoices);
-    setClients(newClients); // ✅ AJOUT: Mettre à jour les clients
+    setClients(newClients);
     saveToStorage('payments', newPayments);
     saveToStorage('invoices', newInvoices);
-    saveToStorage('clients', newClients); // ✅ AJOUT: Sauvegarder les clients
+    saveToStorage('clients', newClients);
+    
     alert('✅ Des paiements par chèque ont été automatiquement marqués comme reçus!');
     return true;
+  } else {
+    console.log('\n⏭️ Aucun paiement à marquer automatiquement');
   }
+  
+  console.log('🔍 === FIN VÉRIFICATION AUTO-PAIEMENTS ===\n');
   return false;
 };
   // METTRE CETTE FONCTION ICI, AVANT sendNotificationViaBackend
