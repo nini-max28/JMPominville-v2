@@ -432,7 +432,7 @@ const checkAndMarkPaymentsReceived = () => {
   
   console.log('🔍 === FIN VÉRIFICATION AUTO-PAIEMENTS ===\n');
   return false;
-};
+};  
   // METTRE CETTE FONCTION ICI, AVANT sendNotificationViaBackend
 const formatPhoneForTwilio = (phone) => {
   if (!phone) return null;
