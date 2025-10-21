@@ -242,19 +242,7 @@ const checkBackendConnection = async () => {
     return false;
   }
 };
-} catch (error) {
-    console.error('❌ Erreur complète:', error);
-    
-    if (error.name === 'AbortError') {
-      console.error('Timeout - Backend trop lent');
-    } else if (error.message.includes('Failed to fetch')) {
-      console.error('Problème réseau ou CORS');
-    }
-    
-    setBackendConnected(false);
-    return false;
-  }
-};
+
   // SYNCHRONISATION AVEC BACKEND
   const syncWithBackend = async (key, data) => {
     try {
