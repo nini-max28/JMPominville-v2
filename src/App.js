@@ -71,7 +71,8 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [editClientForm, setEditClientForm] = useState({
     name: '', phone: '', email: '', type: '', address: '',
     paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
-    firstPaymentMethod: '', secondPaymentMethod: ''
+    firstPaymentMethod: '', secondPaymentMethod: '', firstPaymentDateReelle: '',
+    secondPaymentDateReelle: ,,
   });
 
   const [contractForm, setContractForm] = useState({
@@ -322,17 +323,16 @@ const checkAndMarkPaymentsReceived = () => {
 
     console.log(`\n🔍 Analyse: ${client.name}`);
     console.log(`  - Structure: ${client.paymentStructure} versement(s)`);
-    console.log(`  - 1er paiement: ${client.firstPaymentDate} (${client.firstPaymentMethod})`);
-    console.log(`  - 2e paiement: ${client.secondPaymentDate} (${client.secondPaymentMethod})`);
+    console.log(`  - 1er paiement prévu: ${client.firstPaymentDate}`);
+    console.log(`  - 1er paiement date chèque: ${client.firstPaymentDateReelle || 'Pas encore reçu'}`);
 
-    // ✅ VÉRIFIER 1ER PAIEMENT (seulement si chèque)
-    if (client.firstPaymentDate && client.firstPaymentMethod === 'cheque') {
-      const firstPaymentDate = new Date(client.firstPaymentDate);
-      firstPaymentDate.setHours(0, 0, 0, 0);
+    // ✅ VÉRIFIER 1ER PAIEMENT avec date RÉELLE du chèque
+    if (client.firstPaymentDateReelle && client.firstPaymentMethod === 'cheque') {
+      const firstPaymentDateReelle = new Date(client.firstPaymentDateReelle);
+      firstPaymentDateReelle.setHours(0, 0, 0, 0);
       
-      console.log(`  📅 1er versement prévu: ${firstPaymentDate.toLocaleDateString('fr-CA')}`);
+      console.log(`  📅 Date sur le chèque: ${firstPaymentDateReelle.toLocaleDateString('fr-CA')}`);
       console.log(`  ⏰ Aujourd'hui: ${today.toLocaleDateString('fr-CA')}`);
-      console.log(`  ⏱️ Date passée? ${firstPaymentDate <= today}`);
       
       const alreadyReceived = newPayments.some(p => 
         p.clientId === client.id && 
@@ -340,19 +340,21 @@ const checkAndMarkPaymentsReceived = () => {
         p.received
       );
       
-      console.log(`  ✓ Déjà reçu? ${alreadyReceived}`);
+      console.log(`  ✓ Déjà marqué reçu? ${alreadyReceived}`);
 
-      if (firstPaymentDate <= today && !alreadyReceived) {
+      if (firstPaymentDateReelle <= today && !alreadyReceived) {
         const amount = contract.amount / (client.paymentStructure === '1' ? 1 : 2);
         
-        console.log(`  💰 Création paiement automatique de ${amount}$`);
+        console.log(`  💰 Date du chèque atteinte! Marquage automatique de ${amount}$`);
         
         const payment = {
           id: Date.now() + Math.random(),
           clientId: client.id,
           paymentNumber: 1,
           amount: parseFloat(amount),
-          date: client.firstPaymentDate,
+          datePrevu: client.firstPaymentDate,
+          dateReelle: client.firstPaymentDateReelle,
+          date: client.firstPaymentDateReelle,
           paymentMethod: 'cheque',
           received: true,
           recordedAt: new Date().toISOString(),
@@ -364,9 +366,9 @@ const checkAndMarkPaymentsReceived = () => {
           id: Date.now() + Math.random() + 1,
           clientId: client.id,
           amount: parseFloat(amount),
-          date: client.firstPaymentDate,
+          date: client.firstPaymentDateReelle,
           type: 'revenu',
-          description: `1er versement - ${client.name} (Chèque post-daté - Auto)`
+          description: `1er versement - ${client.name} (Chèque daté du ${client.firstPaymentDateReelle}${client.firstPaymentDate !== client.firstPaymentDateReelle ? ' - prévu ' + client.firstPaymentDate : ''})`
         };
         newInvoices.push(invoice);
         
@@ -377,39 +379,39 @@ const checkAndMarkPaymentsReceived = () => {
         
         updatedPayments = true;
         console.log(`  ✅ AUTO: ${client.name} - 1er paiement ${amount}$ marqué reçu`);
-      } else {
-        console.log(`  ⏭️ Conditions non remplies pour 1er paiement`);
+      } else if (firstPaymentDateReelle > today) {
+        console.log(`  ⏭️ Date du chèque pas encore atteinte (${firstPaymentDateReelle.toLocaleDateString('fr-CA')})`);
       }
-    } else {
-      console.log(`  ⏭️ 1er paiement ignoré (pas chèque ou pas de date)`);
+    } else if (!client.firstPaymentDateReelle && client.firstPaymentDate) {
+      console.log(`  ⏳ En attente de recevoir le chèque (prévu ${client.firstPaymentDate})`);
     }
 
-    // ✅ VÉRIFIER 2E PAIEMENT (seulement si chèque)
-    if (client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentDate !== 'À venir' && client.secondPaymentMethod === 'cheque') {
-      const secondPaymentDate = new Date(client.secondPaymentDate);
-      secondPaymentDate.setHours(0, 0, 0, 0);
+    // ✅ VÉRIFIER 2E PAIEMENT avec date RÉELLE du chèque
+    if (client.paymentStructure === '2' && client.secondPaymentDateReelle && client.secondPaymentMethod === 'cheque') {
+      const secondPaymentDateReelle = new Date(client.secondPaymentDateReelle);
+      secondPaymentDateReelle.setHours(0, 0, 0, 0);
       
-      console.log(`  📅 2e versement prévu: ${secondPaymentDate.toLocaleDateString('fr-CA')}`);
+      console.log(`  📅 2e paiement - Date sur le chèque: ${secondPaymentDateReelle.toLocaleDateString('fr-CA')}`);
       
       const alreadyReceived = newPayments.some(p => 
         p.clientId === client.id && 
         p.paymentNumber === 2 && 
         p.received
       );
-      
-      console.log(`  ✓ Déjà reçu? ${alreadyReceived}`);
 
-      if (secondPaymentDate <= today && !alreadyReceived) {
+      if (secondPaymentDateReelle <= today && !alreadyReceived) {
         const amount = contract.amount / 2;
         
-        console.log(`  💰 Création 2e paiement automatique de ${amount}$`);
+        console.log(`  💰 Date du 2e chèque atteinte! Marquage automatique de ${amount}$`);
         
         const payment = {
           id: Date.now() + Math.random() + 2,
           clientId: client.id,
           paymentNumber: 2,
           amount: parseFloat(amount),
-          date: client.secondPaymentDate,
+          datePrevu: client.secondPaymentDate,
+          dateReelle: client.secondPaymentDateReelle,
+          date: client.secondPaymentDateReelle,
           paymentMethod: 'cheque',
           received: true,
           recordedAt: new Date().toISOString(),
@@ -421,9 +423,9 @@ const checkAndMarkPaymentsReceived = () => {
           id: Date.now() + Math.random() + 3,
           clientId: client.id,
           amount: parseFloat(amount),
-          date: client.secondPaymentDate,
+          date: client.secondPaymentDateReelle,
           type: 'revenu',
-          description: `2e versement - ${client.name} (Chèque post-daté - Auto)`
+          description: `2e versement - ${client.name} (Chèque daté du ${client.secondPaymentDateReelle}${client.secondPaymentDate !== client.secondPaymentDateReelle ? ' - prévu ' + client.secondPaymentDate : ''})`
         };
         newInvoices.push(invoice);
         
@@ -434,9 +436,11 @@ const checkAndMarkPaymentsReceived = () => {
         
         updatedPayments = true;
         console.log(`  ✅ AUTO: ${client.name} - 2e paiement ${amount}$ marqué reçu`);
-      } else {
-        console.log(`  ⏭️ Conditions non remplies pour 2e paiement`);
+      } else if (secondPaymentDateReelle > today) {
+        console.log(`  ⏭️ Date du 2e chèque pas encore atteinte (${secondPaymentDateReelle.toLocaleDateString('fr-CA')})`);
       }
+    } else if (client.paymentStructure === '2' && !client.secondPaymentDateReelle && client.secondPaymentDate && client.secondPaymentDate !== 'À venir') {
+      console.log(`  ⏳ En attente de recevoir le 2e chèque (prévu ${client.secondPaymentDate})`);
     }
   });
 
@@ -452,7 +456,7 @@ const checkAndMarkPaymentsReceived = () => {
     saveToStorage('invoices', newInvoices);
     saveToStorage('clients', newClients);
     
-    alert('✅ Des paiements par chèque ont été automatiquement marqués comme reçus!');
+    alert('✅ Des paiements ont été automatiquement marqués comme reçus selon les dates des chèques!');
     return true;
   } else {
     console.log('\n⏭️ Aucun paiement à marquer automatiquement');
@@ -460,7 +464,7 @@ const checkAndMarkPaymentsReceived = () => {
   
   console.log('🔍 === FIN VÉRIFICATION AUTO-PAIEMENTS ===\n');
   return false;
-};  
+};
   // METTRE CETTE FONCTION ICI, AVANT sendNotificationViaBackend
 const formatPhoneForTwilio = (phone) => {
   if (!phone) return null;
@@ -819,7 +823,9 @@ secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.second
       phone2: client.phone2 || '', 
       paymentStructure: client.paymentStructure || '2',
       firstPaymentMethod: client.firstPaymentMethod || '',
-      secondPaymentMethod: client.secondPaymentMethod || ''
+      secondPaymentMethod: client.secondPaymentMethod || '',
+      firstPaymentDateReelle: client.firstPaymentDateRelle || '',
+      secondPaymnetDateReelle: client.secondPaymentDateRelle || ''
     });
   };
 
@@ -869,20 +875,73 @@ const renewContract = (oldContractId) => {
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
 
-  // Calculer les nouvelles dates
-  const startDate = `${currentYear}-11-01`; // 1er novembre
-  const endDate = `${nextYear}-03-31`; // 31 mars prochain
+  const startDate = `${currentYear}-11-01`;
+  const endDate = `${nextYear}-03-31`;
 
-  // Demander confirmation avec le montant
-  const confirmRenewal = window.confirm(
-    `Renouveler le contrat pour ${client.name}?\n\n` +
-    `Ancien contrat: ${oldContract.startDate} au ${oldContract.endDate}\n` +
-    `Nouveau contrat: ${startDate} au ${endDate}\n\n` +
-    `Montant: ${oldContract.amount.toFixed(2)}$ (modifiable après création)\n` +
-    `Type: ${oldContract.type}`
+  // Structure de paiement
+  const paymentStructure = window.prompt(
+    `Renouvellement du contrat pour ${client.name}\n\n` +
+    `Période du contrat: ${startDate} au ${endDate}\n` +
+    `Montant: ${oldContract.amount.toFixed(2)}$\n\n` +
+    `Structure de paiement?\n` +
+    `Tapez "1" pour 1 versement unique\n` +
+    `Tapez "2" pour 2 versements`,
+    client.paymentStructure || '2'
   );
 
-  if (!confirmRenewal) return;
+  if (!paymentStructure || (paymentStructure !== '1' && paymentStructure !== '2')) {
+    alert('Renouvellement annulé');
+    return;
+  }
+
+  // Date PRÉVUE du 1er paiement
+  const firstPaymentDate = window.prompt(
+    `Date PRÉVUE du ${paymentStructure === '1' ? 'paiement unique' : '1er versement'}?\n\n` +
+    `Format: AAAA-MM-JJ (ex: ${currentYear}-11-15)\n\n` +
+    `⚠️ Ceci est la date prévue, pas la date réelle.\n` +
+    `Vous marquerez le paiement reçu plus tard.`,
+    `${currentYear}-11-15`
+  );
+
+  if (!firstPaymentDate) {
+    alert('Renouvellement annulé - Date du 1er paiement requise');
+    return;
+  }
+
+  // Méthode du 1er paiement
+  const firstPaymentMethod = window.prompt(
+    `Méthode PRÉVUE du ${paymentStructure === '1' ? 'paiement' : '1er versement'}?\n\n` +
+    `Tapez "cheque" pour chèque\n` +
+    `Tapez "comptant" pour argent comptant\n\n` +
+    `Vous pourrez modifier au moment de recevoir le paiement.`,
+    'cheque'
+  );
+
+  let secondPaymentDate = '';
+  let secondPaymentMethod = '';
+
+  if (paymentStructure === '2') {
+    const secondDateInput = window.prompt(
+      `Date PRÉVUE du 2e versement?\n\n` +
+      `Format: AAAA-MM-JJ (ex: ${nextYear}-01-15)\n` +
+      `Tapez "avenir" si la date n'est pas encore déterminée`,
+      `${nextYear}-01-15`
+    );
+
+    if (secondDateInput && secondDateInput !== 'avenir') {
+      secondPaymentDate = secondDateInput;
+      secondPaymentMethod = window.prompt(
+        `Méthode PRÉVUE du 2e versement?\n\n` +
+        `Tapez "cheque" pour chèque\n` +
+        `Tapez "comptant" pour argent comptant\n\n` +
+        `Vous pourrez modifier au moment de recevoir le paiement.`,
+        'cheque'
+      );
+    } else if (secondDateInput === 'avenir') {
+      secondPaymentDate = 'À venir';
+      secondPaymentMethod = '';
+    }
+  }
 
   // Créer le nouveau contrat
   const newContract = {
@@ -895,10 +954,68 @@ const renewContract = (oldContractId) => {
     status: 'actif',
     notes: oldContract.notes || '',
     createdAt: new Date().toISOString(),
-    renewedFrom: oldContract.id, // Pour traçabilité
+    renewedFrom: oldContract.id,
     archived: false
   };
 
+  // Mettre à jour le client avec les dates PRÉVUES
+  const updatedClient = {
+    ...client,
+    paymentStructure: paymentStructure,
+    firstPaymentDate: firstPaymentDate,
+    secondPaymentDate: secondPaymentDate || '',
+    firstPaymentMethod: firstPaymentMethod || '',
+    secondPaymentMethod: secondPaymentMethod || '',
+    // ❌ Pas encore reçu
+    firstPaymentReceived: false,
+    secondPaymentReceived: false
+    // ❌ Champs pour dates RÉELLES vides (pas encore de chèque reçu)
+  firstPaymentDateReelle: '',     // ← VIDE
+  secondPaymentDateReelle: ''     // ← VIDE  };
+
+  // Archiver l'ancien contrat
+  const updatedContracts = contracts.map(c =>
+    c.id === oldContract.id 
+      ? { ...c, archived: true, yearArchived: currentYear, status: 'terminé' }
+      : c
+  );
+
+  const newContracts = [...updatedContracts, newContract];
+  const updatedClients = clients.map(c => 
+    c.id === client.id ? updatedClient : c
+  );
+  
+  setContracts(newContracts);
+  setClients(updatedClients);
+  
+  saveToStorage('contracts', newContracts);
+  saveToStorage('clients', updatedClients);
+
+  let summaryMessage = `✅ Contrat renouvelé avec succès!\n\n` +
+    `Client: ${client.name}\n` +
+    `📅 Période du contrat: ${startDate} au ${endDate}\n` +
+    `💰 Montant: ${newContract.amount.toFixed(2)}$\n\n` +
+    `Structure: ${paymentStructure} versement${paymentStructure === '2' ? 's' : ''}\n\n`;
+
+  if (firstPaymentDate) {
+    summaryMessage += `📋 ${paymentStructure === '1' ? 'Paiement' : '1er versement'} PRÉVU:\n`;
+    summaryMessage += `   Date prévue: ${firstPaymentDate}\n`;
+    summaryMessage += `   Méthode prévue: ${firstPaymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}\n`;
+  }
+
+  if (paymentStructure === '2' && secondPaymentDate) {
+    summaryMessage += `\n📋 2e versement PRÉVU:\n`;
+    summaryMessage += `   Date prévue: ${secondPaymentDate}\n`;
+    if (secondPaymentDate !== 'À venir') {
+      summaryMessage += `   Méthode prévue: ${secondPaymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}\n`;
+    }
+  }
+
+  summaryMessage += `\n⏳ Les paiements sont à marquer manuellement quand vous les recevez.\n`;
+  summaryMessage += `Cliquez sur "💰 1er Paiement" ou "💰 2e Paiement" dans la liste des clients.`;
+
+  alert(summaryMessage);
+};
   // Archiver l'ancien contrat
   const updatedContracts = contracts.map(c =>
     c.id === oldContract.id 
@@ -931,9 +1048,16 @@ const renewMultipleContracts = () => {
   }
 
   const confirmBulk = window.confirm(
-    `Renouveler TOUS les contrats actifs?\n\n` +
-    `${activeContracts.length} contrats seront renouvelés pour la prochaine saison.\n\n` +
-    `⚠️ Cette action archivera tous les contrats actuels et en créera de nouveaux.`
+    `⚠️ ATTENTION - Renouvellement en masse\n\n` +
+    `${activeContracts.length} contrats seront renouvelés.\n\n` +
+    `Cette action va :\n` +
+    `• Archiver tous les contrats actuels\n` +
+    `• Créer de nouveaux contrats\n` +
+    `• RÉINITIALISER toutes les infos de paiement\n\n` +
+    `⚠️ Vous devrez MANUELLEMENT :\n` +
+    `• Configurer les dates de paiement pour chaque client\n` +
+    `• Marquer les paiements quand vous les recevrez\n\n` +
+    `Voulez-vous continuer?`
   );
 
   if (!confirmBulk) return;
@@ -945,6 +1069,7 @@ const renewMultipleContracts = () => {
   const endDate = `${nextYear}-03-31`;
 
   let updatedContracts = [...contracts];
+  let updatedClients = [...clients];
 
   activeContracts.forEach(oldContract => {
     // Créer nouveau contrat
@@ -969,22 +1094,54 @@ const renewMultipleContracts = () => {
         : c
     );
 
+    // ✅ RÉINITIALISER complètement les paiements du client
+    updatedClients = updatedClients.map(client => {
+      if (client.id === oldContract.clientId) {
+        return {
+          ...client,
+       // ❌ Dates prévues vides (à configurer manuellement après)
+      firstPaymentDate: '',
+      secondPaymentDate: '',
+      firstPaymentMethod: '',
+      secondPaymentMethod: '',
+      // ❌ Pas encore reçu
+      firstPaymentReceived: false,
+      secondPaymentReceived: false,
+      // ❌ Dates réelles vides (pas de chèque reçu)
+      firstPaymentDateReelle: '',    // ← VIDE
+      secondPaymentDateReelle: ''    // ← VIDE
+    };
+  }      return client;
+    });
+
     // Ajouter le nouveau
     updatedContracts.push(newContract);
     renewedCount++;
   });
 
   setContracts(updatedContracts);
+  setClients(updatedClients);
+  
   saveToStorage('contracts', updatedContracts);
+  saveToStorage('clients', updatedClients);
 
   alert(
     `✅ Renouvellement en masse terminé!\n\n` +
     `${renewedCount} contrat(s) renouvelé(s)\n` +
     `Nouvelle période: ${startDate} au ${endDate}\n\n` +
-    `Les anciens contrats ont été archivés.`
+    `⚠️ IMPORTANT:\n` +
+    `Les anciens contrats ont été archivés.\n` +
+    `Les infos de paiement ont été réinitialisées.\n\n` +
+    `📋 PROCHAINES ÉTAPES:\n` +
+    `1. Allez dans "👥 Clients"\n` +
+    `2. Modifiez CHAQUE client pour configurer:\n` +
+    `   • Les dates de paiement\n` +
+    `   • Les méthodes de paiement\n` +
+    `3. Marquez les paiements manuellement quand vous les recevrez\n\n` +
+    `⏳ Tous les paiements sont maintenant MANUELS pour ces contrats.`
   );
 };
-  // FONCTIONS CONTRATS
+// FONCTIONS CONTRATS
   const addContract = () => {
     if (!contractForm.clientId || !contractForm.type || !contractForm.startDate || !contractForm.amount) {
       alert('Veuillez remplir tous les champs obligatoires.');
@@ -2677,14 +2834,6 @@ Merci de votre patience!
   <input
     type="tel" value={editClientForm.phone2 || ''}
     onChange={(e) => setEditClientForm({ ...editClientForm, phone2: e.target.value })}
-    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-  />
-</div><div>
-  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone 2 (optionnel)</label>
-  <input
-    type="tel" value={clientForm.phone2}
-    onChange={(e) => setClientForm({ ...clientForm, phone2: e.target.value })}
-    placeholder="514-555-9999"
     style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
   />
 </div>
@@ -4701,8 +4850,73 @@ Merci de votre patience!
                 />
               </div>
             </div>
+{/* ✅ NOUVEAU CHAMP - Date réelle du chèque */}
+<div style={{ 
+  marginBottom: '15px', 
+  background: '#fff3cd', 
+  padding: '12px', 
+  borderRadius: '8px',
+  border: '2px solid #ffc107'
+}}>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#856404' }}>
+    📄 Date inscrite sur le CHÈQUE reçu (1er paiement)
+  </label>
+  <input
+    type="date" 
+    value={editClientForm.firstPaymentDateReelle || ''}
+    onChange={(e) => setEditClientForm({ ...editClientForm, firstPaymentDateReelle: e.target.value })}
+    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+  />
+  <small style={{ color: '#856404', fontSize: '12px', display: 'block', marginTop: '5px' }}>
+    ⚠️ Cette date sera utilisée pour le marquage automatique du paiement.
+    <br />Inscrivez la date EXACTE écrite sur le chèque que vous avez reçu.
+  </small>
+</div>
 
-            {editClientForm.paymentStructure === '2' && (
+{editClientForm.paymentStructure === '2' && (
+  <>
+    <div style={{ marginBottom: '15px' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '10px' }}>
+        <input 
+          type="checkbox"
+          checked={editClientForm.secondPaymentDate === 'À venir'}
+          onChange={(e) => {
+            setEditClientForm({ 
+              ...editClientForm, 
+              secondPaymentDate: e.target.checked ? 'À venir' : '',
+              secondPaymentMethod: e.target.checked ? '' : editClientForm.secondPaymentMethod,
+              secondPaymentDateReelle: '' // Vider la date réelle aussi
+            });
+          }}
+          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+        />
+        <span style={{ fontWeight: 'bold', color: '#ff9800', fontSize: '14px' }}>
+          📅 2e versement à venir (date non déterminée)
+        </span>
+      </label>
+      
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Date du 2e paiement (PRÉVUE)
+      </label>
+      <input
+        type="date" 
+        value={editClientForm.secondPaymentDate === 'À venir' ? '' : editClientForm.secondPaymentDate}
+        onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentDate: e.target.value })}
+        disabled={editClientForm.secondPaymentDate === 'À venir'}
+        style={{ 
+          width: '100%', 
+          padding: '8px 12px', 
+          borderRadius: '6px', 
+          border: '1px solid #ddd',
+          backgroundColor: editClientForm.secondPaymentDate === 'À venir' ? '#f5f5f5' : 'white',
+          cursor: editClientForm.secondPaymentDate === 'À venir' ? 'not-allowed' : 'text'
+        }}
+      />
+      <small style={{ color: '#666', fontSize: '12px' }}>
+        Date prévue dans le contrat (pour le client)
+      </small>
+    </div>
+          {editClientForm.paymentStructure === '2' && (
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 2e versement</label>
                 <input
@@ -4712,7 +4926,32 @@ Merci de votre patience!
                 />
               </div>
             )}
-
+ {/* ✅ NOUVEAU CHAMP - Date réelle du 2e chèque */}
+    {editClientForm.secondPaymentDate !== 'À venir' && (
+      <div style={{ 
+        marginBottom: '15px', 
+        background: '#e3f2fd', 
+        padding: '12px', 
+        borderRadius: '8px',
+        border: '2px solid #2196f3'
+      }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#1976d2' }}>
+          📄 Date inscrite sur le CHÈQUE reçu (2e paiement)
+        </label>
+        <input
+          type="date" 
+          value={editClientForm.secondPaymentDateReelle || ''}
+          onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentDateReelle: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+        <small style={{ color: '#1976d2', fontSize: '12px', display: 'block', marginTop: '5px' }}>
+          ⚠️ Cette date sera utilisée pour le marquage automatique du paiement.
+          <br />Inscrivez la date EXACTE écrite sur le chèque que vous avez reçu.
+        </small>
+      </div>
+    )}
+  </>
+)}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
               <button onClick={cancelEdit} style={{
                 padding: '10px 20px', background: '#6c757d', color: 'white',
