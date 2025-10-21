@@ -145,11 +145,8 @@ useEffect(() => {
         } catch (error) {
             console.log('❌ Backend non disponible - mode simulation');
             setBackendConnected(false);
-        }
+        
     };
-    
-    testBackendConnection();
-
 }, []); 
     // ✅ AJOUTEZ CE CODE ICI ↓
 useEffect(() => {
