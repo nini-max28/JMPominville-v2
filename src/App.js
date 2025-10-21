@@ -1002,7 +1002,7 @@ const renewContract = (oldContractId) => {
       ? { ...c, archived: true, yearArchived: currentYear, status: 'terminé' }
       : c
   );
-};
+
 
 // FONCTION DE RENOUVELLEMENT EN MASSE
 const renewMultipleContracts = () => {
