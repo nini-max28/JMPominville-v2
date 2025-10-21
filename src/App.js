@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-function App() {
+function App() { 
   // TOUS LES ÉTATS
 const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz7.onrender.com';
   console.log('https://backend-1-ohz7.onrender.com:' ,API_BASE_URL);
