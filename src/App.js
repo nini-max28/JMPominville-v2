@@ -87,7 +87,6 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [invoiceForm, setInvoiceForm] = useState({
     clientId: '', amount: '', date: '', type: '', description: ''
   });
-
   // INITIALISATION
 
 useEffect(() => {
@@ -112,10 +111,14 @@ useEffect(() => {
     
     setTimeout(() => { 
       archiveOldContracts();
-      
+            // Vérifier les paiements à marquer automatiquement
+      checkAndMarkPaymentsReceived();
+    }, 1000);
+  };    
 
-  
-      const handleOnline = () => { 
+  loadData();
+
+  const handleOnline = () => { 
     setIsOnline(true); 
     syncData(); 
   };
@@ -134,7 +137,23 @@ useEffect(() => {
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);
   };
-}, []); 
+     // Test de connexion au backend
+    const testBackendConnection = async () => {
+        try {
+            const response = await fetch(`${API_BASE_URL}/api/test`);
+            if (response.ok) {
+                setBackendConnected(true);
+                console.log('✅ Backend connecté');
+            }
+        } catch (error) {
+            console.log('❌ Backend non disponible - mode simulation');
+            setBackendConnected(false);
+        }
+    };
+    
+    testBackendConnection();
+
+}, []);  
     // ✅ AJOUTEZ CE CODE ICI ↓
 useEffect(() => {
   if (clients.length === 0) {
