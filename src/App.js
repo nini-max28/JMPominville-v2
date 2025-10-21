@@ -134,19 +134,6 @@ useEffect(() => {
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);
   };
-     // Test de connexion au backend
-    const testBackendConnection = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/test`);
-            if (response.ok) {
-                setBackendConnected(true);
-                console.log('✅ Backend connecté');
-            }
-        } catch (error) {
-            console.log('❌ Backend non disponible - mode simulation');
-            setBackendConnected(false);
-        }
-    };
 }, []); 
     // ✅ AJOUTEZ CE CODE ICI ↓
 useEffect(() => {
