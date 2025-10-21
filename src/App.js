@@ -1003,7 +1003,6 @@ const renewContract = (oldContractId) => {
       : c
   );
 
-
 // FONCTION DE RENOUVELLEMENT EN MASSE
 const renewMultipleContracts = () => {
   const activeContracts = contracts.filter(c => !c.archived && c.status === 'actif');
@@ -1016,20 +1015,13 @@ const renewMultipleContracts = () => {
   const confirmBulk = window.confirm(
     `⚠️ ATTENTION - Renouvellement en masse\n\n` +
     `${activeContracts.length} contrats seront renouvelés.\n\n` +
-    `Cette action va :\n` +
-    `• Archiver tous les contrats actuels\n` +
-    `• Créer de nouveaux contrats\n` +
-    `• RÉINITIALISER toutes les infos de paiement\n\n` +
-    `⚠️ Vous devrez MANUELLEMENT :\n` +
-    `• Configurer les dates de paiement pour chaque client\n` +
-    `• Marquer les paiements quand vous les recevrez\n\n` +
-    `Voulez-vous continuer?`
+    // ... reste du message ...
   );
 
   if (!confirmBulk) return;
 
   let renewedCount = 0;
-  const currentYear = new Date().getFullYear();
+  const currentYear = new Date().getFullYear();  // ← Définir currentYear ICI
   const nextYear = currentYear + 1;
   const startDate = `${currentYear}-11-01`;
   const endDate = `${nextYear}-03-31`;
@@ -1037,28 +1029,21 @@ const renewMultipleContracts = () => {
   let updatedContracts = [...contracts];
   let updatedClients = [...clients];
 
-  activeContracts.forEach(oldContract => {
+  activeContracts.forEach(oldContract => {  // ← oldContract défini ICI par le forEach
     // Créer nouveau contrat
     const newContract = {
       id: Date.now() + renewedCount,
       clientId: oldContract.clientId,
-      type: oldContract.type,
-      startDate: startDate,
-      endDate: endDate,
-      amount: oldContract.amount,
-      status: 'actif',
-      notes: oldContract.notes || '',
-      createdAt: new Date().toISOString(),
-      renewedFrom: oldContract.id,
-      archived: false
+      // ... reste du nouveau contrat
     };
 
-    // Archiver l'ancien
+    // Archiver l'ancien contrat
     updatedContracts = updatedContracts.map(c =>
-      c.id === oldContract.id
+      c.id === oldContract.id  // ← oldContract existe dans le forEach
         ? { ...c, archived: true, yearArchived: currentYear, status: 'terminé' }
         : c
     );
+
 
     // ✅ RÉINITIALISER complètement les paiements du client
     updatedClients = updatedClients.map(client => {
@@ -1106,7 +1091,6 @@ const renewMultipleContracts = () => {
     `   • Les méthodes de paiement\n` +
     `3. Marquez les paiements manuellement quand vous les recevrez\n\n` +
     `⏳ Tous les paiements sont maintenant MANUELS pour ces contrats.`
-  );
 };
 // FONCTIONS CONTRATS
   const addContract = () => {
