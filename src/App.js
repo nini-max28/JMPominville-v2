@@ -112,14 +112,37 @@ useEffect(() => {
     
     setTimeout(() => { 
       archiveOldContracts();
-            // Vérifier les paiements à marquer automatiquement
-      checkAndMarkPaymentsReceived();
-    }, 1000);
-  };    
-
-  loadData();
-
-  const handleOnline = () => { 
+      
+  // ✅ AJOUTEZ CE CODE ICI ↓
+useEffect(() => {
+  if (clients.length === 0) {
+    console.log('⏳ En attente du chargement des clients...');
+    return;
+  }
+  
+  console.log('✅ Données React chargées, lancement vérification automatique');
+  console.log(`👥 ${clients.length} clients dans l'état React`);
+  console.log(`📋 ${contracts.length} contrats dans l'état React`);
+  console.log(`💰 ${payments.length} paiements dans l'état React`);
+  
+  const timer = setTimeout(() => {
+    console.log('🔄 Lancement vérification automatique...');
+    archiveOldContracts();
+    checkAndMarkPaymentsReceived();
+  }, 500);
+  
+  const paymentCheckInterval = setInterval(() => {
+    console.log('⏰ Vérification périodique des paiements...');
+    checkAndMarkPaymentsReceived();
+  }, 300000);
+  
+  return () => {
+    clearTimeout(timer);
+    clearInterval(paymentCheckInterval);
+  };
+}, [clients.length, contracts.length]);
+  
+      const handleOnline = () => { 
     setIsOnline(true); 
     syncData(); 
   };
@@ -155,6 +178,7 @@ useEffect(() => {
     testBackendConnection();
 
 }, []); 
+
   // FONCTIONS DE STOCKAGE
   const loadFromStorage = (key, defaultValue = []) => {
     try {
