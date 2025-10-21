@@ -72,7 +72,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
     name: '', phone: '', email: '', type: '', address: '',
     paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
     firstPaymentMethod: '', secondPaymentMethod: '', firstPaymentDateReelle: '',
-    secondPaymentDateReelle: ,,
+    secondPaymentDateReelle: ''
   });
 
   const [contractForm, setContractForm] = useState({
