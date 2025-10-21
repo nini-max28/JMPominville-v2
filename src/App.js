@@ -1089,13 +1089,13 @@ const printMultipleContracts = () => {
         </div>
         
         <div style="margin-bottom: 25px;">
-          <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Informations du Client :</h3>
-          <p style="margin: 8px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
-          <p style="margin: 8px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
-          <p style="margin: 8px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
-          ${client.email ? `<p style="margin: 8px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
-        </div>
-        
+  <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Informations du Client :</h3>
+  <p style="margin: 8px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
+  <p style="margin: 8px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
+  <p style="margin: 8px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
+  ${client.phone2 ? `<p style="margin: 8px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
+  ${client.email ? `<p style="margin: 8px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
+</div>        
         <hr style="border: 1px solid #000; margin: 25px 0;">
         
         <div style="margin-bottom: 25px;">
@@ -1533,14 +1533,14 @@ const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMetho
           <hr style="border: 1px solid #000; margin: 20px 0;">
         </div>
         
-        <div style="margin-bottom: 25px;">
-          <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Informations du Client :</h3>
-          <p style="margin: 8px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
-          <p style="margin: 8px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
-          <p style="margin: 8px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
-          ${client.email ? `<p style="margin: 8px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
-        </div>
-        
+     <div style="margin-bottom: 25px;">
+  <h3 style="color: #000; font-size: 14px; margin-bottom: 15px; font-weight: bold;">Informations du Client :</h3>
+  <p style="margin: 8px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
+  <p style="margin: 8px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
+  <p style="margin: 8px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
+  ${client.phone2 ? `<p style="margin: 8px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
+  ${client.email ? `<p style="margin: 8px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
+</div>        
         <hr style="border: 1px solid #000; margin: 25px 0;">
         
         <div style="margin-bottom: 25px;">
