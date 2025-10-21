@@ -2817,7 +2817,7 @@ Merci de votre patience!
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
         <div>
           <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 2e versement *</label>
-         <input
+   <input
   type="date" 
   value={editClientForm.secondPaymentDate === 'À venir' ? '' : editClientForm.secondPaymentDate}
   onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentDate: e.target.value })}
@@ -2829,9 +2829,8 @@ Merci de votre patience!
     border: '1px solid #ddd',
     backgroundColor: editClientForm.secondPaymentDate === 'À venir' ? '#f5f5f5' : 'white',
     cursor: editClientForm.secondPaymentDate === 'À venir' ? 'not-allowed' : 'text'
-  }}            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-          />
-        </div>
+  }}
+/>        </div>
         <div>
             <div style={{ marginBottom: '15px' }}>
   <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
