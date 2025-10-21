@@ -968,7 +968,7 @@ const renewContract = (oldContractId) => {
     secondPaymentMethod: secondPaymentMethod || '',
     // ❌ Pas encore reçu
     firstPaymentReceived: false,
-    secondPaymentReceived: false
+    secondPaymentReceived: false,
     // ❌ Champs pour dates RÉELLES vides (pas encore de chèque reçu)
   firstPaymentDateReelle: '',     // ← VIDE
   secondPaymentDateReelle: ''     // ← VIDE 
@@ -1112,7 +1112,8 @@ const renewMultipleContracts = () => {
       firstPaymentDateReelle: '',    // ← VIDE
       secondPaymentDateReelle: ''    // ← VIDE
     };
-  }      return client;
+  }      
+      return client;
     });
 
     // Ajouter le nouveau
