@@ -1014,20 +1014,6 @@ const renewContract = (oldContractId) => {
       ? { ...c, archived: true, yearArchived: currentYear, status: 'terminé' }
       : c
   );
-
-  // Ajouter le nouveau contrat
-  const newContracts = [...updatedContracts, newContract];
-  
-  setContracts(newContracts);
-  saveToStorage('contracts', newContracts);
-
-  alert(
-    `✅ Contrat renouvelé avec succès!\n\n` +
-    `Client: ${client.name}\n` +
-    `Période: ${startDate} au ${endDate}\n` +
-    `Montant: ${newContract.amount.toFixed(2)}$\n\n` +
-    `L'ancien contrat a été archivé.`
-  );
 };
 
 // FONCTION DE RENOUVELLEMENT EN MASSE
