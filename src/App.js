@@ -58,7 +58,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
 
   // FORMULAIRES
   const [clientForm, setClientForm] = useState({
-  name: '', phone: '', email: '', type: '', address: '',
+  name: '', phone: '', phone2: '', email: '', type: '', address: '',
   paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
   firstPaymentMethod: '', secondPaymentMethod: '',
   // ✅ NOUVEAUX CHAMPS POUR LE CONTRAT
@@ -756,6 +756,7 @@ if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
     id: clientId,
     name: clientForm.name,
     phone: clientForm.phone,
+    phone2: clientForm.phone2 || '',
     email: clientForm.email,
     type: clientForm.type,
     address: clientForm.address,
@@ -792,7 +793,7 @@ secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.second
   
   // Réinitialiser le formulaire
   setClientForm({
-    name: '', phone: '', email: '', type: '', address: '',
+    name: '', phone: '', phone2: '', email: '', type: '', address: '',
     paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
     firstPaymentMethod: '', secondPaymentMethod: '',
     contractType: 'saisonnier',
@@ -815,6 +816,7 @@ secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.second
     setEditingClient(client.id);
     setEditClientForm({
       ...client,
+      phone2: client.phone2 || '', 
       paymentStructure: client.paymentStructure || '2',
       firstPaymentMethod: client.firstPaymentMethod || '',
       secondPaymentMethod: client.secondPaymentMethod || ''
@@ -2670,7 +2672,23 @@ Merci de votre patience!
           style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
         />
       </div>
-      <div>
+<div>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone 2 (optionnel)</label>
+  <input
+    type="tel" value={editClientForm.phone2 || ''}
+    onChange={(e) => setEditClientForm({ ...editClientForm, phone2: e.target.value })}
+    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+  />
+</div><div>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone 2 (optionnel)</label>
+  <input
+    type="tel" value={clientForm.phone2}
+    onChange={(e) => setClientForm({ ...clientForm, phone2: e.target.value })}
+    placeholder="514-555-9999"
+    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+  />
+</div>
+    <div>
         <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Email</label>
         <input
           type="email" value={clientForm.email}
@@ -2969,15 +2987,15 @@ Merci de votre patience!
                                 </div>
                               </div>
                             </td>
-                            
+                       
                             <td style={{ padding: '15px' }}>
-                              <div>
-                                <div>📞 {client.phone}</div>
-                                {client.email && <div style={{ fontSize: '12px', color: '#666' }}>📧 {client.email}</div>}
-                              </div>
-                            </td>
-                            
-                            <td style={{ padding: '15px' }}>
+  <div>
+    <div>📞 {client.phone}</div>
+    {client.phone2 && <div style={{ fontSize: '12px', color: '#666' }}>📞 {client.phone2}</div>}
+    {client.email && <div style={{ fontSize: '12px', color: '#666' }}>📧 {client.email}</div>}
+  </div>
+</td>
+      <td style={{ padding: '15px' }}>
                               <span style={{
                                 padding: '4px 8px', borderRadius: '12px', fontSize: '12px',
                                 fontWeight: 'bold', background: '#e8f5e8', color: '#1a4d1a'
