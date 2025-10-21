@@ -972,7 +972,7 @@ const renewContract = (oldContractId) => {
     // ❌ Champs pour dates RÉELLES vides (pas encore de chèque reçu)
   firstPaymentDateReelle: '',     // ← VIDE
   secondPaymentDateReelle: ''     // ← VIDE 
-};
+}; 
 
   // Archiver l'ancien contrat
   const updatedContracts = contracts.map(c =>
