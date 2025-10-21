@@ -89,7 +89,6 @@ const [notificationLogs, setNotificationLogs] = useState([]);
     clientId: '', amount: '', date: '', type: '', description: ''
   });
   // INITIALISATION
-
 useEffect(() => {
   const loadData = async () => {
     console.log('=== DÉMARRAGE APP RENDER ===');
@@ -112,7 +111,6 @@ useEffect(() => {
     
     setTimeout(() => { 
       archiveOldContracts();
-            // Vérifier les paiements à marquer automatiquement
       checkAndMarkPaymentsReceived();
     }, 1000);
   };    
@@ -127,7 +125,7 @@ useEffect(() => {
   const handleOffline = () => setIsOnline(false);
   
   // Configuration des intervals et event listeners
-  const backendInterval = setInterval(checkBackendConnection, 60000); // Toutes les minutes
+  const backendInterval = setInterval(checkBackendConnection, 60000);
   
   window.addEventListener('online', handleOnline);
   window.addEventListener('offline', handleOffline);
@@ -138,24 +136,9 @@ useEffect(() => {
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);
   };
-     // Test de connexion au backend
-    const testBackendConnection = async () => {
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/test`);
-            if (response.ok) {
-                setBackendConnected(true);
-                console.log('✅ Backend connecté');
-            }
-        } catch (error) {
-            console.log('❌ Backend non disponible - mode simulation');
-            setBackendConnected(false);
-        }
-    };
-    
-    testBackendConnection();
+}, []); // ← Fermez le premier useEffect ici
 
-}, []);  
-    // ✅ AJOUTEZ CE CODE ICI ↓
+// ✅ Second useEffect séparé
 useEffect(() => {
   if (clients.length === 0) {
     console.log('⏳ En attente du chargement des clients...');
@@ -182,25 +165,24 @@ useEffect(() => {
     clearTimeout(timer);
     clearInterval(paymentCheckInterval);
   };
-}, [clients.length, contracts.length]);
-    
-  // FONCTIONS DE STOCKAGE
-  const loadFromStorage = (key, defaultValue = []) => {
-    try {
-      const item = localStorage.getItem(key);
-      return item ? JSON.parse(item) : defaultValue;
-    } catch (error) {
-      console.error('Erreur loadFromStorage:', error);
-      return defaultValue;
-    }
-  };
+}, [clients.length, contracts.length]); // ← Fermez le second useEffect ici
+
+// ✅ FONCTIONS DE STOCKAGE (en dehors des useEffect)
+const loadFromStorage = (key, defaultValue = []) => {
+  try {
+    const item = localStorage.getItem(key);
+    return item ? JSON.parse(item) : defaultValue;
+  } catch (error) {
+    console.error('Erreur loadFromStorage:', error);
+    return defaultValue;
+  }
+};
 
 const saveToStorage = async (key, data) => {
   try {
     localStorage.setItem(key, JSON.stringify(data));
     localStorage.setItem('lastModified', new Date().toISOString());
     
-    // Réactivez la sync backend
     try {
       await syncWithBackend(key, data);
       setNeedsBackup(false);
@@ -212,15 +194,15 @@ const saveToStorage = async (key, data) => {
     console.error('Erreur de sauvegarde:', error);
   }
 };
-// VÉRIFICATION CONNEXION BACKEND
+
+// ✅ VÉRIFICATION CONNEXION BACKEND (en dehors des useEffect)
 const checkBackendConnection = async () => {
   try {
     console.log('=== TEST CONNEXION BACKEND ===');
-    console.log('https://backend-1-ohz7.onrender.com', API_BASE_URL);
+    console.log('URL:', API_BASE_URL);
     
-    // Test avec timeout
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 secondes
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
     
     const response = await fetch(`${API_BASE_URL}/api/test`, {
       method: 'GET',
@@ -234,7 +216,6 @@ const checkBackendConnection = async () => {
     clearTimeout(timeoutId);
     
     console.log('Statut réponse:', response.status);
-    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
     
     if (response.ok) {
       const data = await response.json();
@@ -245,13 +226,23 @@ const checkBackendConnection = async () => {
       const errorText = await response.text();
       console.error('❌ Erreur HTTP:', response.status, response.statusText);
       console.error('Corps de l\'erreur:', errorText);
-
-   
-
       setBackendConnected(false);
       return false;
     }
   } catch (error) {
+    console.error('❌ Erreur complète:', error);
+    
+    if (error.name === 'AbortError') {
+      console.error('Timeout - Backend trop lent');
+    } else if (error.message.includes('Failed to fetch')) {
+      console.error('Problème réseau ou CORS');
+    }
+    
+    setBackendConnected(false);
+    return false;
+  }
+};
+} catch (error) {
     console.error('❌ Erreur complète:', error);
     
     if (error.name === 'AbortError') {
