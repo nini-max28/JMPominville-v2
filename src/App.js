@@ -1015,13 +1015,15 @@ const renewMultipleContracts = () => {
   const confirmBulk = window.confirm(
     `⚠️ ATTENTION - Renouvellement en masse\n\n` +
     `${activeContracts.length} contrats seront renouvelés.\n\n` +
-    // ... reste du message ...
+    `Les anciens contrats seront archivés et de nouveaux contrats seront créés.\n` +
+    `Les informations de paiement seront réinitialisées.\n\n` +
+    `Voulez-vous continuer ?`
   );
 
   if (!confirmBulk) return;
 
   let renewedCount = 0;
-  const currentYear = new Date().getFullYear();  // ← Définir currentYear ICI
+  const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
   const startDate = `${currentYear}-11-01`;
   const endDate = `${nextYear}-03-31`;
@@ -1029,40 +1031,46 @@ const renewMultipleContracts = () => {
   let updatedContracts = [...contracts];
   let updatedClients = [...clients];
 
-  activeContracts.forEach(oldContract => {  // ← oldContract défini ICI par le forEach
-    // Créer nouveau contrat
+  activeContracts.forEach(oldContract => {
+    // Créer nouveau contrat COMPLET
     const newContract = {
       id: Date.now() + renewedCount,
       clientId: oldContract.clientId,
-      // ... reste du nouveau contrat
+      type: oldContract.type,
+      startDate: startDate,
+      endDate: endDate,
+      amount: oldContract.amount,
+      status: 'actif',
+      notes: oldContract.notes || '',
+      createdAt: new Date().toISOString(),
+      renewedFrom: oldContract.id,
+      archived: false
     };
 
     // Archiver l'ancien contrat
     updatedContracts = updatedContracts.map(c =>
-      c.id === oldContract.id  // ← oldContract existe dans le forEach
+      c.id === oldContract.id
         ? { ...c, archived: true, yearArchived: currentYear, status: 'terminé' }
         : c
     );
-
 
     // ✅ RÉINITIALISER complètement les paiements du client
     updatedClients = updatedClients.map(client => {
       if (client.id === oldContract.clientId) {
         return {
           ...client,
-       // ❌ Dates prévues vides (à configurer manuellement après)
-      firstPaymentDate: '',
-      secondPaymentDate: '',
-      firstPaymentMethod: '',
-      secondPaymentMethod: '',
-      // ❌ Pas encore reçu
-      firstPaymentReceived: false,
-      secondPaymentReceived: false,
-      // ❌ Dates réelles vides (pas de chèque reçu)
-      firstPaymentDateReelle: '',    // ← VIDE
-      secondPaymentDateReelle: ''    // ← VIDE
-    };
-  }      
+          // ❌ Dates prévues vides (à configurer manuellement après)
+          firstPaymentDate: '',
+          secondPaymentDate: '',
+          firstPaymentMethod: '',
+          secondPaymentMethod: '',
+          // ❌ Pas encore reçu
+          firstPaymentReceived: false,
+          secondPaymentReceived: false,
+firstPaymentDateReelle: ‘’,
+secondPaymentDateReelle: ‘’
+        };
+      }
       return client;
     });
 
@@ -1091,99 +1099,8 @@ const renewMultipleContracts = () => {
     `   • Les méthodes de paiement\n` +
     `3. Marquez les paiements manuellement quand vous les recevrez\n\n` +
     `⏳ Tous les paiements sont maintenant MANUELS pour ces contrats.`
-};
-// FONCTIONS CONTRATS
-  const addContract = () => {
-    if (!contractForm.clientId || !contractForm.type || !contractForm.startDate || !contractForm.amount) {
-      alert('Veuillez remplir tous les champs obligatoires.');
-      return;
-    }
-    const contract = {
-      id: Date.now(),
-      clientId: parseInt(contractForm.clientId),
-      type: contractForm.type,
-      startDate: contractForm.startDate,
-      endDate: contractForm.endDate,
-      amount: parseFloat(contractForm.amount),
-      status: contractForm.status,
-      notes: contractForm.notes
-    };
-    const newContracts = [...contracts, contract];
-    setContracts(newContracts);
-    saveToStorage('contracts', newContracts);
-    setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '' });
-    setClientSearch('');
-  };
-
-  const deleteContract = (id) => {
-    if (window.confirm('Supprimer ce contrat ?')) {
-      const newContracts = contracts.filter(contract => contract.id !== id);
-      setContracts(newContracts);
-      saveToStorage('contracts', newContracts);
-    }
-  };
-
-  const startEditContract = (contract) => {
-    setEditingContract(contract.id);
-    setEditContractForm({
-      clientId: contract.clientId,
-      type: contract.type,
-      startDate: contract.startDate,
-      endDate: contract.endDate,
-      amount: contract.amount,
-      status: contract.status,
-      notes: contract.notes
-    });
-  };
-
-  const saveEditContract = () => {
-    const updatedContracts = contracts.map(contract =>
-      contract.id === editingContract ? { ...contract, ...editContractForm } : contract
-    );
-    setContracts(updatedContracts);
-    saveToStorage('contracts', updatedContracts);
-    setEditingContract(null);
-    setEditContractForm({
-      clientId: '', type: '', startDate: '', endDate: '',
-      amount: '', status: 'actif', notes: ''
-    });
-  };
-
-  const cancelEditContract = () => {
-    setEditingContract(null);
-    setEditContractForm({
-      clientId: '', type: '', startDate: '', endDate: '',
-      amount: '', status: 'actif', notes: ''
-    });
-  };
-  
-// FONCTION POUR IMPRIMER PLUSIEURS CONTRATS
-const printMultipleContracts = () => {
-  if (selectedContracts.length === 0) {
-    alert('Aucun contrat sélectionné');
-    return;
-  }
-
-  const confirmPrint = window.confirm(
-    `Imprimer ${selectedContracts.length} contrat(s) ?\n\n` +
-    `Tous les contrats seront générés dans une seule fenêtre d'impression.`
   );
-
-  if (!confirmPrint) return;
-
-  let allContractsHTML = '';
-
-  selectedContracts.forEach((contractId, index) => {
-    const contract = contracts.find(c => c.id === contractId);
-    const client = clients.find(c => c.id === contract?.clientId);
-
-    if (!contract || !client) return;
-
-    const paymentStructure = client.paymentStructure || '2';
-    const firstPayment = paymentStructure === '1' ? contract.amount : contract.amount / 2;
-    const secondPayment = paymentStructure === '2' ? contract.amount / 2 : 0;
-    const today = new Date().toLocaleDateString('fr-CA');
-
+};
     const contractHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; font-size: 12px; page-break-after: always;">
         <div style="text-align: center; margin-bottom: 30px;">
