@@ -997,8 +997,7 @@ const renewContract = (oldContractId) => {
   alert(summaryMessage);
 };
 
-
-// FONCTION DE RENOUVELLEMENT EN MASSE
+// FONCTION DE RENOUVELLEMENT EN MASSE AMÉLIORÉE
 const renewMultipleContracts = () => {
   const activeContracts = contracts.filter(c => !c.archived && c.status === 'actif');
   
@@ -1010,24 +1009,104 @@ const renewMultipleContracts = () => {
   const confirmBulk = window.confirm(
     `⚠️ ATTENTION - Renouvellement en masse\n\n` +
     `${activeContracts.length} contrats seront renouvelés.\n\n` +
-    `Les anciens contrats seront archivés et de nouveaux contrats seront créés.\n` +
-    `Les informations de paiement seront réinitialisées.\n\n` +
-    `Voulez-vous continuer ?`
+    `Vous allez configurer les dates de paiement UNE FOIS pour tous les clients.\n\n` +
+    `Voulez-vous continuer?`
   );
 
   if (!confirmBulk) return;
 
-  let renewedCount = 0;
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
   const startDate = `${currentYear}-11-01`;
   const endDate = `${nextYear}-03-31`;
 
+  // 📅 CONFIGURATION DES DATES - UNE SEULE FOIS POUR TOUS
+  const paymentStructure = window.prompt(
+    `Configuration des paiements pour TOUS les ${activeContracts.length} clients\n\n` +
+    `Structure de paiement?\n` +
+    `Tapez "1" pour 1 versement unique\n` +
+    `Tapez "2" pour 2 versements`,
+    '2'
+  );
+
+  if (!paymentStructure || (paymentStructure !== '1' && paymentStructure !== '2')) {
+    alert('Renouvellement annulé');
+    return;
+  }
+
+  // Date du 1er paiement
+  const firstPaymentDate = window.prompt(
+    `Date du ${paymentStructure === '1' ? 'paiement unique' : '1er versement'} pour TOUS les clients?\n\n` +
+    `Format: AAAA-MM-JJ (ex: ${currentYear}-11-15)\n\n` +
+    `Cette date sera appliquée à tous les ${activeContracts.length} contrats.`,
+    `${currentYear}-11-15`
+  );
+
+  if (!firstPaymentDate) {
+    alert('Renouvellement annulé - Date du 1er paiement requise');
+    return;
+  }
+
+  // Méthode du 1er paiement
+  const firstPaymentMethod = window.prompt(
+    `Méthode du ${paymentStructure === '1' ? 'paiement' : '1er versement'} pour TOUS les clients?\n\n` +
+    `Tapez "cheque" pour chèque\n` +
+    `Tapez "comptant" pour argent comptant`,
+    'cheque'
+  );
+
+  let secondPaymentDate = '';
+  let secondPaymentMethod = '';
+
+  // Si 2 versements, demander la date du 2e
+  if (paymentStructure === '2') {
+    const secondDateInput = window.prompt(
+      `Date du 2e versement pour TOUS les clients?\n\n` +
+      `Format: AAAA-MM-JJ (ex: ${nextYear}-01-15)\n` +
+      `Tapez "avenir" si la date n'est pas encore déterminée\n\n` +
+      `Cette date sera appliquée à tous les ${activeContracts.length} contrats.`,
+      `${nextYear}-01-15`
+    );
+
+    if (secondDateInput && secondDateInput !== 'avenir') {
+      secondPaymentDate = secondDateInput;
+      secondPaymentMethod = window.prompt(
+        `Méthode du 2e versement pour TOUS les clients?\n\n` +
+        `Tapez "cheque" pour chèque\n` +
+        `Tapez "comptant" pour argent comptant`,
+        'cheque'
+      );
+    } else if (secondDateInput === 'avenir') {
+      secondPaymentDate = 'À venir';
+      secondPaymentMethod = '';
+    }
+  }
+
+  // Confirmation finale avec résumé
+  const finalConfirm = window.confirm(
+    `📋 RÉSUMÉ DU RENOUVELLEMENT EN MASSE\n\n` +
+    `Nombre de contrats: ${activeContracts.length}\n` +
+    `Période: ${startDate} au ${endDate}\n\n` +
+    `💰 Configuration des paiements:\n` +
+    `• Structure: ${paymentStructure} versement${paymentStructure === '2' ? 's' : ''}\n` +
+    `• 1er paiement: ${firstPaymentDate} (${firstPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant'})\n` +
+    (paymentStructure === '2' ? `• 2e paiement: ${secondPaymentDate} ${secondPaymentMethod ? '(' + (secondPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant') + ')' : ''}` : '') +
+    `\n\nCes paramètres seront appliqués à TOUS les clients.\n\n` +
+    `Confirmer le renouvellement?`
+  );
+
+  if (!finalConfirm) {
+    alert('Renouvellement annulé');
+    return;
+  }
+
+  // 🚀 TRAITEMENT DU RENOUVELLEMENT
+  let renewedCount = 0;
   let updatedContracts = [...contracts];
   let updatedClients = [...clients];
 
   activeContracts.forEach(oldContract => {
-    // Créer nouveau contrat COMPLET
+    // Créer nouveau contrat
     const newContract = {
       id: Date.now() + renewedCount,
       clientId: oldContract.clientId,
@@ -1049,33 +1128,33 @@ const renewMultipleContracts = () => {
         : c
     );
 
-    // ✅ RÉINITIALISER complètement les paiements du client
+    // ✅ APPLIQUER LES DATES À CHAQUE CLIENT
     updatedClients = updatedClients.map(client => {
       if (client.id === oldContract.clientId) {
         return {
           ...client,
-          // ❌ Dates prévues vides (à configurer manuellement après)
-          firstPaymentDate: '',
-          secondPaymentDate: '',
-          firstPaymentMethod: '',
-          secondPaymentMethod: '',
+          paymentStructure: paymentStructure,
+          firstPaymentDate: firstPaymentDate,
+          secondPaymentDate: secondPaymentDate || '',
+          firstPaymentMethod: firstPaymentMethod || '',
+          secondPaymentMethod: secondPaymentMethod || '',
           // ❌ Pas encore reçu
           firstPaymentReceived: false,
           secondPaymentReceived: false,
-             // ❌ Dates réelles vides (pas de chèque reçu)
-         firstPaymentDateReelle: '',    // ← VIDE
-      secondPaymentDateReelle: ''    // ← VIDE        };
-      };
+          // ❌ Dates réelles vides (pas de chèque reçu encore)
+          firstPaymentDateReelle: '',
+          secondPaymentDateReelle: ''
+        };
       }
-        
       return client;
     });
 
-    // Ajouter le nouveau
+    // Ajouter le nouveau contrat
     updatedContracts.push(newContract);
     renewedCount++;
   });
 
+  // Sauvegarder
   setContracts(updatedContracts);
   setClients(updatedClients);
   
@@ -1083,19 +1162,16 @@ const renewMultipleContracts = () => {
   saveToStorage('clients', updatedClients);
 
   alert(
-    `✅ Renouvellement en masse terminé!\n\n` +
+    `✅ Renouvellement en masse terminé avec succès!\n\n` +
     `${renewedCount} contrat(s) renouvelé(s)\n` +
-    `Nouvelle période: ${startDate} au ${endDate}\n\n` +
-    `⚠️ IMPORTANT:\n` +
-    `Les anciens contrats ont été archivés.\n` +
-    `Les infos de paiement ont été réinitialisées.\n\n` +
-    `📋 PROCHAINES ÉTAPES:\n` +
-    `1. Allez dans "👥 Clients"\n` +
-    `2. Modifiez CHAQUE client pour configurer:\n` +
-    `   • Les dates de paiement\n` +
-    `   • Les méthodes de paiement\n` +
-    `3. Marquez les paiements manuellement quand vous les recevrez\n\n` +
-    `⏳ Tous les paiements sont maintenant MANUELS pour ces contrats.`
+    `Période: ${startDate} au ${endDate}\n\n` +
+    `💰 Configuration appliquée:\n` +
+    `• ${paymentStructure} versement${paymentStructure === '2' ? 's' : ''}\n` +
+    `• 1er paiement: ${firstPaymentDate} (${firstPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant'})\n` +
+    (paymentStructure === '2' ? `• 2e paiement: ${secondPaymentDate} ${secondPaymentMethod ? '(' + (secondPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant') + ')' : ''}\n` : '') +
+    `\n` +
+    `📋 Les anciens contrats ont été archivés.\n` +
+    `⏳ Les paiements seront marqués automatiquement selon les dates des chèques reçus.`
   );
 };
   // FONCTIONS CONTRATS
