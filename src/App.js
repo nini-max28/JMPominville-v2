@@ -1102,7 +1102,7 @@ const renewMultipleContracts = () => {
     `3. Marquez les paiements manuellement quand vous les recevrez\n\n` +
     `⏳ Tous les paiements sont maintenant MANUELS pour ces contrats.`
   );
-};
+
     const contractHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; font-size: 12px; page-break-after: always;">
         <div style="text-align: center; margin-bottom: 30px;">
