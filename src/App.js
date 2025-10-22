@@ -996,7 +996,6 @@ const renewContract = (oldContractId) => {
 
   alert(summaryMessage);
 };
-
 // FONCTION DE RENOUVELLEMENT EN MASSE AMÉLIORÉE
 const renewMultipleContracts = () => {
   const activeContracts = contracts.filter(c => !c.archived && c.status === 'actif');
@@ -1015,14 +1014,50 @@ const renewMultipleContracts = () => {
 
   if (!confirmBulk) return;
 
+  // 🆕 DEMANDER LA SAISON
   const currentYear = new Date().getFullYear();
-  const nextYear = currentYear + 1;
-  const startDate = `${currentYear}-11-01`;
-  const endDate = `${nextYear}-03-31`;
+  const seasonYearInput = window.prompt(
+    `Pour quelle saison voulez-vous renouveler?\n\n` +
+    `Entrez l'année de DÉBUT de la saison.\n\n` +
+    `Exemples:\n` +
+    `• Tapez "${currentYear}" pour la saison ${currentYear}-${currentYear + 1}\n` +
+    `• Tapez "${currentYear + 1}" pour la saison ${currentYear + 1}-${currentYear + 2}\n\n` +
+    `Année de début:`,
+    currentYear.toString()
+  );
+
+  if (!seasonYearInput) {
+    alert('Renouvellement annulé');
+    return;
+  }
+
+  const seasonStartYear = parseInt(seasonYearInput);
+  if (isNaN(seasonStartYear) || seasonStartYear < 2024 || seasonStartYear > 2050) {
+    alert('Année invalide. Renouvellement annulé.');
+    return;
+  }
+
+  const seasonEndYear = seasonStartYear + 1;
+  const startDate = `${seasonStartYear}-11-01`;
+  const endDate = `${seasonEndYear}-03-31`;
+
+  // Confirmation de la saison choisie
+  const confirmSeason = window.confirm(
+    `Vous avez choisi la saison:\n\n` +
+    `📅 ${seasonStartYear}-${seasonEndYear}\n` +
+    `Du ${startDate} au ${endDate}\n\n` +
+    `Est-ce correct?`
+  );
+
+  if (!confirmSeason) {
+    alert('Renouvellement annulé');
+    return;
+  }
 
   // 📅 CONFIGURATION DES DATES - UNE SEULE FOIS POUR TOUS
   const paymentStructure = window.prompt(
-    `Configuration des paiements pour TOUS les ${activeContracts.length} clients\n\n` +
+    `Configuration des paiements pour TOUS les ${activeContracts.length} clients\n` +
+    `Saison: ${seasonStartYear}-${seasonEndYear}\n\n` +
     `Structure de paiement?\n` +
     `Tapez "1" pour 1 versement unique\n` +
     `Tapez "2" pour 2 versements`,
@@ -1034,12 +1069,12 @@ const renewMultipleContracts = () => {
     return;
   }
 
-  // Date du 1er paiement
+  // Date du 1er paiement (avec l'année de la saison choisie)
   const firstPaymentDate = window.prompt(
     `Date du ${paymentStructure === '1' ? 'paiement unique' : '1er versement'} pour TOUS les clients?\n\n` +
-    `Format: AAAA-MM-JJ (ex: ${currentYear}-11-15)\n\n` +
+    `Format: AAAA-MM-JJ (ex: ${seasonStartYear}-11-15)\n\n` +
     `Cette date sera appliquée à tous les ${activeContracts.length} contrats.`,
-    `${currentYear}-11-15`
+    `${seasonStartYear}-11-15`
   );
 
   if (!firstPaymentDate) {
@@ -1062,10 +1097,10 @@ const renewMultipleContracts = () => {
   if (paymentStructure === '2') {
     const secondDateInput = window.prompt(
       `Date du 2e versement pour TOUS les clients?\n\n` +
-      `Format: AAAA-MM-JJ (ex: ${nextYear}-01-15)\n` +
+      `Format: AAAA-MM-JJ (ex: ${seasonEndYear}-01-15)\n` +
       `Tapez "avenir" si la date n'est pas encore déterminée\n\n` +
       `Cette date sera appliquée à tous les ${activeContracts.length} contrats.`,
-      `${nextYear}-01-15`
+      `${seasonEndYear}-01-15`
     );
 
     if (secondDateInput && secondDateInput !== 'avenir') {
@@ -1086,6 +1121,7 @@ const renewMultipleContracts = () => {
   const finalConfirm = window.confirm(
     `📋 RÉSUMÉ DU RENOUVELLEMENT EN MASSE\n\n` +
     `Nombre de contrats: ${activeContracts.length}\n` +
+    `Saison: ${seasonStartYear}-${seasonEndYear}\n` +
     `Période: ${startDate} au ${endDate}\n\n` +
     `💰 Configuration des paiements:\n` +
     `• Structure: ${paymentStructure} versement${paymentStructure === '2' ? 's' : ''}\n` +
@@ -1124,7 +1160,7 @@ const renewMultipleContracts = () => {
     // Archiver l'ancien contrat
     updatedContracts = updatedContracts.map(c =>
       c.id === oldContract.id
-        ? { ...c, archived: true, yearArchived: currentYear, status: 'terminé' }
+        ? { ...c, archived: true, yearArchived: seasonStartYear, status: 'terminé' }
         : c
     );
 
@@ -1138,10 +1174,8 @@ const renewMultipleContracts = () => {
           secondPaymentDate: secondPaymentDate || '',
           firstPaymentMethod: firstPaymentMethod || '',
           secondPaymentMethod: secondPaymentMethod || '',
-          // ❌ Pas encore reçu
           firstPaymentReceived: false,
           secondPaymentReceived: false,
-          // ❌ Dates réelles vides (pas de chèque reçu encore)
           firstPaymentDateReelle: '',
           secondPaymentDateReelle: ''
         };
@@ -1164,6 +1198,7 @@ const renewMultipleContracts = () => {
   alert(
     `✅ Renouvellement en masse terminé avec succès!\n\n` +
     `${renewedCount} contrat(s) renouvelé(s)\n` +
+    `Saison: ${seasonStartYear}-${seasonEndYear}\n` +
     `Période: ${startDate} au ${endDate}\n\n` +
     `💰 Configuration appliquée:\n` +
     `• ${paymentStructure} versement${paymentStructure === '2' ? 's' : ''}\n` +
