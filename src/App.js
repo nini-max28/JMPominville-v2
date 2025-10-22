@@ -996,12 +996,7 @@ const renewContract = (oldContractId) => {
 
   alert(summaryMessage);
 };
-  // Archiver l'ancien contrat
-  const updatedContracts = contracts.map(c =>
-    c.id === oldContract.id 
-      ? { ...c, archived: true, yearArchived: currentYear, status: 'terminé' }
-      : c
-  );
+
 
 // FONCTION DE RENOUVELLEMENT EN MASSE
 const renewMultipleContracts = () => {
