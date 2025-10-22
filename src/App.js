@@ -1102,6 +1102,33 @@ const renewMultipleContracts = () => {
     `3. Marquez les paiements manuellement quand vous les recevrez\n\n` +
     `⏳ Tous les paiements sont maintenant MANUELS pour ces contrats.`
   );
+};
+  // FONCTION POUR IMPRIMER PLUSIEURS CONTRATS
+const printMultipleContracts = () => {
+  if (selectedContracts.length === 0) {
+    alert('Aucun contrat sélectionné');
+    return;
+  }
+
+  const confirmPrint = window.confirm(
+    `Imprimer ${selectedContracts.length} contrat(s) ?\n\n` +
+    `Tous les contrats seront générés dans une seule fenêtre d'impression.`
+  );
+
+  if (!confirmPrint) return;
+
+  let allContractsHTML = '';
+
+  selectedContracts.forEach((contractId, index) => {
+    const contract = contracts.find(c => c.id === contractId);
+    const client = clients.find(c => c.id === contract?.clientId);
+
+    if (!contract || !client) return;
+
+    const paymentStructure = client.paymentStructure || '2';
+    const firstPayment = paymentStructure === '1' ? contract.amount : contract.amount / 2;
+    const secondPayment = paymentStructure === '2' ? contract.amount / 2 : 0;
+    const today = new Date().toLocaleDateString('fr-CA');
 
     const contractHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; line-height: 1.6; font-size: 12px; page-break-after: always;">
