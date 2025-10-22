@@ -1103,6 +1103,70 @@ const renewMultipleContracts = () => {
     `⏳ Tous les paiements sont maintenant MANUELS pour ces contrats.`
   );
 };
+  // FONCTIONS CONTRATS
+const addContract = () => {
+  if (!contractForm.clientId || !contractForm.type || !contractForm.startDate || !contractForm.amount) {
+    alert('Veuillez remplir tous les champs obligatoires.');
+    return;
+  }
+  const contract = {
+    id: Date.now(),
+    clientId: parseInt(contractForm.clientId),
+    type: contractForm.type,
+    startDate: contractForm.startDate,
+    endDate: contractForm.endDate,
+    amount: parseFloat(contractForm.amount),
+    status: contractForm.status,
+    notes: contractForm.notes
+  };
+  const newContracts = [...contracts, contract];
+  setContracts(newContracts);
+  saveToStorage('contracts', newContracts);
+  setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '' });
+  setClientSearch('');
+};
+
+const deleteContract = (id) => {
+  if (window.confirm('Supprimer ce contrat ?')) {
+    const newContracts = contracts.filter(contract => contract.id !== id);
+    setContracts(newContracts);
+    saveToStorage('contracts', newContracts);
+  }
+};
+
+const startEditContract = (contract) => {
+  setEditingContract(contract.id);
+  setEditContractForm({
+    clientId: contract.clientId,
+    type: contract.type,
+    startDate: contract.startDate,
+    endDate: contract.endDate,
+    amount: contract.amount,
+    status: contract.status,
+    notes: contract.notes
+  });
+};
+
+const saveEditContract = () => {
+  const updatedContracts = contracts.map(contract =>
+    contract.id === editingContract ? { ...contract, ...editContractForm } : contract
+  );
+  setContracts(updatedContracts);
+  saveToStorage('contracts', updatedContracts);
+  setEditingContract(null);
+  setEditContractForm({
+    clientId: '', type: '', startDate: '', endDate: '',
+    amount: '', status: 'actif', notes: ''
+  });
+};
+
+const cancelEditContract = () => {
+  setEditingContract(null);
+  setEditContractForm({
+    clientId: '', type: '', startDate: '', endDate: '',
+    amount: '', status: 'actif', notes: ''
+  });
+};
   // FONCTION POUR IMPRIMER PLUSIEURS CONTRATS
 const printMultipleContracts = () => {
   if (selectedContracts.length === 0) {
