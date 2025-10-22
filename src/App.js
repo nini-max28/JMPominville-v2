@@ -1070,7 +1070,9 @@ const renewMultipleContracts = () => {
              // ❌ Dates réelles vides (pas de chèque reçu)
          firstPaymentDateReelle: '',    // ← VIDE
       secondPaymentDateReelle: ''    // ← VIDE        };
+      };
       }
+        
       return client;
     });
 
