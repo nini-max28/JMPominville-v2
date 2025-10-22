@@ -1067,9 +1067,9 @@ const renewMultipleContracts = () => {
           // ❌ Pas encore reçu
           firstPaymentReceived: false,
           secondPaymentReceived: false,
-firstPaymentDateReelle: ‘’,
-secondPaymentDateReelle: ‘’
-        };
+             // ❌ Dates réelles vides (pas de chèque reçu)
+         firstPaymentDateReelle: '',    // ← VIDE
+      secondPaymentDateReelle: ''    // ← VIDE        };
       }
       return client;
     });
