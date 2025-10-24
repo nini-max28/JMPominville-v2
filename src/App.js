@@ -276,7 +276,7 @@ const checkBackendConnection = async () => {
       throw error;
     }
   };
-// FONCTION AMÉLIORÉE POUR MARQUER AUTOMATIQUEMENT LES PAIEMENTS
+// FONCTION SIMPLIFIÉE - COMME AVANT
 const checkAndMarkPaymentsReceived = () => {
   console.log('🔍 === DÉBUT VÉRIFICATION AUTO-PAIEMENTS ===');
   
@@ -303,14 +303,13 @@ const checkAndMarkPaymentsReceived = () => {
     console.log(`\n🔍 Analyse: ${client.name}`);
     console.log(`  - Structure: ${client.paymentStructure} versement(s)`);
     console.log(`  - 1er paiement prévu: ${client.firstPaymentDate}`);
-    console.log(`  - 1er paiement date chèque: ${client.firstPaymentDateReelle || 'Pas encore reçu'}`);
 
-    // ✅ VÉRIFIER 1ER PAIEMENT avec date RÉELLE du chèque
-    if (client.firstPaymentDateReelle && client.firstPaymentMethod === 'cheque') {
-      const firstPaymentDateReelle = new Date(client.firstPaymentDateReelle);
-      firstPaymentDateReelle.setHours(0, 0, 0, 0);
+    // ✅ VÉRIFIER 1ER PAIEMENT - VERSION SIMPLIFIÉE
+    if (client.firstPaymentDate && client.firstPaymentMethod === 'cheque') {
+      const firstPaymentDate = new Date(client.firstPaymentDate);
+      firstPaymentDate.setHours(0, 0, 0, 0);
       
-      console.log(`  📅 Date sur le chèque: ${firstPaymentDateReelle.toLocaleDateString('fr-CA')}`);
+      console.log(`  📅 Date prévue: ${firstPaymentDate.toLocaleDateString('fr-CA')}`);
       console.log(`  ⏰ Aujourd'hui: ${today.toLocaleDateString('fr-CA')}`);
       
       const alreadyReceived = newPayments.some(p => 
@@ -321,19 +320,17 @@ const checkAndMarkPaymentsReceived = () => {
       
       console.log(`  ✓ Déjà marqué reçu? ${alreadyReceived}`);
 
-      if (firstPaymentDateReelle <= today && !alreadyReceived) {
+      if (firstPaymentDate <= today && !alreadyReceived) {
         const amount = contract.amount / (client.paymentStructure === '1' ? 1 : 2);
         
-        console.log(`  💰 Date du chèque atteinte! Marquage automatique de ${amount}$`);
+        console.log(`  💰 Date atteinte! Marquage automatique de ${amount}$`);
         
         const payment = {
           id: Date.now() + Math.random(),
           clientId: client.id,
           paymentNumber: 1,
           amount: parseFloat(amount),
-          datePrevu: client.firstPaymentDate,
-          dateReelle: client.firstPaymentDateReelle,
-          date: client.firstPaymentDateReelle,
+          date: client.firstPaymentDate,
           paymentMethod: 'cheque',
           received: true,
           recordedAt: new Date().toISOString(),
@@ -345,9 +342,9 @@ const checkAndMarkPaymentsReceived = () => {
           id: Date.now() + Math.random() + 1,
           clientId: client.id,
           amount: parseFloat(amount),
-          date: client.firstPaymentDateReelle,
+          date: client.firstPaymentDate,
           type: 'revenu',
-          description: `1er versement - ${client.name} (Chèque daté du ${client.firstPaymentDateReelle}${client.firstPaymentDate !== client.firstPaymentDateReelle ? ' - prévu ' + client.firstPaymentDate : ''})`
+          description: `1er versement - ${client.name} (Chèque)`
         };
         newInvoices.push(invoice);
         
@@ -358,19 +355,19 @@ const checkAndMarkPaymentsReceived = () => {
         
         updatedPayments = true;
         console.log(`  ✅ AUTO: ${client.name} - 1er paiement ${amount}$ marqué reçu`);
-      } else if (firstPaymentDateReelle > today) {
-        console.log(`  ⏭️ Date du chèque pas encore atteinte (${firstPaymentDateReelle.toLocaleDateString('fr-CA')})`);
+      } else if (firstPaymentDate > today) {
+        console.log(`  ⏭️ Date pas encore atteinte (${firstPaymentDate.toLocaleDateString('fr-CA')})`);
       }
-    } else if (!client.firstPaymentDateReelle && client.firstPaymentDate) {
-      console.log(`  ⏳ En attente de recevoir le chèque (prévu ${client.firstPaymentDate})`);
+    } else if (!client.firstPaymentDate) {
+      console.log(`  ⏳ Aucune date de paiement configurée`);
     }
 
-    // ✅ VÉRIFIER 2E PAIEMENT avec date RÉELLE du chèque
-    if (client.paymentStructure === '2' && client.secondPaymentDateReelle && client.secondPaymentMethod === 'cheque') {
-      const secondPaymentDateReelle = new Date(client.secondPaymentDateReelle);
-      secondPaymentDateReelle.setHours(0, 0, 0, 0);
+    // ✅ VÉRIFIER 2E PAIEMENT - VERSION SIMPLIFIÉE
+    if (client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentDate !== 'À venir' && client.secondPaymentMethod === 'cheque') {
+      const secondPaymentDate = new Date(client.secondPaymentDate);
+      secondPaymentDate.setHours(0, 0, 0, 0);
       
-      console.log(`  📅 2e paiement - Date sur le chèque: ${secondPaymentDateReelle.toLocaleDateString('fr-CA')}`);
+      console.log(`  📅 2e paiement - Date prévue: ${secondPaymentDate.toLocaleDateString('fr-CA')}`);
       
       const alreadyReceived = newPayments.some(p => 
         p.clientId === client.id && 
@@ -378,19 +375,17 @@ const checkAndMarkPaymentsReceived = () => {
         p.received
       );
 
-      if (secondPaymentDateReelle <= today && !alreadyReceived) {
+      if (secondPaymentDate <= today && !alreadyReceived) {
         const amount = contract.amount / 2;
         
-        console.log(`  💰 Date du 2e chèque atteinte! Marquage automatique de ${amount}$`);
+        console.log(`  💰 Date du 2e paiement atteinte! Marquage automatique de ${amount}$`);
         
         const payment = {
           id: Date.now() + Math.random() + 2,
           clientId: client.id,
           paymentNumber: 2,
           amount: parseFloat(amount),
-          datePrevu: client.secondPaymentDate,
-          dateReelle: client.secondPaymentDateReelle,
-          date: client.secondPaymentDateReelle,
+          date: client.secondPaymentDate,
           paymentMethod: 'cheque',
           received: true,
           recordedAt: new Date().toISOString(),
@@ -402,9 +397,9 @@ const checkAndMarkPaymentsReceived = () => {
           id: Date.now() + Math.random() + 3,
           clientId: client.id,
           amount: parseFloat(amount),
-          date: client.secondPaymentDateReelle,
+          date: client.secondPaymentDate,
           type: 'revenu',
-          description: `2e versement - ${client.name} (Chèque daté du ${client.secondPaymentDateReelle}${client.secondPaymentDate !== client.secondPaymentDateReelle ? ' - prévu ' + client.secondPaymentDate : ''})`
+          description: `2e versement - ${client.name} (Chèque)`
         };
         newInvoices.push(invoice);
         
@@ -415,11 +410,9 @@ const checkAndMarkPaymentsReceived = () => {
         
         updatedPayments = true;
         console.log(`  ✅ AUTO: ${client.name} - 2e paiement ${amount}$ marqué reçu`);
-      } else if (secondPaymentDateReelle > today) {
-        console.log(`  ⏭️ Date du 2e chèque pas encore atteinte (${secondPaymentDateReelle.toLocaleDateString('fr-CA')})`);
+      } else if (secondPaymentDate > today) {
+        console.log(`  ⏭️ Date du 2e paiement pas encore atteinte (${secondPaymentDate.toLocaleDateString('fr-CA')})`);
       }
-    } else if (client.paymentStructure === '2' && !client.secondPaymentDateReelle && client.secondPaymentDate && client.secondPaymentDate !== 'À venir') {
-      console.log(`  ⏳ En attente de recevoir le 2e chèque (prévu ${client.secondPaymentDate})`);
     }
   });
 
@@ -435,7 +428,7 @@ const checkAndMarkPaymentsReceived = () => {
     saveToStorage('invoices', newInvoices);
     saveToStorage('clients', newClients);
     
-    alert('✅ Des paiements ont été automatiquement marqués comme reçus selon les dates des chèques!');
+    alert('✅ Des paiements ont été automatiquement marqués comme reçus selon les dates prévues!');
     return true;
   } else {
     console.log('\n⏭️ Aucun paiement à marquer automatiquement');
