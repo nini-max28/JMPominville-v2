@@ -4838,23 +4838,40 @@ Merci de votre patience!
             <h3 style={{ color: '#1a4d1a', marginBottom: '20px' }}>Modifier le client</h3>
             
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nom du client</label>
-                <input
-                  type="text" value={editClientForm.name}
-                  onChange={(e) => setEditClientForm({ ...editClientForm, name: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone</label>
-                <input
-                  type="tel" value={editClientForm.phone}
-                  onChange={(e) => setEditClientForm({ ...editClientForm, phone: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                />
-              </div>
-            </div>
+           <div>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nom du client</label>
+  <input
+    type="text" 
+    value={editClientForm.name}
+    onChange={(e) => setEditClientForm({ ...editClientForm, name: e.target.value })}
+    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+  />
+</div>
+
+<div>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone</label>
+  <input
+    type="tel" 
+    value={editClientForm.phone}
+    onChange={(e) => setEditClientForm({ ...editClientForm, phone: e.target.value })}
+    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+  />
+</div>
+
+{/* 📱 NOUVEAU CHAMP - Téléphone 2 */}
+<div>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+    Téléphone 2 (optionnel)
+  </label>
+  <input
+    type="tel" 
+    value={editClientForm.phone2 || ''}
+    onChange={(e) => setEditClientForm({ ...editClientForm, phone2: e.target.value })}
+    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+    placeholder="Numéro secondaire (optionnel)"
+  />
+</div>
+      </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
               <div>
