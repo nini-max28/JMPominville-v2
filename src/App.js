@@ -865,6 +865,7 @@ secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.second
     fourthPaymentDate: clientForm.fourthPaymentDate || '',
     fourthPaymentMethod: clientForm.fourthPaymentMethod || '',
     fourthPaymentReceived: false
+  }
   };
   // ✅ CRÉER LE CONTRAT AUTOMATIQUEMENT
   const contract = {
