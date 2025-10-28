@@ -854,7 +854,7 @@ const addClient = () => {
     // 2e paiement
     secondPaymentDate: clientForm.secondPaymentDate || '',
     secondPaymentMethod: clientForm.secondPaymentMethod || '',
-secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.secondPaymentDate && clientForm.secondPaymentDate !== '' && clientForm.secondPaymentDate !== 'À venir') ? true : false  };
+secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.secondPaymentDate && clientForm.secondPaymentDate !== '' && clientForm.secondPaymentDate !== 'À venir') ? true : false,  
     
     // 3e paiement (nouveau)
     thirdPaymentDate: clientForm.thirdPaymentDate || '',
