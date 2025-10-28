@@ -5136,131 +5136,261 @@ Merci de votre patience!
         </div>
       )}
 
-      {/* Modal d'édition client */}
+{/* Modal d'édition client */}
 {editingClient && (
-  <div style={{ 
-    background: 'white', 
-    padding: '20px', 
-    borderRadius: '8px', 
-    boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+  <div style={{
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: 'rgba(0, 0, 0, 0.5)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1000,
+    padding: '20px'
   }}>
-    <h3 style={{ color: '#1a4d1a', marginBottom: '20px' }}>Modifier le client</h3>
-    
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
-      
-      {/* Nom du client */}
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Nom du client
-        </label>
-        <input
-          type="text" 
-          value={editClientForm.name}
-          onChange={(e) => setEditClientForm({ ...editClientForm, name: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        />
-      </div>
-
-      {/* Téléphone */}
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Téléphone
-        </label>
-        <input
-          type="tel" 
-          value={editClientForm.phone}
-          onChange={(e) => setEditClientForm({ ...editClientForm, phone: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        />
-      </div>
-
-      {/* 📱 Téléphone 2 */}
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Téléphone 2 (optionnel)
-        </label>
-        <input
-          type="tel" 
-          value={editClientForm.phone2 || ''}
-          onChange={(e) => setEditClientForm({ ...editClientForm, phone2: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-          placeholder="Numéro secondaire"
-        />
-      </div>
-
-      {/* Email */}
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Email
-        </label>
-        <input
-          type="email" 
-          value={editClientForm.email || ''}
-          onChange={(e) => setEditClientForm({ ...editClientForm, email: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        />
-      </div>
-
-      {/* Adresse */}
-      <div style={{ gridColumn: '1 / -1' }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Adresse
-        </label>
-        <input
-          type="text" 
-          value={editClientForm.address}
-          onChange={(e) => setEditClientForm({ ...editClientForm, address: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        />
-      </div>
-
-      {/* ✨ STRUCTURE DE PAIEMENT - NOUVEAU CHAMP MODIFIABLE */}
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Structure de paiement
-        </label>
-        <select
-          value={editClientForm.paymentStructure || '2'}
-          onChange={(e) => setEditClientForm({ ...editClientForm, paymentStructure: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+    <div style={{
+      background: 'white',
+      borderRadius: '12px',
+      boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+      maxWidth: '800px',
+      width: '100%',
+      maxHeight: '90vh',
+      overflow: 'auto',
+      padding: '30px'
+    }}>
+      {/* Header */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '25px',
+        borderBottom: '2px solid #e9ecef',
+        paddingBottom: '15px'
+      }}>
+        <h3 style={{ 
+          color: '#1a4d1a', 
+          margin: 0,
+          fontSize: '24px',
+          fontWeight: 'bold'
+        }}>
+          ✏️ Modifier le client
+        </h3>
+        <button
+          onClick={() => {
+            setEditingClient(null);
+            setEditClientForm({
+              name: '', phone: '', phone2: '', email: '', type: '', address: '',
+              paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
+              firstPaymentMethod: '', secondPaymentMethod: '',
+              thirdPaymentDate: '', thirdPaymentMethod: '',
+              fourthPaymentDate: '', fourthPaymentMethod: ''
+            });
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            fontSize: '28px',
+            cursor: 'pointer',
+            color: '#6c757d',
+            padding: '0',
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
+          onMouseLeave={(e) => e.target.style.background = 'transparent'}
         >
-          <option value="1">1 versement unique</option>
-          <option value="2">2 versements</option>
-          <option value="3">3 versements</option>
-          <option value="4">4 versements</option>
-        </select>
+          ×
+        </button>
       </div>
 
-      {/* Date 1er paiement */}
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Date 1er paiement
-        </label>
-        <input
-          type="date"
-          value={editClientForm.firstPaymentDate || ''}
-          onChange={(e) => setEditClientForm({ ...editClientForm, firstPaymentDate: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        />
-      </div>
+      {/* Formulaire en grille */}
+      <div style={{ 
+        display: 'grid', 
+        gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', 
+        gap: '20px',
+        marginBottom: '25px'
+      }}>
+        
+        {/* Nom du client */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Nom du client *
+          </label>
+          <input
+            type="text" 
+            value={editClientForm.name}
+            onChange={(e) => setEditClientForm({ ...editClientForm, name: e.target.value })}
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px',
+              transition: 'border-color 0.2s'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#1a4d1a'}
+            onBlur={(e) => e.target.style.borderColor = '#ced4da'}
+          />
+        </div>
 
-      {/* Méthode 1er paiement */}
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-          Méthode 1er paiement
-        </label>
-        <select
-          value={editClientForm.firstPaymentMethod || ''}
-          onChange={(e) => setEditClientForm({ ...editClientForm, firstPaymentMethod: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        >
-          <option value="">Sélectionner...</option>
-          <option value="cheque">Chèque</option>
-          <option value="comptant">Comptant</option>
-        </select>
-      </div>
+        {/* Téléphone */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Téléphone *
+          </label>
+          <input
+            type="tel" 
+            value={editClientForm.phone}
+            onChange={(e) => setEditClientForm({ ...editClientForm, phone: e.target.value })}
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#1a4d1a'}
+            onBlur={(e) => e.target.style.borderColor = '#ced4da'}
+          />
+        </div>
 
-      {/* 2e paiement - Affiché si 2, 3 ou 4 versements */}
+        {/* Téléphone 2 */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Téléphone 2 (optionnel)
+          </label>
+          <input
+            type="tel" 
+            value={editClientForm.phone2 || ''}
+            onChange={(e) => setEditClientForm({ ...editClientForm, phone2: e.target.value })}
+            placeholder="Numéro secondaire"
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#1a4d1a'}
+            onBlur={(e) => e.target.style.borderColor = '#ced4da'}
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Email
+          </label>
+          <input
+            type="email" 
+            value={editClientForm.email || ''}
+            onChange={(e) => setEditClientForm({ ...editClientForm, email: e.target.value })}
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#1a4d1a'}
+            onBlur={(e) => e.target.style.borderColor = '#ced4da'}
+          />
+        </div>
+
+        {/* Adresse */}
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Adresse *
+          </label>
+          <input
+            type="text" 
+            value={editClientForm.address}
+            onChange={(e) => setEditClientForm({ ...editClientForm, address: e.target.value })}
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#1a4d1a'}
+            onBlur={(e) => e.target.style.borderColor = '#ced4da'}
+          />
+        </div>
+
+        {/* Structure de paiement */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Structure de paiement
+          </label>
+          <select
+            value={editClientForm.paymentStructure || '2'}
+            onChange={(e) => setEditClientForm({ ...editClientForm, paymentStructure: e.target.value })}
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px'
+            }}
+          >
+            <option value="1">1 versement unique</option>
+            <option value="2">2 versements</option>
+            <option value="3">3 versements</option>
+            <option value="4">4 versements</option>
+          </select>
+        </div>
+
+        {/* Date 1er paiement */}
+        {/* Date 1er paiement */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Date 1er paiement
+          </label>
+          <input
+            type="date"
+            value={editClientForm.firstPaymentDate || ''}
+            onChange={(e) => setEditClientForm({ ...editClientForm, firstPaymentDate: e.target.value })}
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px'
+            }}
+          />
+        </div>
+
+        {/* Méthode 1er paiement */}
+        <div>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Méthode 1er paiement
+          </label>
+          <select
+            value={editClientForm.firstPaymentMethod || ''}
+            onChange={(e) => setEditClientForm({ ...editClientForm, firstPaymentMethod: e.target.value })}
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px'
+            }}
+          >
+            <option value="">Sélectionner...</option>
+            <option value="cheque">Chèque</option>
+            <option value="comptant">Comptant</option>
+          </select>
+        </div>
+            {/* 2e paiement - Affiché si 2, 3 ou 4 versements */}
       {(editClientForm.paymentStructure === '2' || editClientForm.paymentStructure === '3' || editClientForm.paymentStructure === '4') && (
         <>
           <div>
@@ -5358,36 +5488,61 @@ Merci de votre patience!
 
     </div>
 
-    {/* Boutons */}
-    <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-      <button
-        onClick={saveEditClient}
-        style={{
-          padding: '10px 20px',
-          background: '#28a745',
-          color: 'white',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          fontWeight: 'bold'
-        }}
-      >
-        💾 Sauvegarder
-      </button>
-      <button
-        onClick={cancelEdit}
-        style={{
-          padding: '10px 20px',
-          background: '#dc3545',
-          color: 'white',
-          border: 'none',
-          borderRadius: '6px',
-          cursor: 'pointer',
-          fontWeight: 'bold'
-        }}
-      >
-        ❌ Annuler
-      </button>
+    {/* Boutons d'action */}
+      <div style={{ 
+        display: 'flex', 
+        gap: '15px', 
+        justifyContent: 'flex-end',
+        borderTop: '1px solid #e9ecef',
+        paddingTop: '20px',
+        marginTop: '10px'
+      }}>
+        <button
+          onClick={() => {
+            setEditingClient(null);
+            setEditClientForm({
+              name: '', phone: '', phone2: '', email: '', type: '', address: '',
+              paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
+              firstPaymentMethod: '', secondPaymentMethod: '',
+              thirdPaymentDate: '', thirdPaymentMethod: '',
+              fourthPaymentDate: '', fourthPaymentMethod: ''
+            });
+          }}
+          style={{
+            padding: '12px 24px',
+            background: '#6c757d',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.background = '#5a6268'}
+          onMouseLeave={(e) => e.target.style.background = '#6c757d'}
+        >
+          ❌ Annuler
+        </button>
+        <button
+          onClick={saveEditClient}
+          style={{
+            padding: '12px 24px',
+            background: '#28a745',
+            color: 'white',
+            border: 'none',
+            borderRadius: '6px',
+            cursor: 'pointer',
+            fontWeight: 'bold',
+            fontSize: '14px',
+            transition: 'background 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.background = '#218838'}
+          onMouseLeave={(e) => e.target.style.background = '#28a745'}
+        >
+          💾 Sauvegarder
+        </button>
+      </div>
     </div>
   </div>
 )}
