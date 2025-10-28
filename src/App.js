@@ -3268,53 +3268,69 @@ Merci de votre patience!
     <option value="comptant">Comptant</option>
   </select>
 </div>
-{/* Date 2e paiement */}
+{/* ===== 2E PAIEMENT ===== */}
 {(clientForm.paymentStructure === '2' || clientForm.paymentStructure === '3' || clientForm.paymentStructure === '4') && (
-  <div>
-    <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-      Date 2e paiement
-    </label>
-    
-    <div style={{ marginBottom: '8px' }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-        <input
-          type="checkbox"
-          checked={clientForm.secondPaymentDate === 'À venir'}
-          onChange={(e) => setClientForm({
-            ...clientForm, 
-            secondPaymentDate: e.target.checked ? 'À venir' : ''
-          })}
-        />
-        <span>Date à déterminer plus tard</span>
+  <>
+    <div>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Date 2e paiement
       </label>
-    </div>
-    
-    {clientForm.secondPaymentDate !== 'À venir' && (
-      <input
-        type="date"
-        value={clientForm.secondPaymentDate || ''}
-        onChange={(e) => setClientForm({...clientForm, secondPaymentDate: e.target.value})}
-        style={{ 
-          width: '100%',
-          padding: '8px 12px', 
-          borderRadius: '6px', 
-          border: '1px solid #ddd' 
-        }}
-      />
-    )}
-    
-    {clientForm.secondPaymentDate === 'À venir' && (
-      <div style={{ 
-        padding: '8px', 
-        background: '#fff3cd', 
-        border: '1px solid #ffc107',
-        borderRadius: '6px',
-        fontSize: '13px'
-      }}>
-        ⚠️ Date à déterminer - Vous pourrez la configurer plus tard
+      
+      {/* Checkbox "À venir" */}
+      <div style={{ marginBottom: '8px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={clientForm.secondPaymentDate === 'À venir'}
+            onChange={(e) => setClientForm({
+              ...clientForm, 
+              secondPaymentDate: e.target.checked ? 'À venir' : ''
+            })}
+          />
+          <span style={{ fontSize: '14px' }}>📅 Date à déterminer plus tard</span>
+        </label>
       </div>
-    )}
-  </div>
+      
+      {/* Champ de date (caché si "À venir") */}
+      {clientForm.secondPaymentDate !== 'À venir' && (
+        <input
+          type="date"
+          value={clientForm.secondPaymentDate || ''}
+          onChange={(e) => setClientForm({...clientForm, secondPaymentDate: e.target.value})}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      )}
+      
+      {/* Message de confirmation */}
+      {clientForm.secondPaymentDate === 'À venir' && (
+        <div style={{ 
+          padding: '10px', 
+          background: '#fff3cd', 
+          border: '1px solid #ffc107',
+          borderRadius: '6px',
+          fontSize: '13px',
+          marginTop: '8px'
+        }}>
+          ⏳ Date à déterminer - Vous pourrez la configurer en modifiant le client
+        </div>
+      )}
+    </div>
+
+    <div>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Méthode 2e paiement
+      </label>
+      <select
+        value={clientForm.secondPaymentMethod || ''}
+        onChange={(e) => setClientForm({...clientForm, secondPaymentMethod: e.target.value})}
+        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      >
+        <option value="">Sélectionner...</option>
+        <option value="cheque">Chèque</option>
+        <option value="comptant">Comptant</option>
+      </select>
+    </div>
+  </>
 )}
 {/* 3e paiement - Si 3 ou 4 versements */}
 {(clientForm.paymentStructure === '3' || clientForm.paymentStructure === '4') && (
