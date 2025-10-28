@@ -3478,7 +3478,50 @@ Merci de votre patience!
       </div>
     )}
   </div>
-</td>
+  {/* 3e paiement - Si 3 ou 4 versements */}
+              {(client.paymentStructure === '3' || client.paymentStructure === '4') && client.thirdPaymentDate && (
+                <div style={{
+                  padding: '4px 8px', 
+                  borderRadius: '8px',
+                  background: isPaymentReceived(client.id, 3) ? '#d4edda' : '#f8d7da',
+                  fontSize: '11px', 
+                  textAlign: 'center'
+                }}>
+                  <div>3e: {isPaymentReceived(client.id, 3) ? '✅ Reçu' : '❌ Non reçu'}</div>
+                  <div>
+                    {client.thirdPaymentMethod === 'cheque' ? '📄 Chèque' :
+                     client.thirdPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
+                  </div>
+                  {client.thirdPaymentDate && (
+                    <div style={{ fontSize: '8px', color: '#666' }}>
+                      Date: {new Date(client.thirdPaymentDate).toLocaleDateString('fr-CA')}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 4e paiement - Si 4 versements */}
+              {client.paymentStructure === '4' && client.fourthPaymentDate && (
+                <div style={{
+                  padding: '4px 8px', 
+                  borderRadius: '8px',
+                  background: isPaymentReceived(client.id, 4) ? '#d4edda' : '#f8d7da',
+                  fontSize: '11px', 
+                  textAlign: 'center'
+                }}>
+                  <div>4e: {isPaymentReceived(client.id, 4) ? '✅ Reçu' : '❌ Non reçu'}</div>
+                  <div>
+                    {client.fourthPaymentMethod === 'cheque' ? '📄 Chèque' :
+                                     client.fourthPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
+                  </div>
+                  {client.fourthPaymentDate && (
+                    <div style={{ fontSize: '8px', color: '#666' }}>
+                      Date: {new Date(client.fourthPaymentDate).toLocaleDateString('fr-CA')}
+                    </div>
+                  )}
+                </div>
+              )}
+                </td>
 
                             <td style={{ padding: '15px' }}>
                               <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
