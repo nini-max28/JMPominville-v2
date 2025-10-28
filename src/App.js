@@ -937,26 +937,65 @@ const addClient = () => {
   };
 
 const saveEditClient = () => {
-    const updatedClients = clients.map(client => {
-      if (client.id === editingClient) {
-        return {
-          ...client,
-          ...editClientForm,
-          firstPaymentReceived: editClientForm.firstPaymentDate ? true : false,
-          secondPaymentReceived: (editClientForm.paymentStructure === '2' && editClientForm.secondPaymentDate && editClientForm.secondPaymentDate !== '' && editClientForm.secondPaymentDate !== 'À venir') ? true : false
-        };
-      }
-      return client;
-    });    setClients(updatedClients);
-    saveToStorage('clients', updatedClients);
-    setEditingClient(null);
-    setEditClientForm({
-      name: '', phone: '', email: '', type: '', address: '',
-      paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
-      firstPaymentMethod: '', secondPaymentMethod: ''
-    });
-  };
-
+  const updatedClients = clients.map(client => {
+    if (client.id === editingClient) {
+      return {
+        ...client,
+        name: editClientForm.name,
+        phone: editClientForm.phone,
+        phone2: editClientForm.phone2 || '',
+        email: editClientForm.email,
+        type: editClientForm.type,
+        address: editClientForm.address,
+        
+        // ✅ Structure de paiement
+        paymentStructure: editClientForm.paymentStructure || '2',
+        
+        // 1er paiement
+        firstPaymentDate: editClientForm.firstPaymentDate || '',
+        firstPaymentMethod: editClientForm.firstPaymentMethod || '',
+        firstPaymentReceived: editClientForm.firstPaymentDate ? true : false,
+        
+        // 2e paiement
+        secondPaymentDate: editClientForm.secondPaymentDate || '',
+        secondPaymentMethod: editClientForm.secondPaymentMethod || '',
+        secondPaymentReceived: (editClientForm.paymentStructure === '2' && editClientForm.secondPaymentDate && editClientForm.secondPaymentDate !== '' && editClientForm.secondPaymentDate !== 'À venir') ? true : false,
+        
+        // 3e paiement
+        thirdPaymentDate: editClientForm.thirdPaymentDate || '',
+        thirdPaymentMethod: editClientForm.thirdPaymentMethod || '',
+        thirdPaymentReceived: false,
+        
+        // 4e paiement
+        fourthPaymentDate: editClientForm.fourthPaymentDate || '',
+        fourthPaymentMethod: editClientForm.fourthPaymentMethod || '',
+        fourthPaymentReceived: false
+      };
+    }
+    return client;
+  });
+  
+  setClients(updatedClients);
+  saveToStorage('clients', updatedClients);
+  setEditingClient(null);
+  setEditClientForm({
+    name: '', 
+    phone: '', 
+    phone2: '', 
+    email: '', 
+    type: '', 
+    address: '',
+    paymentStructure: '2', 
+    firstPaymentDate: '', 
+    secondPaymentDate: '',
+    firstPaymentMethod: '', 
+    secondPaymentMethod: '',
+    thirdPaymentDate: '',
+    thirdPaymentMethod: '',
+    fourthPaymentDate: '',
+    fourthPaymentMethod: ''
+  });
+};
   const cancelEdit = () => {
     setEditingClient(null);
     setEditClientForm({
@@ -5014,230 +5053,261 @@ Merci de votre patience!
       )}
 
       {/* Modal d'édition client */}
-      {editingClient && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-          background: 'rgba(0,0,0,0.5)', zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'white', borderRadius: '12px', padding: '25px',
-            width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto'
-          }}>
-            <h3 style={{ color: '#1a4d1a', marginBottom: '20px' }}>Modifier le client</h3>
-            
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
-           <div>
-  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nom du client</label>
-  <input
-    type="text" 
-    value={editClientForm.name}
-    onChange={(e) => setEditClientForm({ ...editClientForm, name: e.target.value })}
-    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-  />
-</div>
-
-<div>
-  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone</label>
-  <input
-    type="tel" 
-    value={editClientForm.phone}
-    onChange={(e) => setEditClientForm({ ...editClientForm, phone: e.target.value })}
-    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-  />
-</div>
-
-{/* 📱 NOUVEAU CHAMP - Téléphone 2 */}
-<div>
-  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-    Téléphone 2 (optionnel)
-  </label>
-  <input
-    type="tel" 
-    value={editClientForm.phone2 || ''}
-    onChange={(e) => setEditClientForm({ ...editClientForm, phone2: e.target.value })}
-    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-    placeholder="Numéro secondaire (optionnel)"
-  />
-</div>
-      </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Email</label>
-                <input
-                  type="email" value={editClientForm.email}
-                  onChange={(e) => setEditClientForm({ ...editClientForm, email: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                />
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type</label>
-                <select
-                  value={editClientForm.type}
-                  onChange={(e) => setEditClientForm({ ...editClientForm, type: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                >
-                  <option value="">Sélectionner...</option>
-                  <option value="résidentiel">Résidentiel</option>
-                  <option value="commercial">Commercial</option>
-                  <option value="industriel">Industriel</option>
-                </select>
-              </div>
-            </div>
-
-            <div style={{ marginBottom: '15px' }}>
-              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Adresse</label>
-              <textarea
-                rows="2" value={editClientForm.address}
-                onChange={(e) => setEditClientForm({ ...editClientForm, address: e.target.value })}
-                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-              />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Structure de paiement</label>
-                <select
-                  value={editClientForm.paymentStructure}
-                  onChange={(e) => setEditClientForm({ ...editClientForm, paymentStructure: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                >
-                  <option value="1">1 versement unique</option>
-                  <option value="2">2 versements</option>
-                </select>
-              </div>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 1er versement</label>
-                <input
-                  type="date" value={editClientForm.firstPaymentDate}
-                  onChange={(e) => setEditClientForm({ ...editClientForm, firstPaymentDate: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                />
-              </div>
-            </div>
-{/* ✅ NOUVEAU CHAMP - Date réelle du chèque */}
-<div style={{ 
-  marginBottom: '15px', 
-  background: '#fff3cd', 
-  padding: '12px', 
-  borderRadius: '8px',
-  border: '2px solid #ffc107'
-}}>
-  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#856404' }}>
-    📄 Date inscrite sur le CHÈQUE reçu (1er paiement)
-  </label>
-  <input
-    type="date" 
-    value={editClientForm.firstPaymentDateReelle || ''}
-    onChange={(e) => setEditClientForm({ ...editClientForm, firstPaymentDateReelle: e.target.value })}
-    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-  />
-  <small style={{ color: '#856404', fontSize: '12px', display: 'block', marginTop: '5px' }}>
-    ⚠️ Cette date sera utilisée pour le marquage automatique du paiement.
-    <br />Inscrivez la date EXACTE écrite sur le chèque que vous avez reçu.
-  </small>
-</div>
-
-{editClientForm.paymentStructure === '2' && (
-  <>
-    <div style={{ marginBottom: '15px' }}>
-      <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '10px' }}>
-        <input 
-          type="checkbox"
-          checked={editClientForm.secondPaymentDate === 'À venir'}
-          onChange={(e) => {
-            setEditClientForm({ 
-              ...editClientForm, 
-              secondPaymentDate: e.target.checked ? 'À venir' : '',
-              secondPaymentMethod: e.target.checked ? '' : editClientForm.secondPaymentMethod,
-              secondPaymentDateReelle: '' // Vider la date réelle aussi
-            });
-          }}
-          style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-        />
-        <span style={{ fontWeight: 'bold', color: '#ff9800', fontSize: '14px' }}>
-          📅 2e versement à venir (date non déterminée)
-        </span>
-      </label>
+{editingClient && (
+  <div style={{ 
+    background: 'white', 
+    padding: '20px', 
+    borderRadius: '8px', 
+    boxShadow: '0 2px 8px rgba(0,0,0,0.1)' 
+  }}>
+    <h3 style={{ color: '#1a4d1a', marginBottom: '20px' }}>Modifier le client</h3>
+    
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
       
-      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-        Date du 2e paiement (PRÉVUE)
-      </label>
-      <input
-        type="date" 
-        value={editClientForm.secondPaymentDate === 'À venir' ? '' : editClientForm.secondPaymentDate}
-        onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentDate: e.target.value })}
-        disabled={editClientForm.secondPaymentDate === 'À venir'}
-        style={{ 
-          width: '100%', 
-          padding: '8px 12px', 
-          borderRadius: '6px', 
-          border: '1px solid #ddd',
-          backgroundColor: editClientForm.secondPaymentDate === 'À venir' ? '#f5f5f5' : 'white',
-          cursor: editClientForm.secondPaymentDate === 'À venir' ? 'not-allowed' : 'text'
-        }}
-      />
-      <small style={{ color: '#666', fontSize: '12px' }}>
-        Date prévue dans le contrat (pour le client)
-      </small>
-    </div>
-          {editClientForm.paymentStructure === '2' && (
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 2e versement</label>
-                <input
-                  type="date" value={editClientForm.secondPaymentDate}
-                  onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentDate: e.target.value })}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                />
-              </div>
-            )}
- {/* ✅ NOUVEAU CHAMP - Date réelle du 2e chèque */}
-    {editClientForm.secondPaymentDate !== 'À venir' && (
-      <div style={{ 
-        marginBottom: '15px', 
-        background: '#e3f2fd', 
-        padding: '12px', 
-        borderRadius: '8px',
-        border: '2px solid #2196f3'
-      }}>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold', color: '#1976d2' }}>
-          📄 Date inscrite sur le CHÈQUE reçu (2e paiement)
+      {/* Nom du client */}
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Nom du client
         </label>
         <input
-          type="date" 
-          value={editClientForm.secondPaymentDateReelle || ''}
-          onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentDateReelle: e.target.value })}
+          type="text" 
+          value={editClientForm.name}
+          onChange={(e) => setEditClientForm({ ...editClientForm, name: e.target.value })}
           style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
         />
-        <small style={{ color: '#1976d2', fontSize: '12px', display: 'block', marginTop: '5px' }}>
-          ⚠️ Cette date sera utilisée pour le marquage automatique du paiement.
-          <br />Inscrivez la date EXACTE écrite sur le chèque que vous avez reçu.
-        </small>
       </div>
-    )}
-  </>
-)}
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', marginTop: '20px' }}>
-              <button onClick={cancelEdit} style={{
-                padding: '10px 20px', background: '#6c757d', color: 'white',
-                border: 'none', borderRadius: '8px', cursor: 'pointer'
-              }}>
-                Annuler
-              </button>
-              <button onClick={saveEditClient} style={{
-                padding: '10px 20px', background: '#28a745', color: 'white',
-                border: 'none', borderRadius: '8px', cursor: 'pointer'
-              }}>
-                Sauvegarder
-              </button>
-            </div>
+
+      {/* Téléphone */}
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Téléphone
+        </label>
+        <input
+          type="tel" 
+          value={editClientForm.phone}
+          onChange={(e) => setEditClientForm({ ...editClientForm, phone: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+
+      {/* 📱 Téléphone 2 */}
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Téléphone 2 (optionnel)
+        </label>
+        <input
+          type="tel" 
+          value={editClientForm.phone2 || ''}
+          onChange={(e) => setEditClientForm({ ...editClientForm, phone2: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          placeholder="Numéro secondaire"
+        />
+      </div>
+
+      {/* Email */}
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Email
+        </label>
+        <input
+          type="email" 
+          value={editClientForm.email || ''}
+          onChange={(e) => setEditClientForm({ ...editClientForm, email: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+
+      {/* Adresse */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Adresse
+        </label>
+        <input
+          type="text" 
+          value={editClientForm.address}
+          onChange={(e) => setEditClientForm({ ...editClientForm, address: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+
+      {/* ✨ STRUCTURE DE PAIEMENT - NOUVEAU CHAMP MODIFIABLE */}
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Structure de paiement
+        </label>
+        <select
+          value={editClientForm.paymentStructure || '2'}
+          onChange={(e) => setEditClientForm({ ...editClientForm, paymentStructure: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        >
+          <option value="1">1 versement unique</option>
+          <option value="2">2 versements</option>
+          <option value="3">3 versements</option>
+          <option value="4">4 versements</option>
+        </select>
+      </div>
+
+      {/* Date 1er paiement */}
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Date 1er paiement
+        </label>
+        <input
+          type="date"
+          value={editClientForm.firstPaymentDate || ''}
+          onChange={(e) => setEditClientForm({ ...editClientForm, firstPaymentDate: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      </div>
+
+      {/* Méthode 1er paiement */}
+      <div>
+        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+          Méthode 1er paiement
+        </label>
+        <select
+          value={editClientForm.firstPaymentMethod || ''}
+          onChange={(e) => setEditClientForm({ ...editClientForm, firstPaymentMethod: e.target.value })}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        >
+          <option value="">Sélectionner...</option>
+          <option value="cheque">Chèque</option>
+          <option value="comptant">Comptant</option>
+        </select>
+      </div>
+
+      {/* 2e paiement - Affiché si 2, 3 ou 4 versements */}
+      {(editClientForm.paymentStructure === '2' || editClientForm.paymentStructure === '3' || editClientForm.paymentStructure === '4') && (
+        <>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Date 2e paiement
+            </label>
+            <input
+              type="date"
+              value={editClientForm.secondPaymentDate || ''}
+              onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentDate: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
           </div>
-        </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Méthode 2e paiement
+            </label>
+            <select
+              value={editClientForm.secondPaymentMethod || ''}
+              onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentMethod: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            >
+              <option value="">Sélectionner...</option>
+              <option value="cheque">Chèque</option>
+              <option value="comptant">Comptant</option>
+            </select>
+          </div>
+        </>
       )}
 
-      {/* Modal d'édition contrat */}
+      {/* 3e paiement - Affiché si 3 ou 4 versements */}
+      {(editClientForm.paymentStructure === '3' || editClientForm.paymentStructure === '4') && (
+        <>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Date 3e paiement (optionnel)
+            </label>
+            <input
+              type="date"
+              value={editClientForm.thirdPaymentDate || ''}
+              onChange={(e) => setEditClientForm({ ...editClientForm, thirdPaymentDate: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Méthode 3e paiement
+            </label>
+            <select
+              value={editClientForm.thirdPaymentMethod || ''}
+              onChange={(e) => setEditClientForm({ ...editClientForm, thirdPaymentMethod: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            >
+              <option value="">Sélectionner...</option>
+              <option value="cheque">Chèque</option>
+              <option value="comptant">Comptant</option>
+            </select>
+          </div>
+        </>
+      )}
+
+      {/* 4e paiement - Affiché si 4 versements */}
+      {editClientForm.paymentStructure === '4' && (
+        <>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Date 4e paiement (optionnel)
+            </label>
+            <input
+              type="date"
+              value={editClientForm.fourthPaymentDate || ''}
+              onChange={(e) => setEditClientForm({ ...editClientForm, fourthPaymentDate: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+              Méthode 4e paiement
+            </label>
+            <select
+              value={editClientForm.fourthPaymentMethod || ''}
+              onChange={(e) => setEditClientForm({ ...editClientForm, fourthPaymentMethod: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            >
+              <option value="">Sélectionner...</option>
+              <option value="cheque">Chèque</option>
+              <option value="comptant">Comptant</option>
+            </select>
+          </div>
+        </>
+      )}
+
+    </div>
+
+    {/* Boutons */}
+    <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+      <button
+        onClick={saveEditClient}
+        style={{
+          padding: '10px 20px',
+          background: '#28a745',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontWeight: 'bold'
+        }}
+      >
+        💾 Sauvegarder
+      </button>
+      <button
+        onClick={cancelEdit}
+        style={{
+          padding: '10px 20px',
+          background: '#dc3545',
+          color: 'white',
+          border: 'none',
+          borderRadius: '6px',
+          cursor: 'pointer',
+          fontWeight: 'bold'
+        }}
+      >
+        ❌ Annuler
+      </button>
+    </div>
+  </div>
+)}
+{/* Modal d'édition contrat */}
       {editingContract && (
         <div style={{
           position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
