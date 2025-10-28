@@ -798,6 +798,7 @@ Merci de votre patience!
   };
 
   // FONCTIONS CLIENTS
+// ✅ CRÉER LE CLIENT
 const addClient = () => {
   // Validations client
   if (!clientForm.name || !clientForm.phone || !clientForm.address) {
@@ -816,10 +817,12 @@ const addClient = () => {
     alert('Veuillez spécifier la date de paiement.');
     return;
   }
-if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
-  alert('Veuillez spécifier la date du 1er versement.');
-  return;
-}
+  
+  if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
+    alert('Veuillez spécifier la date du 1er versement.');
+    return;
+  }
+  
   if (!clientForm.firstPaymentMethod) {
     alert('Veuillez sélectionner la méthode du 1er paiement.');
     return;
@@ -833,9 +836,6 @@ if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
   const clientId = Date.now();
 
   // ✅ CRÉER LE CLIENT
-const addClient = () => {
-  // Validations...
-  
   const client = {
     id: clientId,
     name: clientForm.name,
@@ -854,7 +854,7 @@ const addClient = () => {
     // 2e paiement
     secondPaymentDate: clientForm.secondPaymentDate || '',
     secondPaymentMethod: clientForm.secondPaymentMethod || '',
-secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.secondPaymentDate && clientForm.secondPaymentDate !== '' && clientForm.secondPaymentDate !== 'À venir') ? true : false,  
+    secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.secondPaymentDate && clientForm.secondPaymentDate !== '' && clientForm.secondPaymentDate !== 'À venir') ? true : false,
     
     // 3e paiement (nouveau)
     thirdPaymentDate: clientForm.thirdPaymentDate || '',
@@ -865,8 +865,8 @@ secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.second
     fourthPaymentDate: clientForm.fourthPaymentDate || '',
     fourthPaymentMethod: clientForm.fourthPaymentMethod || '',
     fourthPaymentReceived: false
-  }
-  };
+  }; // ← UNE SEULE accolade fermante ici
+
   // ✅ CRÉER LE CONTRAT AUTOMATIQUEMENT
   const contract = {
     id: clientId + 1,
@@ -892,9 +892,21 @@ secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.second
   
   // Réinitialiser le formulaire
   setClientForm({
-    name: '', phone: '', phone2: '', email: '', type: '', address: '',
-    paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
-    firstPaymentMethod: '', secondPaymentMethod: '',
+    name: '', 
+    phone: '', 
+    phone2: '', 
+    email: '', 
+    type: '', 
+    address: '',
+    paymentStructure: '2', 
+    firstPaymentDate: '', 
+    secondPaymentDate: '',
+    firstPaymentMethod: '', 
+    secondPaymentMethod: '',
+    thirdPaymentDate: '',      // ← Ajouter
+    thirdPaymentMethod: '',     // ← Ajouter
+    fourthPaymentDate: '',      // ← Ajouter
+    fourthPaymentMethod: '',    // ← Ajouter
     contractType: 'saisonnier',
     contractAmount: '',
     startDate: '',
@@ -919,8 +931,8 @@ secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.second
       paymentStructure: client.paymentStructure || '2',
       firstPaymentMethod: client.firstPaymentMethod || '',
       secondPaymentMethod: client.secondPaymentMethod || '',
-      firstPaymentDateReelle: client.firstPaymentDateRelle || '',
-      secondPaymnetDateReelle: client.secondPaymentDateRelle || ''
+      firstPaymentDateReelle: client.firstPaymentDateReelle || '',
+      secondPaymnetDateReelle: client.secondPaymentDateReelle || ''
     });
   };
 
