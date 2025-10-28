@@ -413,6 +413,111 @@ const checkAndMarkPaymentsReceived = () => {
       } else if (secondPaymentDate > today) {
         console.log(`  ⏭️ Date du 2e paiement pas encore atteinte (${secondPaymentDate.toLocaleDateString('fr-CA')})`);
       }
+      // ✅ VÉRIFIER 3E PAIEMENT
+if ((client.paymentStructure === '3' || client.paymentStructure === '4') && 
+    client.thirdPaymentDate && 
+    client.thirdPaymentDate !== 'À venir' && 
+    client.thirdPaymentMethod === 'cheque') {
+  
+  const thirdPaymentDate = new Date(client.thirdPaymentDate);
+  thirdPaymentDate.setHours(0, 0, 0, 0);
+  
+  const alreadyReceived = newPayments.some(p => 
+    p.clientId === client.id && 
+    p.paymentNumber === 3 && 
+    p.received
+  );
+
+  if (thirdPaymentDate <= today && !alreadyReceived) {
+    const amount = contract.amount / parseInt(client.paymentStructure);
+    
+    console.log(`  💰 Date du 3e paiement atteinte! Marquage automatique de ${amount}$`);
+    
+    const payment = {
+      id: Date.now() + Math.random() + 4,
+      clientId: client.id,
+      paymentNumber: 3,
+      amount: parseFloat(amount),
+      date: client.thirdPaymentDate,
+      paymentMethod: 'cheque',
+      received: true,
+      recordedAt: new Date().toISOString(),
+      autoMarked: true
+    };
+    newPayments.push(payment);
+
+    const invoice = {
+      id: Date.now() + Math.random() + 5,
+      clientId: client.id,
+      amount: parseFloat(amount),
+      date: client.thirdPaymentDate,
+      type: 'revenu',
+      description: `3e versement - ${client.name} (Chèque)`
+    };
+    newInvoices.push(invoice);
+    
+    newClients[index] = {
+      ...newClients[index],
+      thirdPaymentReceived: true
+    };
+    
+    updatedPayments = true;
+    console.log(`  ✅ AUTO: ${client.name} - 3e paiement ${amount}$ marqué reçu`);
+  }
+}
+
+// ✅ VÉRIFIER 4E PAIEMENT
+if (client.paymentStructure === '4' && 
+    client.fourthPaymentDate && 
+    client.fourthPaymentDate !== 'À venir' && 
+    client.fourthPaymentMethod === 'cheque') {
+  
+  const fourthPaymentDate = new Date(client.fourthPaymentDate);
+  fourthPaymentDate.setHours(0, 0, 0, 0);
+  
+  const alreadyReceived = newPayments.some(p => 
+    p.clientId === client.id && 
+    p.paymentNumber === 4 && 
+    p.received
+  );
+
+  if (fourthPaymentDate <= today && !alreadyReceived) {
+    const amount = contract.amount / 4;
+    
+    console.log(`  💰 Date du 4e paiement atteinte! Marquage automatique de ${amount}$`);
+    
+    const payment = {
+      id: Date.now() + Math.random() + 6,
+      clientId: client.id,
+      paymentNumber: 4,
+      amount: parseFloat(amount),
+      date: client.fourthPaymentDate,
+      paymentMethod: 'cheque',
+      received: true,
+      recordedAt: new Date().toISOString(),
+      autoMarked: true
+    };
+    newPayments.push(payment);
+
+    const invoice = {
+      id: Date.now() + Math.random() + 7,
+      clientId: client.id,
+      amount: parseFloat(amount),
+      date: client.fourthPaymentDate,
+      type: 'revenu',
+      description: `4e versement - ${client.name} (Chèque)`
+    };
+    newInvoices.push(invoice);
+    
+    newClients[index] = {
+      ...newClients[index],
+      fourthPaymentReceived: true
+    };
+    
+    updatedPayments = true;
+    console.log(`  ✅ AUTO: ${client.name} - 4e paiement ${amount}$ marqué reçu`);
+  }
+}
     }
   });
 
@@ -728,6 +833,9 @@ if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
   const clientId = Date.now();
 
   // ✅ CRÉER LE CLIENT
+const addClient = () => {
+  // Validations...
+  
   const client = {
     id: clientId,
     name: clientForm.name,
@@ -737,13 +845,27 @@ if (clientForm.paymentStructure === '2' && !clientForm.firstPaymentDate) {
     type: clientForm.type,
     address: clientForm.address,
     paymentStructure: clientForm.paymentStructure,
+    
+    // 1er paiement
     firstPaymentDate: clientForm.firstPaymentDate,
-    secondPaymentDate: clientForm.paymentStructure === '1' ? '' : clientForm.secondPaymentDate,
     firstPaymentMethod: clientForm.firstPaymentMethod,
-    secondPaymentMethod: clientForm.paymentStructure === '1' ? '' : clientForm.secondPaymentMethod,
-    firstPaymentReceived: clientForm.firstPaymentDate ? true : false,
+    firstPaymentReceived: false,
+    
+    // 2e paiement
+    secondPaymentDate: clientForm.secondPaymentDate || '',
+    secondPaymentMethod: clientForm.secondPaymentMethod || '',
 secondPaymentReceived: (clientForm.paymentStructure === '2' && clientForm.secondPaymentDate && clientForm.secondPaymentDate !== '' && clientForm.secondPaymentDate !== 'À venir') ? true : false  };
-
+    
+    // 3e paiement (nouveau)
+    thirdPaymentDate: clientForm.thirdPaymentDate || '',
+    thirdPaymentMethod: clientForm.thirdPaymentMethod || '',
+    thirdPaymentReceived: false,
+    
+    // 4e paiement (nouveau)
+    fourthPaymentDate: clientForm.fourthPaymentDate || '',
+    fourthPaymentMethod: clientForm.fourthPaymentMethod || '',
+    fourthPaymentReceived: false
+  };
   // ✅ CRÉER LE CONTRAT AUTOMATIQUEMENT
   const contract = {
     id: clientId + 1,
@@ -1048,20 +1170,22 @@ const renewMultipleContracts = () => {
   }
 
   // 📅 CONFIGURATION DES DATES - UNE SEULE FOIS POUR TOUS
-  const paymentStructure = window.prompt(
-    `Configuration des paiements pour TOUS les ${activeContracts.length} clients\n` +
-    `Saison: ${seasonStartYear}-${seasonEndYear}\n\n` +
-    `Structure de paiement?\n` +
-    `Tapez "1" pour 1 versement unique\n` +
-    `Tapez "2" pour 2 versements`,
-    '2'
-  );
+const paymentStructure = window.prompt(
+  `Configuration des paiements pour TOUS les ${activeContracts.length} clients\n\n` +
+  `Structure de paiement?\n` +
+  `Tapez "1" pour 1 versement unique\n` +
+  `Tapez "2" pour 2 versements\n` +
+  `Tapez "3" pour 3 versements\n` +
+  `Tapez "4" pour 4 versements`,
+  '2'
+);
 
-  if (!paymentStructure || (paymentStructure !== '1' && paymentStructure !== '2')) {
-    alert('Renouvellement annulé');
-    return;
-  }
+if (!paymentStructure || !['1', '2', '3', '4'].includes(paymentStructure)) {
+  alert('Renouvellement annulé');
+  return;
+}
 
+// Demander les dates selon le nombre de versements...
   // Date du 1er paiement (avec l'année de la saison choisie)
   const firstPaymentDate = window.prompt(
     `Date du ${paymentStructure === '1' ? 'paiement unique' : '1er versement'} pour TOUS les clients?\n\n` +
@@ -1288,9 +1412,10 @@ const printMultipleContracts = () => {
 
     if (!contract || !client) return;
 
-    const paymentStructure = client.paymentStructure || '2';
-    const firstPayment = paymentStructure === '1' ? contract.amount : contract.amount / 2;
-    const secondPayment = paymentStructure === '2' ? contract.amount / 2 : 0;
+
+const paymentStructure = client.paymentStructure || '2';
+const numPayments = parseInt(paymentStructure);
+const paymentAmount = contract.amount / numPayments;
     const today = new Date().toLocaleDateString('fr-CA');
 
     const contractHTML = `
@@ -1349,30 +1474,49 @@ const printMultipleContracts = () => {
           <p style="margin: 12px 0;">Le tarif pour la saison de déneigement est fixe et établi comme suit :</p>
           <p style="margin: 15px 0; font-size: 14px;"><strong>• Montant Total du Contrat :</strong> ${contract.amount.toFixed(2)} $</p>
           
-          ${paymentStructure === '1' ? `
-            <p style="margin: 15px 0;">Le paiement s'effectuera en un versement unique :</p>
-            <div style="margin: 15px 0;">
-              <p style="margin: 8px 0;"><strong>• Paiement Unique :</strong></p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${firstPayment.toFixed(2)} $</p>
-              ${client.firstPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.firstPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
-            </div>
-          ` : `
-            <p style="margin: 15px 0;">Le paiement s'effectuera selon les modalités suivantes :</p>
-            <div style="margin: 15px 0;">
-              <p style="margin: 8px 0;"><strong>• 1er Versement :</strong></p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${firstPayment.toFixed(2)} $</p>
-              ${client.firstPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.firstPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
-            </div>
-            <div style="margin: 15px 0;">
-              <p style="margin: 8px 0;"><strong>• 2e Versement :</strong></p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.secondPaymentDate || 'À déterminer'}</p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${secondPayment.toFixed(2)} $</p>
-              ${client.secondPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.secondPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
-            </div>
-          `}
-        </div>
+${paymentStructure === '1' ? `
+  <p style="margin: 15px 0;">Le paiement s'effectuera en un versement unique :</p>
+  <div style="margin: 15px 0;">
+    <p style="margin: 8px 0;"><strong>• Paiement Unique :</strong></p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+  </div>
+` : `
+  <p style="margin: 15px 0;">Le paiement s'effectuera en ${paymentStructure} versements :</p>
+  
+  <!-- 1er versement -->
+  <div style="margin: 15px 0;">
+    <p style="margin: 8px 0;"><strong>• 1er Versement :</strong></p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+  </div>
+  
+  <!-- 2e versement -->
+  <div style="margin: 15px 0;">
+    <p style="margin: 8px 0;"><strong>• 2e Versement :</strong></p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.secondPaymentDate || 'À déterminer'}</p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+  </div>
+  
+  ${(paymentStructure === '3' || paymentStructure === '4') ? `
+    <!-- 3e versement -->
+    <div style="margin: 15px 0;">
+      <p style="margin: 8px 0;"><strong>• 3e Versement :</strong></p>
+      <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.thirdPaymentDate || 'À déterminer'}</p>
+      <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+    </div>
+  ` : ''}
+  
+  ${paymentStructure === '4' ? `
+    <!-- 4e versement -->
+    <div style="margin: 15px 0;">
+      <p style="margin: 8px 0;"><strong>• 4e Versement :</strong></p>
+      <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.fourthPaymentDate || 'À déterminer'}</p>
+      <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+    </div>
+  ` : ''}
+`}
+</div>
         
         <hr style="border: 1px solid #000; margin: 25px 0;">
         
@@ -1733,9 +1877,9 @@ const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMetho
       return;
     }
 
-    const paymentStructure = client.paymentStructure || '2';
-    const firstPayment = paymentStructure === '1' ? contract.amount : contract.amount / 2;
-    const secondPayment = paymentStructure === '2' ? contract.amount / 2 : 0;
+const paymentStructure = client.paymentStructure || '2';
+const numPayments = parseInt(paymentStructure);
+const paymentAmount = contract.amount / numPayments;
     const today = new Date().toLocaleDateString('fr-CA');
     
     const contractHTML = `
@@ -1795,30 +1939,51 @@ const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMetho
           <p style="margin: 12px 0;">Le tarif pour la saison de déneigement est fixe et établi comme suit :</p>
           <p style="margin: 15px 0; font-size: 14px;"><strong>• Montant Total du Contrat :</strong> ${contract.amount.toFixed(2)} $</p>
           
-          ${paymentStructure === '1' ? `
-            <p style="margin: 15px 0;">Le paiement s'effectuera en un versement unique :</p>
-            <div style="margin: 15px 0;">
-              <p style="margin: 8px 0;"><strong>• Paiement Unique :</strong></p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${firstPayment.toFixed(2)} $</p>
-              ${client.firstPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.firstPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
-            </div>
-          ` : `
-            <p style="margin: 15px 0;">Le paiement s'effectuera selon les modalités suivantes :</p>
-            <div style="margin: 15px 0;">
-              <p style="margin: 8px 0;"><strong>• 1er Versement :</strong></p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${firstPayment.toFixed(2)} $</p>
-              ${client.firstPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.firstPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
-            </div>
-            <div style="margin: 15px 0;">
-              <p style="margin: 8px 0;"><strong>• 2e Versement :</strong></p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.secondPaymentDate || 'À déterminer'}</p>
-              <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${secondPayment.toFixed(2)} $</p>
-              ${client.secondPaymentMethod ? `<p style="margin: 5px 0; margin-left: 20px;">• Méthode : ${client.secondPaymentMethod === 'cheque' ? 'Chèque' : 'Argent comptant'}</p>` : ''}
-            </div>
-          `}
-          
+      
+
+
+${paymentStructure === '1' ? `
+  <p style="margin: 15px 0;">Le paiement s'effectuera en un versement unique :</p>
+  <div style="margin: 15px 0;">
+    <p style="margin: 8px 0;"><strong>• Paiement Unique :</strong></p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+  </div>
+` : `
+  <p style="margin: 15px 0;">Le paiement s'effectuera en ${paymentStructure} versements :</p>
+  
+  <!-- 1er versement -->
+  <div style="margin: 15px 0;">
+    <p style="margin: 8px 0;"><strong>• 1er Versement :</strong></p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+  </div>
+  
+  <!-- 2e versement -->
+  <div style="margin: 15px 0;">
+    <p style="margin: 8px 0;"><strong>• 2e Versement :</strong></p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.secondPaymentDate || 'À déterminer'}</p>
+    <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+  </div>
+  
+  ${(paymentStructure === '3' || paymentStructure === '4') ? `
+    <!-- 3e versement -->
+    <div style="margin: 15px 0;">
+      <p style="margin: 8px 0;"><strong>• 3e Versement :</strong></p>
+      <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.thirdPaymentDate || 'À déterminer'}</p>
+      <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+    </div>
+  ` : ''}
+  
+  ${paymentStructure === '4' ? `
+    <!-- 4e versement -->
+    <div style="margin: 15px 0;">
+      <p style="margin: 8px 0;"><strong>• 4e Versement :</strong></p>
+      <p style="margin: 5px 0; margin-left: 20px;">• Date : ${client.fourthPaymentDate || 'À déterminer'}</p>
+      <p style="margin: 5px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
+    </div>
+  ` : ''}
+`}          
           <p style="margin: 12px 0; font-size: 11px;">Tout retard de paiement pourrait entraîner la suspension immédiate du service de déneigement jusqu'à la régularisation du solde.</p>
           <p style="margin: 12px 0; font-size: 11px;">Les paiements peuvent être effectués par chèque ou en argent comptant. Tous les chèques doivent être libellés à l'ordre de JM Pominville.</p>
         </div>
@@ -2993,138 +3158,150 @@ Merci de votre patience!
   </div>
 
   {/* SECTION 3: Paiements */}
-  <div style={{ marginBottom: '15px' }}>
-    <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>💳 Structure de paiement *</label>
-    <select
-      value={clientForm.paymentStructure}
-      onChange={(e) => setClientForm({ ...clientForm, paymentStructure: e.target.value })}
-      style={{ width: '100%', maxWidth: '300px', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-    >
-      <option value="1">1 versement unique</option>
-      <option value="2">2 versements</option>
-    </select>
-  </div>
-
-  {/* Bloc 1er paiement */}
-  <div style={{ 
-    background: '#e8f5e8', padding: '15px', borderRadius: '8px', 
-    marginBottom: '15px', border: '2px solid #1a4d1a'
-  }}>
-    <h5 style={{ color: '#1a4d1a', marginBottom: '10px', fontSize: '14px' }}>
-      📅 Premier Versement {clientForm.paymentStructure === '1' ? '(Unique)' : ''}
-    </h5>
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 1er versement *</label>
-        <input
-          type="date" 
-          value={clientForm.firstPaymentDate}
-          onChange={(e) => setClientForm({ ...clientForm, firstPaymentDate: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        />
-      </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode de paiement *</label>
-        <select
-          value={clientForm.firstPaymentMethod}
-          onChange={(e) => setClientForm({ ...clientForm, firstPaymentMethod: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        >
-          <option value="">Sélectionner...</option>
-          <option value="cheque">📄 Chèque post-daté</option>
-          <option value="comptant">💰 Argent comptant</option>
-        </select>
-      </div>
-    </div>
-    {clientForm.firstPaymentMethod === 'cheque' && (
-      <div style={{ 
-        marginTop: '10px', padding: '8px', background: '#fff3cd', 
-        borderRadius: '6px', fontSize: '12px', color: '#856404'
-      }}>
-        💡 Ce chèque sera automatiquement marqué comme reçu à la date indiquée
-      </div>
-    )}
-    {clientForm.contractAmount && (
-      <div style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
-        Montant du versement: <strong>{(parseFloat(clientForm.contractAmount || 0) / (clientForm.paymentStructure === '1' ? 1 : 2)).toFixed(2)} $</strong>
-      </div>
-    )}
-  </div>
-
-  {/* Bloc 2e paiement (si structure = 2) */}
-  {clientForm.paymentStructure === '2' && (
-    <div style={{ 
-      background: '#e3f2fd', padding: '15px', borderRadius: '8px', 
-      marginBottom: '15px', border: '2px solid #007bff'
-    }}>
-      <h5 style={{ color: '#007bff', marginBottom: '10px', fontSize: '14px' }}>
-        📅 Deuxième Versement
-      </h5>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 2e versement *</label>
-   <input
-  type="date" 
-  value={editClientForm.secondPaymentDate === 'À venir' ? '' : editClientForm.secondPaymentDate}
-  onChange={(e) => setEditClientForm({ ...editClientForm, secondPaymentDate: e.target.value })}
-  disabled={editClientForm.secondPaymentDate === 'À venir'}
-  style={{ 
-    width: '100%', 
-    padding: '8px 12px', 
-    borderRadius: '6px', 
-    border: '1px solid #ddd',
-    backgroundColor: editClientForm.secondPaymentDate === 'À venir' ? '#f5f5f5' : 'white',
-    cursor: editClientForm.secondPaymentDate === 'À venir' ? 'not-allowed' : 'text'
-  }}
-/>        </div>
-        <div>
-            <div style={{ marginBottom: '15px' }}>
-  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-    <input 
-      type="checkbox"
-      checked={editClientForm.secondPaymentDate === 'À venir'}
-      onChange={(e) => {
-        setEditClientForm({ 
-          ...editClientForm, 
-          secondPaymentDate: e.target.checked ? 'À venir' : '',
-          secondPaymentMethod: e.target.checked ? '' : editClientForm.secondPaymentMethod
-        });
-      }}
-      style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-    />
-    <span style={{ fontWeight: 'bold', color: '#ff9800', fontSize: '14px' }}>
-      📅 2e versement à venir (date non déterminée)
-    </span>
+{/* Structure de paiement */}
+<div>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+    Structure de paiement *
   </label>
+  <select
+    value={clientForm.paymentStructure}
+    onChange={(e) => setClientForm({...clientForm, paymentStructure: e.target.value})}
+    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+    required
+  >
+    <option value="1">1 versement unique</option>
+    <option value="2">2 versements</option>
+    <option value="3">3 versements</option>
+    <option value="4">4 versements</option>
+  </select>
 </div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode de paiement *</label>
-          <select
-            value={clientForm.secondPaymentMethod}
-            onChange={(e) => setClientForm({ ...clientForm, secondPaymentMethod: e.target.value })}
-            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-          >
-            <option value="">Sélectionner...</option>
-            <option value="cheque">📄 Chèque post-daté</option>
-            <option value="comptant">💰 Argent comptant</option>
-          </select>
-        </div>
-      </div>
-      {clientForm.secondPaymentMethod === 'cheque' && (
-        <div style={{ 
-          marginTop: '10px', padding: '8px', background: '#fff3cd', 
-          borderRadius: '6px', fontSize: '12px', color: '#856404'
-        }}>
-          💡 Ce chèque sera automatiquement marqué comme reçu à la date indiquée
-        </div>
-      )}
-      {clientForm.contractAmount && (
-        <div style={{ marginTop: '10px', fontSize: '13px', color: '#666' }}>
-          Montant du versement: <strong>{(parseFloat(clientForm.contractAmount || 0) / 2).toFixed(2)} $</strong>
-        </div>
-      )}
-    </div>
-  )}
 
+{/* Date 1er paiement */}
+<div>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+    Date 1er paiement *
+  </label>
+  <input
+    type="date"
+    value={clientForm.firstPaymentDate}
+    onChange={(e) => setClientForm({...clientForm, firstPaymentDate: e.target.value})}
+    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+    required
+  />
+</div>
+
+{/* Méthode 1er paiement */}
+<div>
+  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+    Méthode 1er paiement *
+  </label>
+  <select
+    value={clientForm.firstPaymentMethod}
+    onChange={(e) => setClientForm({...clientForm, firstPaymentMethod: e.target.value})}
+    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+    required
+  >
+    <option value="">Sélectionner...</option>
+    <option value="cheque">Chèque</option>
+    <option value="comptant">Comptant</option>
+  </select>
+</div>
+
+{/* 2e paiement - Si 2, 3 ou 4 versements */}
+{(clientForm.paymentStructure === '2' || clientForm.paymentStructure === '3' || clientForm.paymentStructure === '4') && (
+  <>
+    <div>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Date 2e paiement *
+      </label>
+      <input
+        type="date"
+        value={clientForm.secondPaymentDate}
+        onChange={(e) => setClientForm({...clientForm, secondPaymentDate: e.target.value})}
+        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      />
+    </div>
+    
+    <div>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Méthode 2e paiement *
+      </label>
+      <select
+        value={clientForm.secondPaymentMethod}
+        onChange={(e) => setClientForm({...clientForm, secondPaymentMethod: e.target.value})}
+        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      >
+        <option value="">Sélectionner...</option>
+        <option value="cheque">Chèque</option>
+        <option value="comptant">Comptant</option>
+      </select>
+    </div>
+  </>
+)}
+
+{/* 3e paiement - Si 3 ou 4 versements */}
+{(clientForm.paymentStructure === '3' || clientForm.paymentStructure === '4') && (
+  <>
+    <div>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Date 3e paiement (optionnel)
+      </label>
+      <input
+        type="date"
+        value={clientForm.thirdPaymentDate || ''}
+        onChange={(e) => setClientForm({...clientForm, thirdPaymentDate: e.target.value})}
+        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      />
+    </div>
+    
+    <div>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Méthode 3e paiement
+      </label>
+      <select
+        value={clientForm.thirdPaymentMethod || ''}
+        onChange={(e) => setClientForm({...clientForm, thirdPaymentMethod: e.target.value})}
+        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      >
+        <option value="">Sélectionner...</option>
+        <option value="cheque">Chèque</option>
+        <option value="comptant">Comptant</option>
+      </select>
+    </div>
+  </>
+)}
+
+{/* 4e paiement - Si 4 versements */}
+{clientForm.paymentStructure === '4' && (
+  <>
+    <div>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Date 4e paiement (optionnel)
+      </label>
+      <input
+        type="date"
+        value={clientForm.fourthPaymentDate || ''}
+        onChange={(e) => setClientForm({...clientForm, fourthPaymentDate: e.target.value})}
+        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      />
+    </div>
+    
+    <div>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Méthode 4e paiement
+      </label>
+      <select
+        value={clientForm.fourthPaymentMethod || ''}
+        onChange={(e) => setClientForm({...clientForm, fourthPaymentMethod: e.target.value})}
+        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+      >
+        <option value="">Sélectionner...</option>
+        <option value="cheque">Chèque</option>
+        <option value="comptant">Comptant</option>
+      </select>
+    </div>
+  </>
+)}
   <button onClick={addClient} style={{
     padding: '12px 24px', background: '#28a745', color: 'white',
     border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
