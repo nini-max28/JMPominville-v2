@@ -278,30 +278,42 @@ const checkBackendConnection = async () => {
   };
 // FONCTION SIMPLIFIÉE - COMME AVANT
 const checkAndMarkPaymentsReceived = () => {
-  console.log('🔍 === DÉBUT VÉRIFICATION AUTO-PAIEMENTS ===');
+  // Éviter les doubles exécutions
+  if (sessionStorage.getItem('checkingPayments') === 'true') {
+    return false;
+  }
+  sessionStorage.setItem('checkingPayments', 'true');
   
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  console.log('📅 Date du jour:', today.toLocaleDateString('fr-CA'));
-  
+  try {
+    console.log('🔍 === DÉBUT VÉRIFICATION AUTO-PAIEMENTS ===');
+    
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    // ✅ TOUJOURS lire depuis localStorage pour avoir les données fraîches
+    const freshClients = JSON.parse(localStorage.getItem('clients') || '[]');
+    const freshPayments = JSON.parse(localStorage.getItem('payments') || '[]');
+    const freshInvoices = JSON.parse(localStorage.getItem('invoices') || '[]');
+    const freshContracts = JSON.parse(localStorage.getItem('contracts') || '[]');
+    
   let updatedPayments = false;
-  const newPayments = [...payments];
-  const newInvoices = [...invoices];
-  const newClients = [...clients];
+  const newPayments = [...freshPayments];
+  const newInvoices = [...freshInvoices];
+  const newClients = [...freshClients];  // ← Utilise les données fraîches
 
-  console.log('👥 Nombre de clients:', clients.length);
-  console.log('📋 Nombre de contrats:', contracts.length);
-  console.log('💰 Nombre de paiements existants:', payments.length);
+  console.log('👥 Nombre de clients:', freshClients.length);
+  console.log('📋 Nombre de contrats:', freshContracts.length);
+  console.log('💰 Nombre de paiements existants:', freshPayments.length);
 
   newClients.forEach((client, index) => {
-    const contract = contracts.find(c => c.clientId === client.id && !c.archived);
+    const contract = freshContracts.find(c => c.clientId === client.id && !c.archived);
     if (!contract) {
       console.log(`⏭️ ${client.name}: Pas de contrat actif`);
       return;
     }
 
     console.log(`\n🔍 Analyse: ${client.name}`);
-    console.log(`  - Structure: ${client.paymentStructure} versement(s)`);
+    console.log(`  - Structure: ${client.paymentStructure} versement(s)`); 
     console.log(`  - 1er paiement prévu: ${client.firstPaymentDate}`);
 
     // ✅ VÉRIFIER 1ER PAIEMENT - VERSION SIMPLIFIÉE
@@ -520,28 +532,25 @@ if (client.paymentStructure === '4' &&
 }
     }
   });
-
+    
   if (updatedPayments) {
-    console.log('\n✅ === MISE À JOUR DES DONNÉES ===');
-    console.log(`Nouveaux paiements: ${newPayments.length - payments.length}`);
-    console.log(`Nouvelles factures: ${newInvoices.length - invoices.length}`);
+      saveToStorage('payments', newPayments);
+      saveToStorage('invoices', newInvoices);
+      saveToStorage('clients', newClients);
+      
+      setPayments(newPayments);
+      setInvoices(newInvoices);
+      setClients(newClients);
+      
+      alert('✅ Des paiements ont été automatiquement marqués comme reçus selon les dates prévues!');
+      return true;
+    }
     
-    setPayments(newPayments);
-    setInvoices(newInvoices);
-    setClients(newClients);
-    saveToStorage('payments', newPayments);
-    saveToStorage('invoices', newInvoices);
-    saveToStorage('clients', newClients);
-    
-    alert('✅ Des paiements ont été automatiquement marqués comme reçus selon les dates prévues!');
-    return true;
-  } else {
-    console.log('\n⏭️ Aucun paiement à marquer automatiquement');
+    return false;
+  } finally {
+    sessionStorage.removeItem('checkingPayments');
   }
-  
-  console.log('🔍 === FIN VÉRIFICATION AUTO-PAIEMENTS ===\n');
-  return false;
-};
+}; 
   // METTRE CETTE FONCTION ICI, AVANT sendNotificationViaBackend
 const formatPhoneForTwilio = (phone) => {
   if (!phone) return null;
