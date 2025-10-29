@@ -282,7 +282,7 @@ const checkAndMarkPaymentsReceived = () => {
   if (sessionStorage.getItem('checkingPayments') === 'true') {
     return false;
   }
-  sessionStorage.setItem('checkingPayments', 'true');
+  sessionStorage.setItem('checkingPayments', 'true'); 
   
   try {
     console.log('🔍 === DÉBUT VÉRIFICATION AUTO-PAIEMENTS ===');
