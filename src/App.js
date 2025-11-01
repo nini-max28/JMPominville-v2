@@ -1670,37 +1670,46 @@ ${paymentStructure === '1' ? `
   };
 
   // FONCTIONS PAIEMENTS
-  const showPaymentModalFunc = (clientId, paymentNumber, amount) => {
-    setPaymentModal({
-      isOpen: true,
-      clientId,
-      paymentNumber,
-      amount
-    });
-  };
-
+const showPaymentModalFunc = (clientId, paymentNumber, amount) => {
+  setPaymentModal({
+    isOpen: true,
+    clientId: clientId,
+    paymentNumber: paymentNumber,
+    amount: amount,
+    customAmount: undefined  // ✅ Initialement undefined
+  });
+};
   const handlePaymentMethodSelect = (method) => {
-    markPaymentReceived(
-      paymentModal.clientId,
-      paymentModal.paymentNumber,
-      paymentModal.amount,
-      new Date().toISOString().split('T')[0],
-      method
-    );
-    setPaymentModal({ isOpen: false, clientId: null, paymentNumber: null, amount: 0 });
-  };
+  if (!paymentModal.clientId || !paymentModal.paymentNumber) {
+    alert('Erreur: Informations de paiement manquantes');
+    return;
+  }
 
-  const closePaymentModal = () => {
-    setPaymentModal({ isOpen: false, clientId: null, paymentNumber: null, amount: 0 });
-  };
-const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMethod) => {
+  // ✅ Utiliser le montant personnalisé s'il existe, sinon le montant par défaut
+  const finalAmount = paymentModal.customAmount !== undefined 
+    ? paymentModal.customAmount 
+    : paymentModal.amount;
+
+  // Validation
+  if (finalAmount <= 0) {
+    alert('⚠️ Le montant doit être supérieur à 0$');
+    return;
+  }
+
+  const client = clients.find(c => c.id === paymentModal.clientId);
+  if (!client) {
+    alert('Client introuvable');
+    return;
+  }
+
+  // Créer l'enregistrement de paiement
   const payment = {
     id: Date.now(),
-    clientId: parseInt(clientId),
-    paymentNumber: paymentNumber,
-    amount: parseFloat(amount),
-    date: date,
-    paymentMethod: paymentMethod,
+    clientId: paymentModal.clientId,
+    paymentNumber: paymentModal.paymentNumber,
+    amount: finalAmount,  // ✅ Utilise le montant final (modifié ou non)
+    date: new Date().toISOString().split('T')[0],
+    paymentMethod: method,
     received: true,
     recordedAt: new Date().toISOString()
   };
@@ -1709,32 +1718,57 @@ const markPaymentReceived = (clientId, paymentNumber, amount, date, paymentMetho
   setPayments(newPayments);
   saveToStorage('payments', newPayments);
 
-  const client = clients.find(c => c.id === parseInt(clientId));
-  if (client) {
-    const invoice = {
-      id: Date.now() + 1,
-      clientId: parseInt(clientId),
-      amount: parseFloat(amount),
-      date: date,
-      type: 'revenu',
-      description: `Paiement ${paymentNumber}${paymentNumber === 1 ? "er" : "e"} versement - ${client.name} (${paymentMethod === 'cheque' ? "Chèque" : "Comptant"})`
-    };
-
-    const newInvoices = [...invoices, invoice];
-    setInvoices(newInvoices);
-    saveToStorage('invoices', newInvoices);
-  }
-
-  alert(`Paiement ${paymentNumber}${paymentNumber === 1 ? "er" : "e"} versement marqué comme reçu (${paymentMethod === 'cheque' ? "Chèque" : "Comptant"}) !`);
-}; 
-  const deletePayment = (id) => {
-    if (window.confirm('Supprimer ce paiement ?')) {
-      const newPayments = payments.filter(payment => payment.id !== id);
-      setPayments(newPayments);
-      saveToStorage('payments', newPayments);
-    }
+  // Créer la facture avec le montant réel
+  const invoice = {
+    id: Date.now() + 1,
+    clientId: paymentModal.clientId,
+    amount: finalAmount,  // ✅ Utilise le montant final
+    date: new Date().toISOString().split('T')[0],
+    type: 'revenu',
+    description: `Paiement ${paymentModal.paymentNumber} - ${client.name} (${method === 'cheque' ? 'Chèque' : 'Comptant'})${
+      paymentModal.customAmount !== undefined && paymentModal.customAmount !== paymentModal.amount 
+        ? ` - Montant ajusté: ${finalAmount.toFixed(2)}$` 
+        : ''
+    }`
   };
 
+  const newInvoices = [...invoices, invoice];
+  setInvoices(newInvoices);
+  saveToStorage('invoices', newInvoices);
+
+  // Marquer le paiement comme reçu dans le client
+  const updatedClients = clients.map(c => {
+    if (c.id === paymentModal.clientId) {
+      const paymentField = `${
+        paymentModal.paymentNumber === 1 ? 'first' :
+        paymentModal.paymentNumber === 2 ? 'second' :
+        paymentModal.paymentNumber === 3 ? 'third' : 'fourth'
+      }PaymentReceived`;
+      
+      return { ...c, [paymentField]: true };
+    }
+    return c;
+  });
+
+  setClients(updatedClients);
+  saveToStorage('clients', updatedClients);
+
+  // Message de confirmation
+  const diffText = paymentModal.customAmount !== undefined && paymentModal.customAmount !== paymentModal.amount
+    ? `\n\n⚠️ Montant modifié: ${finalAmount.toFixed(2)}$ au lieu de ${paymentModal.amount.toFixed(2)}$`
+    : '';
+
+  alert(`✅ Paiement enregistré!\n\nMontant: ${finalAmount.toFixed(2)}$\nMéthode: ${method === 'cheque' ? 'Chèque' : 'Comptant'}${diffText}`);
+
+  // Fermer le modal
+  setPaymentModal({ 
+    isOpen: false, 
+    clientId: null, 
+    paymentNumber: null, 
+    amount: 0,
+    customAmount: undefined 
+  });
+};
   // FONCTIONS UTILITAIRES
   const isPaymentReceived = (clientId, paymentNumber) => {
     return payments.some(payment =>
@@ -5088,63 +5122,206 @@ Merci de votre patience!
 
 
       {/* Modal de paiement */}
-      {paymentModal.isOpen && (
-        <div style={{
-          position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-          background: 'rgba(0,0,0,0.5)', zIndex: 1000,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          padding: '20px'
-        }}>
-          <div style={{
-            background: 'white', borderRadius: '12px', padding: '20px',
-            width: '100%', maxWidth: '400px'
-          }}>
-            <h3 style={{ color: '#1a4d1a', marginBottom: '15px', fontSize: '1.2em' }}>
+  {paymentModal.isOpen && (
+  <div 
+    style={{
+      position: 'fixed', 
+      top: 0, 
+      left: 0, 
+      width: '100%', 
+      height: '100%',
+      background: 'rgba(0,0,0,0.5)', 
+      zIndex: 1000,
+      display: 'flex', 
+      alignItems: 'center', 
+      justifyContent: 'center', 
+      padding: '20px'
+    }}
+  >
+    <div 
+      style={{
+        background: 'white', 
+        borderRadius: '12px', 
+        padding: '25px',
+        width: '100%', 
+        maxWidth: '450px',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.3)'
+      }}
+    >
+      {/* Header */}
+      <h3 style={{ 
+        color: '#1a4d1a', 
+        marginBottom: '20px', 
+        fontSize: '1.3em',
+        textAlign: 'center',
+        borderBottom: '2px solid #e9ecef',
+        paddingBottom: '15px'
+      }}>
+        💰 Enregistrer le paiement
+      </h3>
+      
+      {/* Montant prévu */}
+      <div style={{ 
+        background: '#e7f3ff', 
+        padding: '12px', 
+        borderRadius: '8px',
+        marginBottom: '20px',
+        border: '1px solid #b3d9ff'
+      }}>
+        <p style={{ margin: '0', fontSize: '14px', color: '#004085' }}>
+          <strong>Montant prévu :</strong> {paymentModal.amount.toFixed(2)} $
+        </p>
+      </div>
 
-              Paiement de {paymentModal.amount.toFixed(0)}$ reçu
-            </h3>
-            <p style={{ color: '#666', marginBottom: '20px', fontSize: '14px' }}>
-              Comment le paiement a-t-il été reçu ?
-            </p>
-            
-            <div style={{ display: 'grid', gap: '10px', marginBottom: '15px' }}>
-              <button
-                onClick={() => handlePaymentMethodSelect('cheque')}
-                style={{
-                  padding: '15px 20px', border: '2px solid #007bff',
-                  borderRadius: '8px', background: 'white', cursor: 'pointer',
-                  fontSize: '16px', fontWeight: 'bold', color: '#007bff'
-                }}
-              >
-                📄 Chèque
-              </button>
-              
-              <button
-                onClick={() => handlePaymentMethodSelect('comptant')}
-                style={{
-                  padding: '15px 20px', border: '2px solid #28a745',
-                  borderRadius: '8px', background: 'white', cursor: 'pointer',
-                  fontSize: '16px', fontWeight: 'bold', color: '#28a745'
-                }}
-              >
-                💰 Argent comptant
-              </button>
-            </div>
-            
-            <button
-              onClick={closePaymentModal}
-              style={{
-                padding: '12px 20px', border: 'none',
-                background: '#6c757d', color: 'white', borderRadius: '8px',
-                cursor: 'pointer', width: '100%', fontSize: '14px'
-              }}
-            >
-              Annuler
-            </button>
-          </div>
+      {/* Champ montant modifiable */}
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ 
+          display: 'block', 
+          marginBottom: '8px', 
+          fontWeight: 'bold',
+          color: '#495057',
+          fontSize: '14px'
+        }}>
+          Montant réellement reçu *
+        </label>
+        <input
+          type="number"
+          step="0.01"
+          min="0"
+          value={paymentModal.customAmount !== undefined ? paymentModal.customAmount : paymentModal.amount}
+          onChange={(e) => setPaymentModal({
+            ...paymentModal, 
+            customAmount: parseFloat(e.target.value) || 0
+          })}
+          style={{
+            width: '100%',
+            padding: '12px',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            border: '2px solid #ced4da',
+            borderRadius: '8px',
+            textAlign: 'center'
+          }}
+          onFocus={(e) => e.target.style.borderColor = '#1a4d1a'}
+          onBlur={(e) => e.target.style.borderColor = '#ced4da'}
+        />
+        <small style={{ 
+          display: 'block', 
+          marginTop: '5px', 
+          color: '#6c757d',
+          fontSize: '12px'
+        }}>
+          Modifiez ce montant si le client a payé un montant différent
+        </small>
+      </div>
+
+      {/* Alerte si montant différent */}
+      {paymentModal.customAmount !== undefined && 
+       paymentModal.customAmount !== paymentModal.amount && (
+        <div style={{
+          background: '#fff3cd',
+          border: '1px solid #ffc107',
+          borderRadius: '8px',
+          padding: '12px',
+          marginBottom: '20px'
+        }}>
+          <p style={{ margin: '0', fontSize: '13px', color: '#856404' }}>
+            ⚠️ <strong>Montant modifié :</strong> Différence de {
+              (paymentModal.customAmount - paymentModal.amount).toFixed(2)
+            } $ par rapport au montant prévu
+          </p>
         </div>
       )}
 
+      {/* Question méthode de paiement */}
+      <p style={{ 
+        color: '#666', 
+        marginBottom: '20px', 
+        fontSize: '14px',
+        textAlign: 'center'
+      }}>
+        Comment le paiement a-t-il été reçu ?
+      </p>
+
+      {/* Boutons méthode */}
+      <div style={{ 
+        display: 'grid', 
+        gap: '10px', 
+        marginBottom: '20px' 
+      }}>
+        <button
+          onClick={() => handlePaymentMethodSelect('cheque')}
+          style={{
+            padding: '15px 20px',
+            border: '2px solid #007bff',
+            borderRadius: '8px',
+            background: 'white',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            color: '#007bff',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = '#007bff';
+            e.target.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'white';
+            e.target.style.color = '#007bff';
+          }}
+        >
+          📄 Chèque
+        </button>
+        
+        <button
+          onClick={() => handlePaymentMethodSelect('comptant')}
+          style={{
+            padding: '15px 20px',
+            border: '2px solid #28a745',
+            borderRadius: '8px',
+            background: 'white',
+            cursor: 'pointer',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            color: '#28a745',
+            transition: 'all 0.2s'
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = '#28a745';
+            e.target.style.color = 'white';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'white';
+            e.target.style.color = '#28a745';
+          }}
+        >
+          💰 Argent Comptant
+        </button>
+      </div>
+
+      {/* Bouton annuler */}
+      <button
+        onClick={() => setPaymentModal({ isOpen: false, clientId: null, paymentNumber: null, amount: 0, customAmount: undefined })}
+        style={{
+          width: '100%',
+          padding: '12px',
+          background: '#6c757d',
+          color: 'white',
+          border: 'none',
+          borderRadius: '8px',
+          cursor: 'pointer',
+          fontWeight: 'bold',
+          fontSize: '14px'
+        }}
+        onMouseEnter={(e) => e.target.style.background = '#5a6268'}
+        onMouseLeave={(e) => e.target.style.background = '#6c757d'}
+      >
+        ❌ Annuler
+      </button>
+    </div>
+  </div>
+)}
 {/* Modal d'édition client */}
 {editingClient && (
   <div style={{
