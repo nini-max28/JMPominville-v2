@@ -53,8 +53,9 @@ const [notificationLogs, setNotificationLogs] = useState([]);
     searchTerm: '',
     type: '',
     status: '',
-    year: ''
-  });
+    year: '',
+    const [showAddClientModal, setShowAddClientModal] = useState(false);
+});
 
   // FORMULAIRES
   const [clientForm, setClientForm] = useState({
@@ -3167,92 +3168,463 @@ Merci de votre patience!
               </div>
             </div>
 
-        {/* Formulaire d'ajout de client */}
-<div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '25px' }}>
-  <h4 style={{ marginBottom: '20px', color: '#1a4d1a' }}>
-    ➕ Ajouter un nouveau client (avec contrat automatique)
-  </h4>
+{/* Bouton pour ouvrir le modal */}
+<button
+  onClick={() => setShowAddClientModal(true)}
+  style={{
+    padding: '15px 30px',
+    background: '#28a745',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '16px',
+    boxShadow: '0 4px 12px rgba(40, 167, 69, 0.3)',
+    transition: 'all 0.2s',
+    marginBottom: '20px'
+  }}
+  onMouseEnter={(e) => {
+    e.target.style.transform = 'translateY(-2px)';
+    e.target.style.boxShadow = '0 6px 16px rgba(40, 167, 69, 0.4)';
+  }}
+  onMouseLeave={(e) => {
+    e.target.style.transform = 'translateY(0)';
+    e.target.style.boxShadow = '0 4px 12px rgba(40, 167, 69, 0.3)';
+  }}
+>
+  ➕ Ajouter un nouveau client
+</button>
 
-  {/* SECTION 1: Informations client */}
-  <div style={{ 
-    background: '#fff', padding: '15px', borderRadius: '8px', 
-    marginBottom: '20px', border: '2px solid #1a4d1a'
-  }}>
-    <h5 style={{ color: '#1a4d1a', marginBottom: '15px' }}>👤 Informations du Client</h5>
-    
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nom du client *</label>
-        <input
-          type="text" value={clientForm.name}
-          onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
-          placeholder="Ex: Jean Dupont"
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        />
-      </div>
-    {/* Téléphone 1 - ce que vous voyez actuellement */}
-<div>
-  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-    Téléphone *
-  </label>
-  <input
-    type="tel" 
-    value={clientForm.phone}
-    onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })}
-    placeholder="514-555-0123"
-    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-  />
-</div>
-
-{/* ✨ AJOUTEZ CE NOUVEAU BLOC ICI */}
-<div>
-  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
-    Téléphone 2 (optionnel)
-  </label>
-  <input
-    type="tel" 
-    value={clientForm.phone2 || ''}
-    onChange={(e) => setClientForm({ ...clientForm, phone2: e.target.value })}
-    placeholder="Numéro secondaire"
-    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-  />
-</div>
-    <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Email</label>
-        <input
-          type="email" value={clientForm.email}
-          onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
-          placeholder="client@example.com"
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-        />
-      </div>
-      <div>
-        <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type *</label>
-        <select
-          value={clientForm.type}
-          onChange={(e) => setClientForm({ ...clientForm, type: e.target.value })}
-          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+{/* Modal d'ajout de client */}
+{showAddClientModal && (
+  <div 
+    onClick={() => setShowAddClientModal(false)}
+    style={{
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      background: 'rgba(0, 0, 0, 0.5)',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      zIndex: 1000,
+      padding: '20px',
+      overflow: 'auto'
+    }}
+  >
+    <div 
+      onClick={(e) => e.stopPropagation()}
+      style={{
+        background: 'white',
+        borderRadius: '12px',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.3)',
+        maxWidth: '900px',
+        width: '100%',
+        maxHeight: '90vh',
+        overflow: 'auto',
+        padding: '30px'
+      }}
+    >
+      {/* Header avec bouton fermer */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        marginBottom: '25px',
+        borderBottom: '2px solid #e9ecef',
+        paddingBottom: '15px'
+      }}>
+        <h4 style={{ 
+          color: '#1a4d1a',
+          margin: 0,
+          fontSize: '24px',
+          fontWeight: 'bold'
+        }}>
+          ➕ Ajouter un nouveau client (avec contrat automatique)
+        </h4>
+        <button
+          onClick={() => setShowAddClientModal(false)}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            fontSize: '28px',
+            cursor: 'pointer',
+            color: '#6c757d',
+            padding: '0',
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}
+          onMouseEnter={(e) => e.target.style.background = '#f8f9fa'}
+          onMouseLeave={(e) => e.target.style.background = 'transparent'}
         >
-          <option value="">Sélectionner...</option>
-          <option value="résidentiel">Résidentiel</option>
-          <option value="commercial">Commercial</option>
-          <option value="industriel">Industriel</option>
-        </select>
+          ×
+        </button>
       </div>
-    </div>
-    
-    <div style={{ marginBottom: '15px' }}>
-      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Adresse complète *</label>
-      <textarea
-        rows="2" value={clientForm.address}
-        onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })}
-        placeholder="123 Rue Example, Ville, Province, Code postal"
-        style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-      />
+
+      {/* SECTION 1: Informations client */}
+      <div style={{ 
+        background: '#fff', 
+        padding: '15px', 
+        borderRadius: '8px', 
+        marginBottom: '20px', 
+        border: '2px solid #1a4d1a'
+      }}>
+        <h5 style={{ color: '#1a4d1a', marginBottom: '15px' }}>👤 Informations du Client</h5>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px', marginBottom: '15px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nom du client *</label>
+            <input
+              type="text" 
+              value={clientForm.name}
+              onChange={(e) => setClientForm({ ...clientForm, name: e.target.value })}
+              placeholder="Ex: Jean Dupont"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone *</label>
+            <input
+              type="tel" 
+              value={clientForm.phone}
+              onChange={(e) => setClientForm({ ...clientForm, phone: e.target.value })}
+              placeholder="514-555-0123"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Téléphone 2 (optionnel)</label>
+            <input
+              type="tel" 
+              value={clientForm.phone2 || ''}
+              onChange={(e) => setClientForm({ ...clientForm, phone2: e.target.value })}
+              placeholder="Numéro secondaire"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Email</label>
+            <input
+              type="email" 
+              value={clientForm.email}
+              onChange={(e) => setClientForm({ ...clientForm, email: e.target.value })}
+              placeholder="client@example.com"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type *</label>
+            <select
+              value={clientForm.type}
+              onChange={(e) => setClientForm({ ...clientForm, type: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            >
+              <option value="">Sélectionner...</option>
+              <option value="résidentiel">Résidentiel</option>
+              <option value="commercial">Commercial</option>
+              <option value="industriel">Industriel</option>
+            </select>
+          </div>
+        </div>
+        
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Adresse complète *</label>
+          <textarea
+            rows="2" 
+            value={clientForm.address}
+            onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })}
+            placeholder="123 Rue Example, Ville, Province, Code postal"
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          />
+        </div>
+      </div>
+
+      {/* SECTION 2: Contrat */}
+      <div style={{ 
+        background: '#fff3cd', 
+        padding: '15px', 
+        borderRadius: '8px', 
+        marginBottom: '20px', 
+        border: '2px solid #ffc107'
+      }}>
+        <h5 style={{ color: '#856404', marginBottom: '15px' }}>📋 Contrat de Déneigement</h5>
+        
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type de contrat *</label>
+            <select
+              value={clientForm.contractType}
+              onChange={(e) => setClientForm({ ...clientForm, contractType: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            >
+              <option value="">Sélectionner...</option>
+              <option value="saisonnier">Saisonnier</option>
+              <option value="par-service">Par service</option>
+              <option value="mensuel">Mensuel</option>
+            </select>
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Montant total ($) *</label>
+            <input
+              type="number" 
+              min="0" 
+              step="0.01" 
+              value={clientForm.contractAmount}
+              onChange={(e) => setClientForm({ ...clientForm, contractAmount: e.target.value })}
+              placeholder="500.00"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date de début *</label>
+            <input
+              type="date" 
+              value={clientForm.startDate}
+              onChange={(e) => setClientForm({ ...clientForm, startDate: e.target.value })}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date de fin</label>
+            <input
+              type="date" 
+              value={clientForm.endDate}
+              onChange={(e) => setClientForm({ ...clientForm, endDate: e.target.value })}
+              placeholder="Auto: 31 mars prochain"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Notes spéciales</label>
+          <textarea
+            rows="2" 
+            value={clientForm.contractNotes}
+            onChange={(e) => setClientForm({ ...clientForm, contractNotes: e.target.value })}
+            placeholder="Ex: Accès par l'arrière, attention aux arbustes..."
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          />
+        </div>
+      </div>
+
+      {/* SECTION 3: Paiements */}
+      <div style={{ 
+        background: '#e7f3ff', 
+        padding: '15px', 
+        borderRadius: '8px', 
+        marginBottom: '20px', 
+        border: '2px solid #007bff'
+      }}>
+        <h5 style={{ color: '#004085', marginBottom: '15px' }}>💰 Configuration des Paiements</h5>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '15px' }}>
+          
+          {/* Structure de paiement */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Structure de paiement *</label>
+            <select
+              value={clientForm.paymentStructure}
+              onChange={(e) => setClientForm({...clientForm, paymentStructure: e.target.value})}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+              required
+            >
+              <option value="1">1 versement unique</option>
+              <option value="2">2 versements</option>
+              <option value="3">3 versements</option>
+              <option value="4">4 versements</option>
+            </select>
+          </div>
+
+          {/* Date 1er paiement */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 1er paiement *</label>
+            <input
+              type="date"
+              value={clientForm.firstPaymentDate}
+              onChange={(e) => setClientForm({...clientForm, firstPaymentDate: e.target.value})}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+              required
+            />
+          </div>
+
+          {/* Méthode 1er paiement */}
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 1er paiement *</label>
+            <select
+              value={clientForm.firstPaymentMethod}
+              onChange={(e) => setClientForm({...clientForm, firstPaymentMethod: e.target.value})}
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+              required
+            >
+              <option value="">Sélectionner...</option>
+              <option value="cheque">Chèque</option>
+              <option value="comptant">Comptant</option>
+            </select>
+          </div>
+
+          {/* 2e paiement */}
+          {(clientForm.paymentStructure === '2' || clientForm.paymentStructure === '3' || clientForm.paymentStructure === '4') && (
+            <>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 2e paiement</label>
+                <div style={{ marginBottom: '8px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                    <input
+                      type="checkbox"
+                      checked={clientForm.secondPaymentDate === 'À venir'}
+                      onChange={(e) => setClientForm({
+                        ...clientForm, 
+                        secondPaymentDate: e.target.checked ? 'À venir' : ''
+                      })}
+                    />
+                    <span style={{ fontSize: '14px' }}>📅 Date à déterminer plus tard</span>
+                  </label>
+                </div>
+                {clientForm.secondPaymentDate !== 'À venir' && (
+                  <input
+                    type="date"
+                    value={clientForm.secondPaymentDate || ''}
+                    onChange={(e) => setClientForm({...clientForm, secondPaymentDate: e.target.value})}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                  />
+                )}
+                {clientForm.secondPaymentDate === 'À venir' && (
+                  <div style={{ padding: '10px', background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '6px', fontSize: '13px', marginTop: '8px' }}>
+                    ⏳ Date à déterminer
+                  </div>
+                )}
+              </div>
+
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 2e paiement</label>
+                <select
+                  value={clientForm.secondPaymentMethod || ''}
+                  onChange={(e) => setClientForm({...clientForm, secondPaymentMethod: e.target.value})}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                >
+                  <option value="">Sélectionner...</option>
+                  <option value="cheque">Chèque</option>
+                  <option value="comptant">Comptant</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* 3e paiement */}
+          {(clientForm.paymentStructure === '3' || clientForm.paymentStructure === '4') && (
+            <>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 3e paiement (optionnel)</label>
+                <input
+                  type="date"
+                  value={clientForm.thirdPaymentDate || ''}
+                  onChange={(e) => setClientForm({...clientForm, thirdPaymentDate: e.target.value})}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 3e paiement</label>
+                <select
+                  value={clientForm.thirdPaymentMethod || ''}
+                  onChange={(e) => setClientForm({...clientForm, thirdPaymentMethod: e.target.value})}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                >
+                  <option value="">Sélectionner...</option>
+                  <option value="cheque">Chèque</option>
+                  <option value="comptant">Comptant</option>
+                </select>
+              </div>
+            </>
+          )}
+
+          {/* 4e paiement */}
+          {clientForm.paymentStructure === '4' && (
+            <>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 4e paiement (optionnel)</label>
+                <input
+                  type="date"
+                  value={clientForm.fourthPaymentDate || ''}
+                  onChange={(e) => setClientForm({...clientForm, fourthPaymentDate: e.target.value})}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                />
+              </div>
+              
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 4e paiement</label>
+                <select
+                  value={clientForm.fourthPaymentMethod || ''}
+                  onChange={(e) => setClientForm({...clientForm, fourthPaymentMethod: e.target.value})}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                >
+                  <option value="">Sélectionner...</option>
+                  <option value="cheque">Chèque</option>
+                  <option value="comptant">Comptant</option>
+                </select>
+              </div>
+            </>
+          )}
+
+        </div>
+      </div>
+
+      {/* Boutons d'action */}
+      <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end', marginTop: '20px' }}>
+        <button 
+          onClick={() => setShowAddClientModal(false)}
+          style={{
+            padding: '12px 24px', 
+            background: '#6c757d', 
+            color: 'white',
+            border: 'none', 
+            borderRadius: '8px', 
+            cursor: 'pointer', 
+            fontWeight: 'bold',
+            fontSize: '16px'
+          }}
+        >
+          ❌ Annuler
+        </button>
+        <button 
+          onClick={() => {
+            addClient();
+            setShowAddClientModal(false);
+          }} 
+          style={{
+            padding: '12px 24px', 
+            background: '#28a745', 
+            color: 'white',
+            border: 'none', 
+            borderRadius: '8px', 
+            cursor: 'pointer', 
+            fontWeight: 'bold',
+            fontSize: '16px'
+          }}
+        >
+          ✅ Créer Client + Contrat
+        </button>
+      </div>
+
     </div>
   </div>
-
-  {/* SECTION 2: Contrat */}
+)}
+{/* SECTION 2: Contrat */}
   <div style={{ 
     background: '#fff3cd', padding: '15px', borderRadius: '8px', 
     marginBottom: '20px', border: '2px solid #ffc107'
@@ -3488,15 +3860,25 @@ Merci de votre patience!
     </div>
   </>
 )}
-  <button onClick={addClient} style={{
-    padding: '12px 24px', background: '#28a745', color: 'white',
-    border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold',
+<button 
+  onClick={() => {
+    addClient();
+    setShowAddClientModal(false);
+  }} 
+  style={{
+    padding: '12px 24px', 
+    background: '#28a745', 
+    color: 'white',
+    border: 'none', 
+    borderRadius: '8px', 
+    cursor: 'pointer', 
+    fontWeight: 'bold',
     fontSize: '16px'
-  }}>
-    ✅ Créer Client + Contrat
-  </button>
-</div>
-{/* ALERTES DE PAIEMENT - Clients sans 2e versement */}
+  }}
+>
+  ✅ Créer Client + Contrat
+</button>
+  {/* ALERTES DE PAIEMENT - Clients sans 2e versement */}
 {(() => {
   const clientsWithMissingPayment = getAdvancedFilteredClients().filter(client => {
     if (client.paymentStructure === '1') return false; // Paiement unique, pas de 2e versement
