@@ -875,7 +875,55 @@ const addClient = () => {
     fourthPaymentMethod: clientForm.fourthPaymentMethod || '',
     fourthPaymentReceived: false
   }; // ← UNE SEULE accolade fermante ici
+  const deletePayment = (paymentId) => {
+  if (!window.confirm('⚠️ Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
+    return;
+  }
 
+  // Trouver le paiement à supprimer
+  const payment = payments.find(p => p.id === paymentId);
+  if (!payment) {
+    alert('Paiement introuvable');
+    return;
+  }
+
+  // Supprimer le paiement
+  const newPayments = payments.filter(p => p.id !== paymentId);
+  setPayments(newPayments);
+  saveToStorage('payments', newPayments);
+
+  // Supprimer la facture associée si elle existe
+  const associatedInvoice = invoices.find(inv => 
+    inv.clientId === payment.clientId && 
+    Math.abs(inv.amount - payment.amount) < 0.01 &&
+    inv.date === payment.date
+  );
+
+  if (associatedInvoice) {
+    const newInvoices = invoices.filter(inv => inv.id !== associatedInvoice.id);
+    setInvoices(newInvoices);
+    saveToStorage('invoices', newInvoices);
+  }
+
+  // Mettre à jour le statut du client (remettre le paiement en "non reçu")
+  const updatedClients = clients.map(client => {
+    if (client.id === payment.clientId) {
+      const paymentField = `${
+        payment.paymentNumber === 1 ? 'first' :
+        payment.paymentNumber === 2 ? 'second' :
+        payment.paymentNumber === 3 ? 'third' : 'fourth'
+      }PaymentReceived`;
+      
+      return { ...client, [paymentField]: false };
+    }
+    return client;
+  });
+
+  setClients(updatedClients);
+  saveToStorage('clients', updatedClients);
+
+  alert('✅ Paiement supprimé avec succès!');
+};
   // ✅ CRÉER LE CONTRAT AUTOMATIQUEMENT
   const contract = {
     id: clientId + 1,
