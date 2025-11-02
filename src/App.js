@@ -550,6 +550,7 @@ if (client.paymentStructure === '4' &&
   } finally {
     sessionStorage.removeItem('checkingPayments');
   }
+};
   const deletePayment = (paymentId) => {
   if (!window.confirm('⚠️ Êtes-vous sûr de vouloir supprimer ce paiement ?')) {
     return;
