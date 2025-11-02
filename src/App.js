@@ -41,7 +41,8 @@ const [streetSearchTerm, setStreetSearchTerm] = useState('');
 const [needsBackup, setNeedsBackup] = useState(false);
 const [notificationsHistory, setNotificationsHistory] = useState([]);
 const [notificationLogs, setNotificationLogs] = useState([]);
-  const [selectedContracts, setSelectedContracts] = useState([]);  // États pour la recherche avancée
+  const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
+  const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSearchFilters, setClientSearchFilters] = useState({
     searchTerm: '',
     type: '', 
@@ -53,8 +54,8 @@ const [notificationLogs, setNotificationLogs] = useState([]);
     searchTerm: '',
     type: '',
     status: '',
-    year: '',
-    const [showAddClientModal, setShowAddClientModal] = useState(false);
+    year: ''
+  
 });
 
   // FORMULAIRES
