@@ -16,7 +16,7 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz
   const [contractContent, setContractContent] = useState('');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastSync, setLastSync] = useState('');
-  const [paymentModal, setPaymentModal] = useState({
+  const [, setPaymentModal] = useState({
     isOpen: false,
     clientId: null,
     paymentNumber: null,
@@ -998,64 +998,81 @@ const addClient = () => {
   };
 
 const saveEditClient = () => {
-  const updatedClients = clients.map(client => {
-    if (client.id === editingClient) {
-      return {
-        ...client,
-        name: editClientForm.name,
-        phone: editClientForm.phone,
-        phone2: editClientForm.phone2 || '',
-        email: editClientForm.email,
-        type: editClientForm.type,
-        address: editClientForm.address,
-        
-        // ✅ Structure de paiement
-        paymentStructure: editClientForm.paymentStructure || '2',
-        
-        // 1er paiement
-        firstPaymentDate: editClientForm.firstPaymentDate || '',
-        firstPaymentMethod: editClientForm.firstPaymentMethod || '',
-        firstPaymentReceived: editClientForm.firstPaymentDate ? true : false,
-        
-        // 2e paiement
-        secondPaymentDate: editClientForm.secondPaymentDate || '',
-        secondPaymentMethod: editClientForm.secondPaymentMethod || '',
-        secondPaymentReceived: (editClientForm.paymentStructure === '2' && editClientForm.secondPaymentDate && editClientForm.secondPaymentDate !== '' && editClientForm.secondPaymentDate !== 'À venir') ? true : false,
-        
-        // 3e paiement
-        thirdPaymentDate: editClientForm.thirdPaymentDate || '',
-        thirdPaymentMethod: editClientForm.thirdPaymentMethod || '',
-        thirdPaymentReceived: false,
-        
-        // 4e paiement
-        fourthPaymentDate: editClientForm.fourthPaymentDate || '',
-        fourthPaymentMethod: editClientForm.fourthPaymentMethod || '',
-        fourthPaymentReceived: false
-      };
+  try {
+    console.log('🔄 Début de la modification du client...');
+    
+    // Vérification que nous sommes bien en train de modifier un client
+    if (!editingClient) {
+      throw new Error('Aucun client en cours de modification');
     }
-    return client;
-  });
-  
-  setClients(updatedClients);
-  saveToStorage('clients', updatedClients);
-  setEditingClient(null);
-  setEditClientForm({
-    name: '', 
-    phone: '', 
-    phone2: '', 
-    email: '', 
-    type: '', 
-    address: '',
-    paymentStructure: '2', 
-    firstPaymentDate: '', 
-    secondPaymentDate: '',
-    firstPaymentMethod: '', 
-    secondPaymentMethod: '',
-    thirdPaymentDate: '',
-    thirdPaymentMethod: '',
-    fourthPaymentDate: '',
-    fourthPaymentMethod: ''
-  });
+
+    // Validation des champs obligatoires
+    if (!editClientForm.name || !editClientForm.phone || !editClientForm.address) {
+      alert('⚠️ Le nom, le téléphone et l\'adresse sont obligatoires');
+      return;
+    }
+
+    console.log('✅ Validation OK, mise à jour du client ID:', editingClient);
+
+    // Mise à jour du client
+    const updatedClients = clients.map(client => {
+      if (client.id === editingClient) {
+        return {
+          ...client,
+          name: editClientForm.name,
+          phone: editClientForm.phone,
+          phone2: editClientForm.phone2 || '',
+          email: editClientForm.email || '',
+          type: editClientForm.type || client.type,
+          address: editClientForm.address,
+          paymentStructure: editClientForm.paymentStructure || client.paymentStructure,
+          firstPaymentDate: editClientForm.firstPaymentDate || client.firstPaymentDate,
+          firstPaymentMethod: editClientForm.firstPaymentMethod || client.firstPaymentMethod,
+          secondPaymentDate: editClientForm.secondPaymentDate || client.secondPaymentDate,
+          secondPaymentMethod: editClientForm.secondPaymentMethod || client.secondPaymentMethod,
+          thirdPaymentDate: editClientForm.thirdPaymentDate || client.thirdPaymentDate,
+          thirdPaymentMethod: editClientForm.thirdPaymentMethod || client.thirdPaymentMethod,
+          fourthPaymentDate: editClientForm.fourthPaymentDate || client.fourthPaymentDate,
+          fourthPaymentMethod: editClientForm.fourthPaymentMethod || client.fourthPaymentMethod
+        };
+      }
+      return client;
+    });
+
+    console.log('💾 Sauvegarde des modifications...');
+
+    // Sauvegarde
+    setClients(updatedClients);
+    saveToStorage('clients', updatedClients);
+
+    console.log('✅ Client modifié avec succès');
+
+    // Fermer le modal et réinitialiser le formulaire
+    setEditingClient(null);
+    setEditClientForm({
+      name: '', 
+      phone: '', 
+      phone2: '', 
+      email: '', 
+      type: '', 
+      address: '',
+      paymentStructure: '2', 
+      firstPaymentDate: '', 
+      secondPaymentDate: '',
+      firstPaymentMethod: '', 
+      secondPaymentMethod: '',
+      thirdPaymentDate: '', 
+      thirdPaymentMethod: '',
+      fourthPaymentDate: '', 
+      fourthPaymentMethod: ''
+    });
+
+    alert('✅ Client modifié avec succès!');
+    
+  } catch (error) {
+    console.error('❌ ERREUR lors de la modification:', error);
+    alert('❌ Erreur lors de la sauvegarde: ' + error.message + '\n\nVos données n\'ont pas été modifiées.');
+  }
 };
   const cancelEdit = () => {
     setEditingClient(null);
@@ -1731,7 +1748,7 @@ const showPaymentModalFunc = (clientId, paymentNumber, amount) => {
     customAmount: undefined  // ✅ Initialement undefined
   });
 };
-  const handlePaymentMethodSelect = (method) => {
+const handlePaymentMethodSelect = (method) => {
   if (!paymentModal.clientId || !paymentModal.paymentNumber) {
     alert('Erreur: Informations de paiement manquantes');
     return;
@@ -1778,7 +1795,7 @@ const showPaymentModalFunc = (clientId, paymentNumber, amount) => {
     date: new Date().toISOString().split('T')[0],
     type: 'revenu',
     description: `Paiement ${paymentModal.paymentNumber} - ${client.name} (${method === 'cheque' ? 'Chèque' : 'Comptant'})${
-      paymentModal.customAmount !== undefined && paymentModal.customAmount !== paymentModal.amount 
+      paymentModal.customAmount !== undefined && Math.abs(paymentModal.customAmount - paymentModal.amount) > 0.01
         ? ` - Montant ajusté: ${finalAmount.toFixed(2)}$` 
         : ''
     }`
@@ -1806,7 +1823,7 @@ const showPaymentModalFunc = (clientId, paymentNumber, amount) => {
   saveToStorage('clients', updatedClients);
 
   // Message de confirmation
-  const diffText = paymentModal.customAmount !== undefined && paymentModal.customAmount !== paymentModal.amount
+  const diffText = paymentModal.customAmount !== undefined && Math.abs(paymentModal.customAmount - paymentModal.amount) > 0.01
     ? `\n\n⚠️ Montant modifié: ${finalAmount.toFixed(2)}$ au lieu de ${paymentModal.amount.toFixed(2)}$`
     : '';
 
@@ -5297,12 +5314,8 @@ Merci de votre patience!
             </div>
           </div>
         )}
-
-
-
-
-      {/* Modal de paiement */}
-  {paymentModal.isOpen && (
+{/* Modal de paiement */}
+{paymentModal.isOpen && (
   <div 
     style={{
       position: 'fixed', 
@@ -5353,7 +5366,7 @@ Merci de votre patience!
         </p>
       </div>
 
-      {/* Champ montant modifiable */}
+      {/* 💰 CHAMP MONTANT MODIFIABLE */}
       <div style={{ marginBottom: '20px' }}>
         <label style={{ 
           display: 'block', 
@@ -5397,7 +5410,7 @@ Merci de votre patience!
 
       {/* Alerte si montant différent */}
       {paymentModal.customAmount !== undefined && 
-       paymentModal.customAmount !== paymentModal.amount && (
+       Math.abs(paymentModal.customAmount - paymentModal.amount) > 0.01 && (
         <div style={{
           background: '#fff3cd',
           border: '1px solid #ffc107',
@@ -5482,7 +5495,13 @@ Merci de votre patience!
 
       {/* Bouton annuler */}
       <button
-        onClick={() => setPaymentModal({ isOpen: false, clientId: null, paymentNumber: null, amount: 0, customAmount: undefined })}
+        onClick={() => setPaymentModal({ 
+          isOpen: false, 
+          clientId: null, 
+          paymentNumber: null, 
+          amount: 0, 
+          customAmount: undefined 
+        })}
         style={{
           width: '100%',
           padding: '12px',
@@ -5502,6 +5521,10 @@ Merci de votre patience!
     </div>
   </div>
 )}
+
+
+     
+
 {/* Modal d'édition client */}
 {editingClient && (
   <div style={{
