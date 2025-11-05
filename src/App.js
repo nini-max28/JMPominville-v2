@@ -1501,20 +1501,105 @@ const startEditContract = (contract) => {
   });
 };
 
-const saveEditContract = () => {
-  const updatedContracts = contracts.map(contract =>
-    contract.id === editingContract ? { ...contract, ...editContractForm } : contract
-  );
-  setContracts(updatedContracts);
-  saveToStorage('contracts', updatedContracts);
-  setEditingContract(null);
-  setEditContractForm({
-    clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: ''
-  });
-};
 
-const cancelEditContract = () => {
+const saveEditContract = () => {
+  console.log('=== DÉBUT MODIFICATION CONTRAT ===');
+  
+  try {
+    // 1. Vérifications de base
+    console.log('1. Vérification editingContract:', editingContract);
+    
+    if (!editingContract) {
+      throw new Error('Aucun contrat sélectionné pour modification');
+    }
+
+    console.log('2. Vérification du formulaire:', editContractForm);
+    
+    if (!editContractForm || !editContractForm.type || !editContractForm.amount) {
+      alert('⚠️ Le type et le montant du contrat sont obligatoires');
+      return;
+    }
+
+    console.log('3. Vérification de contracts:', contracts);
+    
+    if (!contracts || contracts.length === 0) {
+      throw new Error('Liste des contrats vide ou non définie');
+    }
+
+    console.log('4. Recherche du contrat à modifier...');
+    
+    const contractToUpdate = contracts.find(c => c.id === editingContract);
+    
+    if (!contractToUpdate) {
+      throw new Error(`Contrat avec ID ${editingContract} introuvable`);
+    }
+
+    console.log('5. Contrat trouvé:', contractToUpdate);
+    console.log('6. Création de la version mise à jour...');
+
+    // 2. Mise à jour du contrat
+    const updatedContracts = contracts.map(contract => {
+      if (contract.id === editingContract) {
+        const updated = {
+          ...contract,
+          type: editContractForm.type,
+          amount: parseFloat(editContractForm.amount) || 0,
+          startDate: editContractForm.startDate || contract.startDate,
+          endDate: editContractForm.endDate || contract.endDate,
+          notes: editContractForm.notes || '',
+          archived: contract.archived || false
+        };
+        
+        console.log('7. Contrat mis à jour:', updated);
+        return updated;
+      }
+      return contract;
+    });
+
+    console.log('8. Sauvegarde dans React state...');
+    
+    // 3. Vérification que setContracts existe
+    if (typeof setContracts !== 'function') {
+      throw new Error('setContracts n\'est pas une fonction');
+    }
+    
+    setContracts(updatedContracts);
+
+    console.log('9. Sauvegarde dans localStorage...');
+    
+    // 4. Sauvegarde dans localStorage
+    try {
+      localStorage.setItem('contracts', JSON.stringify(updatedContracts));
+      console.log('10. ✅ Sauvegarde localStorage réussie');
+    } catch (storageError) {
+      console.error('Erreur localStorage:', storageError);
+      throw new Error('Impossible de sauvegarder dans localStorage: ' + storageError.message);
+    }
+
+    console.log('11. Fermeture du modal...');
+
+    // 5. Fermer le modal et réinitialiser
+    setEditingContract(null);
+    setEditContractForm({
+      type: '',
+      amount: '',
+      startDate: '',
+      endDate: '',
+      notes: ''
+    });
+
+    console.log('12. ✅ MODIFICATION TERMINÉE AVEC SUCCÈS');
+    alert('✅ Contrat modifié avec succès!');
+    
+  } catch (error) {
+    console.error('❌ ERREUR CRITIQUE:', error);
+    console.error('Stack trace:', error.stack);
+    alert(`❌ Erreur lors de la modification du contrat:\n\n${error.message}\n\nVos données n'ont PAS été modifiées.\n\nOuvrez la console (Cmd+Option+J) pour plus de détails.`);
+  }
+  
+  console.log('=== FIN MODIFICATION CONTRAT ===\n');
+};
+  cancelEditContract = () => {
   setEditingContract(null);
   setEditContractForm({
     clientId: '', type: '', startDate: '', endDate: '',
