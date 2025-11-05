@@ -16,7 +16,7 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz
   const [contractContent, setContractContent] = useState('');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastSync, setLastSync] = useState('');
-  const [payment, setPaymentModal] = useState({
+  const [paymentModal, setPaymentModal] = useState({
     isOpen: false,
     clientId: null,
     paymentNumber: null,
