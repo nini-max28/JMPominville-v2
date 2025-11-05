@@ -16,11 +16,12 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz
   const [contractContent, setContractContent] = useState('');
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [lastSync, setLastSync] = useState('');
-  const [, setPaymentModal] = useState({
+  const [payment, setPaymentModal] = useState({
     isOpen: false,
     clientId: null,
     paymentNumber: null,
-    amount: 0
+    amount: 0,
+    customAmount: undefined
   });
   const [clientSearch, setClientSearch] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
