@@ -1599,11 +1599,18 @@ const saveEditContract = () => {
   
   console.log('=== FIN MODIFICATION CONTRAT ===\n');
 };
-  cancelEditContract = () => {
+const cancelEditContract = () => {
+  console.log('🚫 Annulation de la modification de contrat');
+  
   setEditingContract(null);
   setEditContractForm({
-    clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: ''
+    clientId: '', 
+    type: '', 
+    startDate: '', 
+    endDate: '',
+    amount: '', 
+    status: 'actif', 
+    notes: ''
   });
 };
   // FONCTION POUR IMPRIMER PLUSIEURS CONTRATS
