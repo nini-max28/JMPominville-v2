@@ -198,6 +198,58 @@ const saveToStorage = async (key, data) => {
   }
 };
 
+  const emergencyRecovery = () => {
+  try {
+    // Vérifier si des données existent
+    const clientsData = localStorage.getItem('clients');
+    const contractsData = localStorage.getItem('contracts');
+    const paymentsData = localStorage.getItem('payments');
+    const invoicesData = localStorage.getItem('invoices');
+
+    if (!clientsData && !contractsData) {
+      alert('❌ Aucune donnée trouvée dans le navigateur.\n\nLes données ont été effacées ou n\'existent pas.');
+      return;
+    }
+
+    // Compter les éléments
+    const clientCount = clientsData ? JSON.parse(clientsData).length : 0;
+    const contractCount = contractsData ? JSON.parse(contractsData).length : 0;
+
+    const confirm = window.confirm(
+      `🔍 RÉCUPÉRATION D'URGENCE\n\n` +
+      `Données trouvées dans le navigateur :\n` +
+      `👥 ${clientCount} clients\n` +
+      `📋 ${contractCount} contrats\n\n` +
+      `Voulez-vous télécharger ces données ?`
+    );
+
+    if (!confirm) return;
+
+    // Créer la sauvegarde
+    const backup = {
+      clients: clientsData,
+      contracts: contractsData,
+      payments: paymentsData,
+      invoices: invoicesData,
+      date: new Date().toISOString(),
+      recoveryType: 'emergency'
+    };
+
+    // Télécharger
+    const blob = new Blob([JSON.stringify(backup, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `URGENCE-recuperation-${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    alert(`✅ Fichier de récupération téléchargé !\n\n👥 ${clientCount} clients récupérés\n📋 ${contractCount} contrats récupérés\n\nGardez ce fichier précieusement !`);
+
+  } catch (error) {
+    alert('❌ Erreur lors de la récupération : ' + error.message);
+  }
+};
 // ✅ VÉRIFICATION CONNEXION BACKEND (en dehors des useEffect)
 const checkBackendConnection = async () => {
   try {
@@ -2774,6 +2826,22 @@ Merci de votre patience!
               }}>
                 Export
               </button>
+{/* Bouton de récupération d'urgence */}
+<button
+  onClick={emergencyRecovery}
+  style={{
+    padding: '15px 30px',
+    background: '#dc3545',
+    color: 'white',
+    border: 'none',
+    borderRadius: '8px',
+    cursor: 'pointer',
+    fontWeight: 'bold',
+    fontSize: '16px'
+  }}
+>
+  🚨 Récupération d'urgence
+</button>
 <button 
   onClick={async () => {
     console.log('🔍 Test manuel backend démarré...');
