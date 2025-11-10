@@ -3045,7 +3045,7 @@ Merci de votre patience!
                         const secondPaymentReceived = isPaymentReceived(client.id, 2);
                         const paymentStructure = client.paymentStructure || '2';
                         
-                        // Statut paiement global
+                        //  global
                         let paymentStatus = 'Non payé';
                         if (paymentStructure === '1' && firstPaymentReceived) {
                           paymentStatus = 'Payé';
@@ -3703,34 +3703,41 @@ Merci de votre patience!
               </div>
             </>
           )}
-
-          {/* 3e paiement */}
-          {(clientForm.paymentStructure === '3' || clientForm.paymentStructure === '4') && (
-            <>
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Date 3e paiement (optionnel)</label>
-                <input
-                  type="date"
-                  value={clientForm.thirdPaymentDate || ''}
-                  onChange={(e) => setClientForm({...clientForm, thirdPaymentDate: e.target.value})}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                />
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 3e paiement</label>
-                <select
-                  value={clientForm.thirdPaymentMethod || ''}
-                  onChange={(e) => setClientForm({...clientForm, thirdPaymentMethod: e.target.value})}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                >
-                  <option value="">Sélectionner...</option>
-                  <option value="cheque">Chèque</option>
-                  <option value="comptant">Comptant</option>
-                </select>
-              </div>
-            </>
-          )}
+{/* 3e paiement */}
+{(clientForm.paymentStructure === '3' || clientForm.paymentStructure === '4') && (
+  <>
+    <div>
+      <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>
+        Date 3e paiement
+      </label>
+      
+      {/* Checkbox "À venir" */}
+      <div style={{ marginBottom: '8px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+          <input
+            type="checkbox"
+            checked={clientForm.thirdPaymentDate === 'À venir'}
+            onChange={(e) => setClientForm({
+              ...clientForm, 
+              thirdPaymentDate: e.target.checked ? 'À venir' : ''
+            })}
+          />
+          <span style={{ fontSize: '14px' }}>📅 Date à déterminer plus tard</span>
+        </label>
+      </div>
+      
+      {/* Champ de date */}
+      {clientForm.thirdPaymentDate !== 'À venir' && (
+        <input
+          type="date"
+          value={clientForm.thirdPaymentDate || ''}
+          onChange={(e) => setClientForm({...clientForm, thirdPaymentDate: e.target.value})}
+          style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+        />
+      )}
+    </div>
+  </>
+)}    
 
           {/* 4e paiement */}
           {clientForm.paymentStructure === '4' && (
@@ -3884,87 +3891,116 @@ Merci de votre patience!
                               </span>
                             </td>
 
-                         <td style={{ padding: '15px' }}>
+       <td style={{ padding: '15px' }}>
   <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+    
+    {/* 1er paiement - TOUJOURS affiché */}
     <div style={{
-      padding: '4px 8px', borderRadius: '8px',
-      background: firstPaymentReceived ? '#d4edda' : '#f8d7da',
-      fontSize: '11px', textAlign: 'center'
+      padding: '4px 8px', 
+      borderRadius: '8px',
+      background: client.firstPaymentReceived ? '#d4edda' : '#f8d7da',
+      fontSize: '11px', 
+      textAlign: 'center'
     }}>
-      <div>1er: {(client.firstPaymentReceived !== undefined ? client.firstPaymentReceived : (client.firstPaymentDate ? true : false)) ? '✅ Reçu' : '❌ En attente'}</div>      <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+      <div>1er: {client.firstPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+      <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
         {client.firstPaymentMethod === 'cheque' ? '📄 Chèque' : 
          client.firstPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
       </div>
       {client.firstPaymentDate && (
         <div style={{ fontSize: '8px', color: '#666' }}>
-          Date: {new Date(client.firstPaymentDate).toLocaleDateString('fr-CA')}
+          {new Date(client.firstPaymentDate).toLocaleDateString('fr-CA')}
         </div>
       )}
     </div>
     
-    {client.paymentStructure === '2' && (
+    {/* 2e paiement - Si 2, 3 ou 4 versements */}
+    {(client.paymentStructure === '2' || client.paymentStructure === '3' || client.paymentStructure === '4') && (
       <div style={{
-        padding: '4px 8px', borderRadius: '8px',
-        background: secondPaymentReceived ? '#d4edda' : '#f8d7da',
-        fontSize: '11px', textAlign: 'center'
+        padding: '4px 8px', 
+        borderRadius: '8px',
+        background: client.secondPaymentReceived ? '#d4edda' : 
+                   (client.secondPaymentDate === 'À venir' ? '#fff3cd' : '#f8d7da'),
+        fontSize: '11px', 
+        textAlign: 'center'
       }}>
-        <div>2e: {(client.secondPaymentReceived !== undefined ? client.secondPaymentReceived : ((client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentDate !== 'À venir') ? true : false)) ? '✅ Reçu' : '❌ En attente'}</div>        <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
-          {client.secondPaymentMethod === 'cheque' ? '📄 Chèque' : 
-           client.secondPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
+        <div>
+          2e: {client.secondPaymentReceived ? '✅ Reçu' : 
+              (client.secondPaymentDate === 'À venir' ? '⏳ À venir' : '❌ En attente')}
         </div>
-        {client.secondPaymentDate && (
-          <div style={{ fontSize: '8px', color: '#666' }}>
-            Date: {new Date(client.secondPaymentDate).toLocaleDateString('fr-CA')}
-          </div>
+        {client.secondPaymentDate && client.secondPaymentDate !== 'À venir' && (
+          <>
+            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+              {client.secondPaymentMethod === 'cheque' ? '📄 Chèque' : 
+               client.secondPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
+            </div>
+            <div style={{ fontSize: '8px', color: '#666' }}>
+              {new Date(client.secondPaymentDate).toLocaleDateString('fr-CA')}
+            </div>
+          </>
         )}
       </div>
     )}
+
+    {/* 3e paiement - Si 3 ou 4 versements */}
+    {(client.paymentStructure === '3' || client.paymentStructure === '4') && (
+      <div style={{
+        padding: '4px 8px', 
+        borderRadius: '8px',
+        background: client.thirdPaymentReceived ? '#d4edda' : 
+                   (client.thirdPaymentDate === 'À venir' ? '#fff3cd' : '#f8d7da'),
+        fontSize: '11px', 
+        textAlign: 'center'
+      }}>
+        <div>
+          3e: {client.thirdPaymentReceived ? '✅ Reçu' : 
+              (client.thirdPaymentDate === 'À venir' ? '⏳ À venir' : '❌ En attente')}
+        </div>
+        {client.thirdPaymentDate && client.thirdPaymentDate !== 'À venir' && (
+          <>
+            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+              {client.thirdPaymentMethod === 'cheque' ? '📄 Chèque' : 
+               client.thirdPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
+            </div>
+            <div style={{ fontSize: '8px', color: '#666' }}>
+              {new Date(client.thirdPaymentDate).toLocaleDateString('fr-CA')}
+            </div>
+          </>
+        )}
+      </div>
+    )}
+
+    {/* 4e paiement - Si 4 versements */}
+    {client.paymentStructure === '4' && (
+      <div style={{
+        padding: '4px 8px', 
+        borderRadius: '8px',
+        background: client.fourthPaymentReceived ? '#d4edda' : 
+                   (client.fourthPaymentDate === 'À venir' ? '#fff3cd' : '#f8d7da'),
+        fontSize: '11px', 
+        textAlign: 'center'
+      }}>
+        <div>
+          4e: {client.fourthPaymentReceived ? '✅ Reçu' : 
+              (client.fourthPaymentDate === 'À venir' ? '⏳ À venir' : '❌ En attente')}
+        </div>
+        {client.fourthPaymentDate && client.fourthPaymentDate !== 'À venir' && (
+          <>
+            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+              {client.fourthPaymentMethod === 'cheque' ? '📄 Chèque' : 
+               client.fourthPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
+            </div>
+            <div style={{ fontSize: '8px', color: '#666' }}>
+              {new Date(client.fourthPaymentDate).toLocaleDateString('fr-CA')}
+            </div>
+          </>
+        )}
+      </div>
+    )}
+    
   </div>
-  {/* 3e paiement - Si 3 ou 4 versements */}
-              {(client.paymentStructure === '3' || client.paymentStructure === '4') && client.thirdPaymentDate && (
-                <div style={{
-                  padding: '4px 8px', 
-                  borderRadius: '8px',
-                  background: isPaymentReceived(client.id, 3) ? '#d4edda' : '#f8d7da',
-                  fontSize: '11px', 
-                  textAlign: 'center'
-                }}>
-                  <div>3e: {isPaymentReceived(client.id, 3) ? '✅ Reçu' : '❌ Non reçu'}</div>
-                  <div>
-                    {client.thirdPaymentMethod === 'cheque' ? '📄 Chèque' :
-                     client.thirdPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
-                  </div>
-                  {client.thirdPaymentDate && (
-                    <div style={{ fontSize: '8px', color: '#666' }}>
-                      Date: {new Date(client.thirdPaymentDate).toLocaleDateString('fr-CA')}
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {/* 4e paiement - Si 4 versements */}
-              {client.paymentStructure === '4' && client.fourthPaymentDate && (
-                <div style={{
-                  padding: '4px 8px', 
-                  borderRadius: '8px',
-                  background: isPaymentReceived(client.id, 4) ? '#d4edda' : '#f8d7da',
-                  fontSize: '11px', 
-                  textAlign: 'center'
-                }}>
-                  <div>4e: {isPaymentReceived(client.id, 4) ? '✅ Reçu' : '❌ Non reçu'}</div>
-                  <div>
-                    {client.fourthPaymentMethod === 'cheque' ? '📄 Chèque' :
-                                     client.fourthPaymentMethod === 'comptant' ? '💰 Comptant' : '⚠️ Non défini'}
-                  </div>
-                  {client.fourthPaymentDate && (
-                    <div style={{ fontSize: '8px', color: '#666' }}>
-                      Date: {new Date(client.fourthPaymentDate).toLocaleDateString('fr-CA')}
-                    </div>
-                  )}
-                </div>
-              )}
-                </td>
-
+</td>
+    
                             <td style={{ padding: '15px' }}>
                               <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
                                 {contract && !firstPaymentReceived && (
