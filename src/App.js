@@ -4025,20 +4025,6 @@ Merci de votre patience!
 }}>
   <label style={{ fontWeight: 'bold', color: '#495057' }}>Trier par :</label>
   <button
-    onClick={() => setClientSortMode('street')}
-    style={{
-      padding: '8px 16px',
-      background: clientSortMode === 'street' ? '#1a4d1a' : 'white',
-      color: clientSortMode === 'street' ? 'white' : '#1a4d1a',
-      border: '2px solid #1a4d1a',
-      borderRadius: '6px',
-      cursor: 'pointer',
-      fontWeight: 'bold'
-    }}
-  >
-    🏘️ Par rue
-  </button>
-  <button
     onClick={() => setClientSortMode('name')}
     style={{
       padding: '8px 16px',
@@ -4052,16 +4038,200 @@ Merci de votre patience!
   >
     👤 Par nom
   </button>
+  <button
+    onClick={() => setClientSortMode('street')}
+    style={{
+      padding: '8px 16px',
+      background: clientSortMode === 'street' ? '#1a4d1a' : 'white',
+      color: clientSortMode === 'street' ? 'white' : '#1a4d1a',
+      border: '2px solid #1a4d1a',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontWeight: 'bold'
+    }}
+  >
+    🏘️ Par rue
+  </button>
 </div>
 
 {/* Liste des clients */}
 {getAdvancedFilteredClients().length > 0 ? (
-  (() => {
-    const filteredClients = getAdvancedFilteredClients();
-    
-    if (clientSortMode === 'street') {
-      // Grouper par rue
+  clientSortMode === 'name' ? (
+    // MODE TRI PAR NOM (existant)
+    <div style={{ overflowX: 'auto' }}>
+      <table style={{
+        width: '100%', borderCollapse: 'collapse',
+        background: 'white', borderRadius: '12px', overflow: 'hidden',
+        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+      }}>
+        <thead>
+          <tr style={{ background: '#f8f9fa' }}>
+            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Client</th>
+            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Contact</th>
+            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Type</th>
+            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Statut Paiements</th>
+            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {getAdvancedFilteredClients()
+            .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+            .map(client => {
+              const contract = contracts.find(c => c.clientId === client.id && !c.archived);
+              const firstPaymentReceived = isPaymentReceived(client.id, 1);
+              const secondPaymentReceived = isPaymentReceived(client.id, 2);
+              const firstPayment = payments.find(p => p.clientId === client.id && p.paymentNumber === 1);
+              const secondPayment = payments.find(p => p.clientId === client.id && p.paymentNumber === 2);
+
+              return (
+                <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                  <td style={{ padding: '15px' }}>
+                    <div>
+                      <strong style={{ color: '#1a4d1a' }}>{client.name}</strong>
+                      <div style={{ fontSize: '13px', color: '#666', marginTop: '2px' }}>
+                        {client.address}
+                      </div>
+                    </div>
+                  </td>
+                  
+                  <td style={{ padding: '15px' }}>
+                    <div>
+                      <div>📞 {client.phone}</div>
+                      {client.email && <div style={{ fontSize: '12px', color: '#666' }}>📧 {client.email}</div>}
+                    </div>
+                  </td>
+                  
+                  <td style={{ padding: '15px' }}>
+                    <span style={{
+                      padding: '4px 8px', borderRadius: '12px', fontSize: '12px',
+                      fontWeight: 'bold', background: '#e8f5e8', color: '#1a4d1a'
+                    }}>
+                      {client.type || 'Non défini'}
+                    </span>
+                  </td>
+
+                  <td style={{ padding: '15px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                      <div 
+                        style={{
+                          padding: '4px 8px', 
+                          borderRadius: '8px',
+                          background: firstPaymentReceived ? '#d4edda' : '#f8d7da',
+                          fontSize: '11px', 
+                          textAlign: 'center', 
+                          cursor: !firstPaymentReceived && contract ? 'pointer' : 'default',
+                          transition: 'transform 0.2s'
+                        }}
+                        onClick={() => {
+                          if (!firstPaymentReceived && contract) {
+                            showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));
+                          }
+                        }}
+                        onTouchEnd={(e) => {
+                          if (!firstPaymentReceived && contract) {
+                            e.preventDefault();
+                            showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));
+                          }
+                        }}
+                        onMouseEnter={(e) => {
+                          if (!firstPaymentReceived && contract) {
+                            e.currentTarget.style.transform = 'scale(1.05)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }}
+                      >
+                        <div>1er: {firstPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                        {!firstPaymentReceived && contract && (
+                          <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
+                            👆 Cliquez pour marquer
+                          </div>
+                        )}
+                        {firstPayment && (
+                          <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+                            {firstPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
+                          </div>
+                        )}
+                      </div>
+                      
+                      {client.paymentStructure === '2' && (
+                        <div 
+                          style={{
+                            padding: '4px 8px', 
+                            borderRadius: '8px',
+                            background: secondPaymentReceived ? '#d4edda' : '#f8d7da',
+                            fontSize: '11px', 
+                            textAlign: 'center',
+                            cursor: !secondPaymentReceived && firstPaymentReceived && contract ? 'pointer' : 'default',
+                            transition: 'transform 0.2s',
+                            opacity: !firstPaymentReceived ? 0.5 : 1
+                          }}
+                          onClick={() => {
+                            if (!secondPaymentReceived && firstPaymentReceived && contract) {
+                              showPaymentModalFunc(client.id, 2, contract.amount / 2);
+                            }
+                          }}
+                          onTouchEnd={(e) => {
+                            if (!secondPaymentReceived && firstPaymentReceived && contract) {
+                              e.preventDefault();
+                              showPaymentModalFunc(client.id, 2, contract.amount / 2);
+                            }
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!secondPaymentReceived && firstPaymentReceived && contract) {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        >
+                          <div>2e: {secondPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {!secondPaymentReceived && firstPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
+                              👆 Cliquez pour marquer
+                            </div>
+                          )}
+                          {secondPayment && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+                              {secondPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </td>
+
+                  <td style={{ padding: '15px' }}>
+                    <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+                      <button
+                        onClick={() => startEditClient(client)}
+                        style={{ padding: '5px 10px', fontSize: '12px', background: '#ffc107', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        ✏️ Modifier
+                      </button>
+                      
+                      <button
+                        onClick={() => deleteClient(client.id)}
+                        style={{ padding: '5px 10px', fontSize: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                      >
+                        🗑️ Supprimer
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+        </tbody>
+      </table>
+    </div>
+  ) : (
+    // MODE TRI PAR RUE (nouveau)
+    (() => {
+      const filteredClients = getAdvancedFilteredClients();
       const streetGroups = {};
+      
       filteredClients.forEach(client => {
         const street = client.address.split(',')[0].trim() || 'Sans adresse';
         if (!streetGroups[street]) {
@@ -4070,7 +4240,6 @@ Merci de votre patience!
         streetGroups[street].push(client);
       });
       
-      // Trier les rues alphabétiquement
       const sortedStreets = Object.keys(streetGroups).sort((a, b) => 
         a.toLowerCase().localeCompare(b.toLowerCase())
       );
@@ -4079,7 +4248,6 @@ Merci de votre patience!
         <div>
           {sortedStreets.map(street => (
             <div key={street} style={{ marginBottom: '30px' }}>
-              {/* En-tête de rue */}
               <div style={{
                 background: 'linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%)',
                 color: 'white',
@@ -4103,7 +4271,6 @@ Merci de votre patience!
                 </span>
               </div>
               
-              {/* Tableau des clients de cette rue */}
               <div style={{ overflowX: 'auto', marginBottom: '20px' }}>
                 <table style={{
                   width: '100%', borderCollapse: 'collapse',
@@ -4123,7 +4290,6 @@ Merci de votre patience!
                     {streetGroups[street]
                       .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
                       .map(client => {
-                        // ... Votre code de ligne client existant ...
                         const contract = contracts.find(c => c.clientId === client.id && !c.archived);
                         const firstPaymentReceived = isPaymentReceived(client.id, 1);
                         const secondPaymentReceived = isPaymentReceived(client.id, 2);
@@ -4132,7 +4298,6 @@ Merci de votre patience!
 
                         return (
                           <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                            {/* Votre code de cellules existant */}
                             <td style={{ padding: '15px' }}>
                               <div>
                                 <strong style={{ color: '#1a4d1a' }}>{client.name}</strong>
@@ -4167,7 +4332,6 @@ Merci de votre patience!
                                     background: firstPaymentReceived ? '#d4edda' : '#f8d7da',
                                     fontSize: '11px', 
                                     textAlign: 'center', 
-                                    position: 'relative',
                                     cursor: !firstPaymentReceived && contract ? 'pointer' : 'default',
                                     transition: 'transform 0.2s'
                                   }}
@@ -4279,22 +4443,8 @@ Merci de votre patience!
           ))}
         </div>
       );
-    } else {
-      // Mode tri par nom (existant)
-      return (
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{
-            width: '100%', borderCollapse: 'collapse',
-            background: 'white', borderRadius: '12px', overflow: 'hidden',
-            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-          }}>
-            {/* Votre tableau existant pour le tri par nom */}
-            {/* ... Code existant ... */}
-          </table>
-        </div>
-      );
-    }
-  })()
+    })()
+  )
 ) : (
   <div style={{
     textAlign: 'center', padding: '40px 20px',
