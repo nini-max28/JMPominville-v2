@@ -3163,61 +3163,76 @@ Merci de votre patience!
             </div>
 
             {/* Alertes de paiements */}
-{alerts.slice(0, 5).map((alert, index) => {
-  const client = clients.find(c => c.name === alert.client);
-  const contract = client ? contracts.find(c => c.clientId === client.id && !c.archived) : null;
-  const paymentNumber = alert.message.includes('1er') ? 1 : 2;
-  
-  const handleClick = () => {
-    if (client && contract) {
-      showPaymentModalFunc(client.id, paymentNumber, parseFloat(alert.amount));
-    }
-  };
-  
+{(() => {
+  const alerts = getPaymentAlerts();
+  if (alerts.length === 0) return null;
+
   return (
-    <div 
-      key={index} 
-      style={{
-        padding: '12px 16px', 
-        borderRadius: '8px',
-        background: alert.priority === 'high' ? '#f8d7da' : '#fff3cd',
-        border: `1px solid ${alert.priority === 'high' ? '#f5c6cb' : '#ffeaa7'}`,
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        cursor: 'pointer',
-        transition: 'transform 0.2s',
-        WebkitTapHighlightColor: 'transparent'
-      }}
-      onClick={handleClick}
-      onTouchEnd={(e) => {
-        e.preventDefault();
-        handleClick();
-      }}
-      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-    >
-      <div>
-        <strong>{alert.client}</strong>
-        <div style={{ fontSize: '14px', color: '#666' }}>{alert.message}</div>
-        <div style={{ fontSize: '12px', color: '#28a745', marginTop: '4px', fontWeight: 'bold' }}>
-          👆 Cliquez pour marquer le paiement
-        </div>
-      </div>
-      <div style={{
-        padding: '6px 12px', 
-        borderRadius: '20px', 
-        fontSize: '12px', 
-        fontWeight: 'bold',
-        background: alert.priority === 'high' ? '#dc3545' : '#ffc107', 
-        color: 'white'
-      }}>
-        {alert.amount}$
+    <div style={{
+      background: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '12px',
+      padding: '20px', marginBottom: '30px', borderLeft: '5px solid #fdcb6e'
+    }}>
+      <h3 style={{ color: '#856404', marginBottom: '15px' }}>🔔 Alertes de Paiements ({alerts.length})</h3>
+      <div style={{ display: 'grid', gap: '10px' }}>
+        {alerts.slice(0, 5).map((alert, index) => {
+          const client = clients.find(c => c.name === alert.client);
+          const contract = client ? contracts.find(c => c.clientId === client.id && !c.archived) : null;
+          const paymentNumber = alert.message.includes('1er') ? 1 : 2;
+          
+          const handleClick = () => {
+            if (client && contract) {
+              showPaymentModalFunc(client.id, paymentNumber, parseFloat(alert.amount));
+            }
+          };
+          
+          return (
+            <div 
+              key={index} 
+              style={{
+                padding: '12px 16px', 
+                borderRadius: '8px',
+                background: alert.priority === 'high' ? '#f8d7da' : '#fff3cd',
+                border: `1px solid ${alert.priority === 'high' ? '#f5c6cb' : '#ffeaa7'}`,
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                WebkitTapHighlightColor: 'transparent'
+              }}
+              onClick={handleClick}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleClick();
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              <div>
+                <strong>{alert.client}</strong>
+                <div style={{ fontSize: '14px', color: '#666' }}>{alert.message}</div>
+                <div style={{ fontSize: '12px', color: '#28a745', marginTop: '4px', fontWeight: 'bold' }}>
+                  👆 Cliquez pour marquer le paiement
+                </div>
+              </div>
+              <div style={{
+                padding: '6px 12px', 
+                borderRadius: '20px', 
+                fontSize: '12px', 
+                fontWeight: 'bold',
+                background: alert.priority === 'high' ? '#dc3545' : '#ffc107', 
+                color: 'white'
+              }}>
+                {alert.amount}$
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
-})}
-{/* Activité récente */}
+})()}
+  {/* Activité récente */}
             <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px' }}>
               <h3 style={{ color: '#1a4d1a', marginBottom: '15px' }}>📈 Activité Récente</h3>
               <div style={{ display: 'grid', gap: '10px' }}>
@@ -3254,61 +3269,76 @@ Merci de votre patience!
             <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>👥 Gestion des Clients</h2>
 
             {/* Alertes de paiements si présentes */}
-       {alerts.slice(0, 5).map((alert, index) => {
-  const client = clients.find(c => c.name === alert.client);
-  const contract = client ? contracts.find(c => c.clientId === client.id && !c.archived) : null;
-  const paymentNumber = alert.message.includes('1er') ? 1 : 2;
-  
-  const handleClick = () => {
-    if (client && contract) {
-      showPaymentModalFunc(client.id, paymentNumber, parseFloat(alert.amount));
-    }
-  };
-  
+      {(() => {
+  const alerts = getPaymentAlerts();
+  if (alerts.length === 0) return null;
+
   return (
-    <div 
-      key={index} 
-      style={{
-        padding: '12px 16px', 
-        borderRadius: '8px',
-        background: alert.priority === 'high' ? '#f8d7da' : '#fff3cd',
-        border: `1px solid ${alert.priority === 'high' ? '#f5c6cb' : '#ffeaa7'}`,
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        cursor: 'pointer',
-        transition: 'transform 0.2s',
-        WebkitTapHighlightColor: 'transparent'
-      }}
-      onClick={handleClick}
-      onTouchEnd={(e) => {
-        e.preventDefault();
-        handleClick();
-      }}
-      onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
-      onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-    >
-      <div>
-        <strong>{alert.client}</strong>
-        <div style={{ fontSize: '14px', color: '#666' }}>{alert.message}</div>
-        <div style={{ fontSize: '12px', color: '#28a745', marginTop: '4px', fontWeight: 'bold' }}>
-          👆 Cliquez pour marquer le paiement
-        </div>
-      </div>
-      <div style={{
-        padding: '6px 12px', 
-        borderRadius: '20px', 
-        fontSize: '12px', 
-        fontWeight: 'bold',
-        background: alert.priority === 'high' ? '#dc3545' : '#ffc107', 
-        color: 'white'
-      }}>
-        {alert.amount}$
+    <div style={{
+      background: '#fff3cd', border: '1px solid #ffeaa7', borderRadius: '12px',
+      padding: '20px', marginBottom: '30px', borderLeft: '5px solid #fdcb6e'
+    }}>
+      <h3 style={{ color: '#856404', marginBottom: '15px' }}>🔔 Alertes de Paiements ({alerts.length})</h3>
+      <div style={{ display: 'grid', gap: '10px' }}>
+        {alerts.slice(0, 5).map((alert, index) => {
+          const client = clients.find(c => c.name === alert.client);
+          const contract = client ? contracts.find(c => c.clientId === client.id && !c.archived) : null;
+          const paymentNumber = alert.message.includes('1er') ? 1 : 2;
+          
+          const handleClick = () => {
+            if (client && contract) {
+              showPaymentModalFunc(client.id, paymentNumber, parseFloat(alert.amount));
+            }
+          };
+          
+          return (
+            <div 
+              key={index} 
+              style={{
+                padding: '12px 16px', 
+                borderRadius: '8px',
+                background: alert.priority === 'high' ? '#f8d7da' : '#fff3cd',
+                border: `1px solid ${alert.priority === 'high' ? '#f5c6cb' : '#ffeaa7'}`,
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                WebkitTapHighlightColor: 'transparent'
+              }}
+              onClick={handleClick}
+              onTouchEnd={(e) => {
+                e.preventDefault();
+                handleClick();
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.02)'}
+              onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+            >
+              <div>
+                <strong>{alert.client}</strong>
+                <div style={{ fontSize: '14px', color: '#666' }}>{alert.message}</div>
+                <div style={{ fontSize: '12px', color: '#28a745', marginTop: '4px', fontWeight: 'bold' }}>
+                  👆 Cliquez pour marquer le paiement
+                </div>
+              </div>
+              <div style={{
+                padding: '6px 12px', 
+                borderRadius: '20px', 
+                fontSize: '12px', 
+                fontWeight: 'bold',
+                background: alert.priority === 'high' ? '#dc3545' : '#ffc107', 
+                color: 'white'
+              }}>
+                {alert.amount}$
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
-})}
-{/* Panneau de recherche */}
+})()}
+  {/* Panneau de recherche */}
             <div style={{
               background: '#f8f9fa', padding: '20px', borderRadius: '12px',
               marginBottom: '20px', border: '1px solid #dee2e6'
