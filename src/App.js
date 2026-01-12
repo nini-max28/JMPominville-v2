@@ -3871,8 +3871,11 @@ Merci de votre patience!
     </div>
   </div>
 )}
-{/* Alerte des clients sans 2e versement - CLIQUABLE */}
+   {/* Alerte des clients sans 2e versement - CLIQUABLE */}
 {(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0); // Minuit pour comparaison de dates
+  
   const clientsWithoutSecondPayment = clients.filter(client => {
     const contract = contracts.find(c => c.clientId === client.id && !c.archived);
     if (!contract) return false;
@@ -3883,7 +3886,19 @@ Merci de votre patience!
     const firstPaid = isPaymentReceived(client.id, 1);
     const secondPaid = isPaymentReceived(client.id, 2);
     
-    return firstPaid && !secondPaid;
+    // ⭐ NOUVEAU: Vérifier si la date du 2e paiement est dépassée
+    if (!client.secondPaymentDate) return false; // Pas de date = pas d'alerte
+    
+    const secondPaymentDate = new Date(client.secondPaymentDate);
+    secondPaymentDate.setHours(0, 0, 0, 0);
+    
+    const isSecondPaymentOverdue = secondPaymentDate <= today;
+    
+    // Afficher seulement si:
+    // - 1er versement payé
+    // - 2e versement non payé
+    // - Date du 2e paiement est passée ou aujourd'hui
+    return firstPaid && !secondPaid && isSecondPaymentOverdue;
   });
 
   if (clientsWithoutSecondPayment.length === 0) return null;
@@ -3897,7 +3912,7 @@ Merci de votre patience!
       marginBottom: '20px'
     }}>
       <h3 style={{ color: '#856404', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        ⚠️ {clientsWithoutSecondPayment.length} client(s) n'ont pas encore payé leur 2e versement :
+        ⚠️ {clientsWithoutSecondPayment.length} client(s) n'ont pas encore payé leur 2e versement (en retard) :
       </h3>
       
       <div style={{ 
@@ -3913,9 +3928,16 @@ Merci de votre patience!
           margin: 0 
         }}>
           {clientsWithoutSecondPayment
-            .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+            .sort((a, b) => {
+              // Trier par date de paiement (plus en retard en premier)
+              const dateA = new Date(a.secondPaymentDate);
+              const dateB = new Date(b.secondPaymentDate);
+              return dateA - dateB;
+            })
             .map(client => {
               const contract = contracts.find(c => c.clientId === client.id && !c.archived);
+              const secondPaymentDate = new Date(client.secondPaymentDate);
+              const daysLate = Math.floor((today - secondPaymentDate) / (1000 * 60 * 60 * 24));
               
               return (
                 <li 
@@ -3952,8 +3974,12 @@ Merci de votre patience!
                   {' - '}
                   <span style={{ color: '#666' }}>{client.address}</span>
                   {' '}
-                  <span style={{ color: '#856404', fontSize: '12px' }}>
-                    (1er versement: {client.firstPaymentDate})
+                  <span style={{ 
+                    color: daysLate > 7 ? '#dc3545' : '#856404', 
+                    fontSize: '12px',
+                    fontWeight: 'bold'
+                  }}>
+                    (2e versement dû le: {client.secondPaymentDate} - {daysLate} jour{daysLate > 1 ? 's' : ''} de retard)
                   </span>
                   <div style={{ 
                     fontSize: '11px', 
@@ -3981,7 +4007,7 @@ Merci de votre patience!
       </div>
     </div>
   );
-})()}         
+})()}   
   {/* Liste des clients avec méthodes de paiement */}
             {getAdvancedFilteredClients().length > 0 ? (
               <div style={{ overflowX: 'auto' }}>
