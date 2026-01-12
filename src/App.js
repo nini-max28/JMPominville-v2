@@ -882,35 +882,56 @@ Merci de votre patience!
     localStorage.setItem('lastSync', now);
   };
 
-  const archiveOldContracts = () => {
-    const currentYear = new Date().getFullYear();
-    const cutoffDate = new Date(currentYear, 3, 1);
+const archiveOldContracts = () => {
+  const today = new Date();
+  const currentYear = today.getFullYear();
+  
+  // ⭐ Archivage après le 15 avril (fin de saison de déneigement)
+  const cutoffDate = new Date(currentYear, 3, 15); // 3 = avril, 15 = 15 avril
+  
+  // Si on est avant le 15 avril, on utilise l'année précédente comme référence
+  const archiveYear = today < cutoffDate ? currentYear - 1 : currentYear;
+  const archiveCutoffDate = new Date(archiveYear, 3, 15); // 15 avril de l'année de référence
 
-    const updatedContracts = contracts.map(contract => {
-      const contractEndDate = contract.endDate ? new Date(contract.endDate) :
-        new Date(contract.startDate).setFullYear(new Date(contract.startDate).getFullYear() + 1);
+  const updatedContracts = contracts.map(contract => {
+    // Si déjà archivé, on ne touche pas
+    if (contract.archived) return contract;
+    
+    // Déterminer la date de fin du contrat
+    const contractEndDate = contract.endDate 
+      ? new Date(contract.endDate)
+      : new Date(contract.startDate).setFullYear(new Date(contract.startDate).getFullYear() + 1);
 
-      if (new Date(contractEndDate) < cutoffDate && !contract.archived) {
-        return {
-          ...contract,
-          archived: true,
-          yearArchived: new Date(contractEndDate).getFullYear()
-        };
-      }
-      return contract;
-    });
-
-    if (updatedContracts.some((contract, index) => contract.archived !== contracts[index]?.archived)) {
-      setContracts(updatedContracts);
-      saveToStorage('contracts', updatedContracts);
-
-      const archivedCount = updatedContracts.filter(c => c.archived).length - contracts.filter(c => c.archived).length;
-      if (archivedCount > 0) {
-        alert(`${archivedCount} contrat(s) ont été archivé(s) automatiquement.`);
-      }
+    // Archiver si la fin du contrat est avant le 15 avril de l'année de référence
+    if (new Date(contractEndDate) < archiveCutoffDate) {
+      return {
+        ...contract,
+        archived: true,
+        yearArchived: new Date(contractEndDate).getFullYear(),
+        archivedDate: new Date().toISOString()
+      };
     }
-  };
+    
+    return contract;
+  });
 
+  // Vérifier s'il y a des changements
+  const hasChanges = updatedContracts.some((contract, index) => 
+    contract.archived !== contracts[index]?.archived
+  );
+
+  if (hasChanges) {
+    setContracts(updatedContracts);
+    saveToStorage('contracts', updatedContracts);
+
+    const archivedCount = updatedContracts.filter(c => c.archived).length - 
+                         contracts.filter(c => c.archived).length;
+    
+    if (archivedCount > 0) {
+      alert(`${archivedCount} contrat(s) de la saison précédente ont été archivé(s) automatiquement (fin de saison: 15 avril).`);
+    }
+  }
+};
   // FONCTIONS CLIENTS
 // ✅ CRÉER LE CLIENT
 const addClient = () => {
