@@ -3254,7 +3254,7 @@ Merci de votre patience!
             <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>👥 Gestion des Clients</h2>
 
             {/* Alertes de paiements si présentes */}
-         {alerts.slice(0, 5).map((alert, index) => {
+       {alerts.slice(0, 5).map((alert, index) => {
   const client = clients.find(c => c.name === alert.client);
   const contract = client ? contracts.find(c => c.clientId === client.id && !c.archived) : null;
   const paymentNumber = alert.message.includes('1er') ? 1 : 2;
