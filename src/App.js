@@ -44,6 +44,7 @@ const [notificationsHistory, setNotificationsHistory] = useState([]);
 const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
   const [showAddClientModal, setShowAddClientModal] = useState(false);
+  const [clientSortMode, setClientMode] = useState('street'); // 'street' ou 'name'
   const [clientSearchFilters, setClientSearchFilters] = useState({
     searchTerm: '',
     type: '', 
@@ -4012,6 +4013,46 @@ Merci de votre patience!
     </div>
   );
 })()}
+  {/* Options de tri */}
+<div style={{
+  background: '#f8f9fa', 
+  padding: '15px', 
+  borderRadius: '8px', 
+  marginBottom: '20px',
+  display: 'flex',
+  gap: '10px',
+  alignItems: 'center'
+}}>
+  <label style={{ fontWeight: 'bold', color: '#495057' }}>Trier par :</label>
+  <button
+    onClick={() => setClientSortMode('street')}
+    style={{
+      padding: '8px 16px',
+      background: clientSortMode === 'street' ? '#1a4d1a' : 'white',
+      color: clientSortMode === 'street' ? 'white' : '#1a4d1a',
+      border: '2px solid #1a4d1a',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontWeight: 'bold'
+    }}
+  >
+    🏘️ Par rue
+  </button>
+  <button
+    onClick={() => setClientSortMode('name')}
+    style={{
+      padding: '8px 16px',
+      background: clientSortMode === 'name' ? '#1a4d1a' : 'white',
+      color: clientSortMode === 'name' ? 'white' : '#1a4d1a',
+      border: '2px solid #1a4d1a',
+      borderRadius: '6px',
+      cursor: 'pointer',
+      fontWeight: 'bold'
+    }}
+  >
+    👤 Par nom
+  </button>
+</div>
   {/* Liste des clients avec méthodes de paiement */}
             {getAdvancedFilteredClients().length > 0 ? (
               <div style={{ overflowX: 'auto' }}>
