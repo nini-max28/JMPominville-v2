@@ -3871,12 +3871,9 @@ Merci de votre patience!
     </div>
   </div>
 )}
-   {/* Alerte des clients sans 2e versement - CLIQUABLE */}
+{/* Alerte des clients SANS date de 2e versement */}
 {(() => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Minuit pour comparaison de dates
-  
-  const clientsWithoutSecondPayment = clients.filter(client => {
+  const clientsWithoutSecondPaymentDate = clients.filter(client => {
     const contract = contracts.find(c => c.clientId === client.id && !c.archived);
     if (!contract) return false;
     
@@ -3886,22 +3883,15 @@ Merci de votre patience!
     const firstPaid = isPaymentReceived(client.id, 1);
     const secondPaid = isPaymentReceived(client.id, 2);
     
-    // ⭐ NOUVEAU: Vérifier si la date du 2e paiement est dépassée
-    if (!client.secondPaymentDate) return false; // Pas de date = pas d'alerte
-    
-    const secondPaymentDate = new Date(client.secondPaymentDate);
-    secondPaymentDate.setHours(0, 0, 0, 0);
-    
-    const isSecondPaymentOverdue = secondPaymentDate <= today;
-    
-    // Afficher seulement si:
+    // ⭐ Afficher seulement si:
+    // - Structure à 2 versements
     // - 1er versement payé
     // - 2e versement non payé
-    // - Date du 2e paiement est passée ou aujourd'hui
-    return firstPaid && !secondPaid && isSecondPaymentOverdue;
+    // - PAS de date inscrite pour le 2e versement
+    return firstPaid && !secondPaid && !client.secondPaymentDate;
   });
 
-  if (clientsWithoutSecondPayment.length === 0) return null;
+  if (clientsWithoutSecondPaymentDate.length === 0) return null;
 
   return (
     <div style={{
@@ -3912,7 +3902,7 @@ Merci de votre patience!
       marginBottom: '20px'
     }}>
       <h3 style={{ color: '#856404', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        ⚠️ {clientsWithoutSecondPayment.length} client(s) n'ont pas encore payé leur 2e versement (en retard) :
+        ⚠️ {clientsWithoutSecondPaymentDate.length} client(s) n'ont pas de date inscrite pour leur 2e versement :
       </h3>
       
       <div style={{ 
@@ -3927,17 +3917,10 @@ Merci de votre patience!
           paddingLeft: '20px', 
           margin: 0 
         }}>
-          {clientsWithoutSecondPayment
-            .sort((a, b) => {
-              // Trier par date de paiement (plus en retard en premier)
-              const dateA = new Date(a.secondPaymentDate);
-              const dateB = new Date(b.secondPaymentDate);
-              return dateA - dateB;
-            })
+          {clientsWithoutSecondPaymentDate
+            .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
             .map(client => {
               const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-              const secondPaymentDate = new Date(client.secondPaymentDate);
-              const daysLate = Math.floor((today - secondPaymentDate) / (1000 * 60 * 60 * 24));
               
               return (
                 <li 
@@ -3975,11 +3958,11 @@ Merci de votre patience!
                   <span style={{ color: '#666' }}>{client.address}</span>
                   {' '}
                   <span style={{ 
-                    color: daysLate > 7 ? '#dc3545' : '#856404', 
+                    color: '#dc3545', 
                     fontSize: '12px',
                     fontWeight: 'bold'
                   }}>
-                    (2e versement dû le: {client.secondPaymentDate} - {daysLate} jour{daysLate > 1 ? 's' : ''} de retard)
+                    (1er versement: {client.firstPaymentDate || 'N/A'} - ⚠️ Aucune date pour 2e versement)
                   </span>
                   <div style={{ 
                     fontSize: '11px', 
@@ -4003,11 +3986,11 @@ Merci de votre patience!
         fontSize: '12px',
         color: '#856404'
       }}>
-        💡 <strong>Astuce :</strong> Cliquez directement sur un nom pour marquer le 2e paiement comme reçu
+        💡 <strong>Astuce :</strong> Cliquez directement sur un nom pour marquer le 2e paiement comme reçu. Pensez à ajouter les dates de 2e versement dans la fiche client !
       </div>
     </div>
   );
-})()}   
+})()}
   {/* Liste des clients avec méthodes de paiement */}
             {getAdvancedFilteredClients().length > 0 ? (
               <div style={{ overflowX: 'auto' }}>
