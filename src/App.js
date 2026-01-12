@@ -3407,117 +3407,7 @@ Merci de votre patience!
                 </div>
               </div>
             </div>
-{/* Alerte des clients sans 2e versement - CLIQUABLE */}
-{(() => {
-  const clientsWithoutSecondPayment = clients.filter(client => {
-    const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-    if (!contract) return false;
-    
-    const paymentStructure = client.paymentStructure || '2';
-    if (paymentStructure !== '2') return false;
-    
-    const firstPaid = isPaymentReceived(client.id, 1);
-    const secondPaid = isPaymentReceived(client.id, 2);
-    
-    return firstPaid && !secondPaid;
-  });
 
-  if (clientsWithoutSecondPayment.length === 0) return null;
-
-  return (
-    <div style={{
-      background: '#fff3cd', 
-      border: '2px solid #ffc107', 
-      borderRadius: '12px',
-      padding: '20px', 
-      marginBottom: '20px'
-    }}>
-      <h3 style={{ color: '#856404', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-        ⚠️ {clientsWithoutSecondPayment.length} client(s) n'ont pas encore payé leur 2e versement :
-      </h3>
-      
-      <div style={{ 
-        maxHeight: '400px', 
-        overflowY: 'auto', 
-        background: 'white', 
-        borderRadius: '8px',
-        padding: '10px'
-      }}>
-        <ul style={{ 
-          listStyle: 'disc', 
-          paddingLeft: '20px', 
-          margin: 0 
-        }}>
-          {clientsWithoutSecondPayment
-            .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
-            .map(client => {
-              const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-              
-              return (
-                <li 
-                  key={client.id}
-                  style={{
-                    marginBottom: '8px',
-                    padding: '8px',
-                    cursor: 'pointer',
-                    borderRadius: '6px',
-                    transition: 'all 0.2s',
-                    background: 'white'
-                  }}
-                  onClick={() => {
-                    if (contract) {
-                      showPaymentModalFunc(client.id, 2, contract.amount / 2);
-                    }
-                  }}
-                  onTouchEnd={(e) => {
-                    e.preventDefault();
-                    if (contract) {
-                      showPaymentModalFunc(client.id, 2, contract.amount / 2);
-                    }
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = '#f0f8ff';
-                    e.currentTarget.style.transform = 'translateX(5px)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'white';
-                    e.currentTarget.style.transform = 'translateX(0)';
-                  }}
-                >
-                  <strong style={{ color: '#1a4d1a' }}>{client.name}</strong>
-                  {' - '}
-                  <span style={{ color: '#666' }}>{client.address}</span>
-                  {' '}
-                  <span style={{ color: '#856404', fontSize: '12px' }}>
-                    (1er versement: {client.firstPaymentDate})
-                  </span>
-                  <div style={{ 
-                    fontSize: '11px', 
-                    color: '#28a745', 
-                    marginTop: '4px',
-                    fontWeight: 'bold'
-                  }}>
-                    👆 Cliquez pour marquer le 2e paiement
-                  </div>
-                </li>
-              );
-            })}
-        </ul>
-      </div>
-      
-      <div style={{ 
-        marginTop: '15px', 
-        padding: '10px', 
-        background: '#fff3cd',
-        borderRadius: '6px',
-        fontSize: '12px',
-        color: '#856404'
-      }}>
-        💡 <strong>Astuce :</strong> Cliquez directement sur un nom pour marquer le 2e paiement comme reçu
-      </div>
-    </div>
-  );
-})()}
 {/* Bouton pour ouvrir le modal */}
 <button
   onClick={() => setShowAddClientModal(true)}
@@ -3981,31 +3871,117 @@ Merci de votre patience!
     </div>
   </div>
 )}
-
-  {/* ALERTES DE PAIEMENT - Clients sans 2e versement */}
+{/* Alerte des clients sans 2e versement - CLIQUABLE */}
 {(() => {
-  const clientsWithMissingPayment = getAdvancedFilteredClients().filter(client => {
-    if (client.paymentStructure === '1') return false; // Paiement unique, pas de 2e versement
-    return !client.secondPaymentDate || client.secondPaymentDate === '';
+  const clientsWithoutSecondPayment = clients.filter(client => {
+    const contract = contracts.find(c => c.clientId === client.id && !c.archived);
+    if (!contract) return false;
+    
+    const paymentStructure = client.paymentStructure || '2';
+    if (paymentStructure !== '2') return false;
+    
+    const firstPaid = isPaymentReceived(client.id, 1);
+    const secondPaid = isPaymentReceived(client.id, 2);
+    
+    return firstPaid && !secondPaid;
   });
 
-  if (clientsWithMissingPayment.length > 0) {
-    return (
-      <div className="payment-warning">
-        <strong>⚠️ {clientsWithMissingPayment.length} client(s) n'ont pas encore payé leur 2e versement :</strong>
-        <ul>
-          {clientsWithMissingPayment.map(client => (
-            <li key={client.id}>
-              <strong>{client.name}</strong> - {client.address}
-              {client.firstPaymentDate && ` (1er versement: ${client.firstPaymentDate})`}
-            </li>
-          ))}
+  if (clientsWithoutSecondPayment.length === 0) return null;
+
+  return (
+    <div style={{
+      background: '#fff3cd', 
+      border: '2px solid #ffc107', 
+      borderRadius: '12px',
+      padding: '20px', 
+      marginBottom: '20px'
+    }}>
+      <h3 style={{ color: '#856404', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+        ⚠️ {clientsWithoutSecondPayment.length} client(s) n'ont pas encore payé leur 2e versement :
+      </h3>
+      
+      <div style={{ 
+        maxHeight: '400px', 
+        overflowY: 'auto', 
+        background: 'white', 
+        borderRadius: '8px',
+        padding: '10px'
+      }}>
+        <ul style={{ 
+          listStyle: 'disc', 
+          paddingLeft: '20px', 
+          margin: 0 
+        }}>
+          {clientsWithoutSecondPayment
+            .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
+            .map(client => {
+              const contract = contracts.find(c => c.clientId === client.id && !c.archived);
+              
+              return (
+                <li 
+                  key={client.id}
+                  style={{
+                    marginBottom: '8px',
+                    padding: '8px',
+                    cursor: 'pointer',
+                    borderRadius: '6px',
+                    transition: 'all 0.2s',
+                    background: 'white'
+                  }}
+                  onClick={() => {
+                    if (contract) {
+                      showPaymentModalFunc(client.id, 2, contract.amount / 2);
+                    }
+                  }}
+                  onTouchEnd={(e) => {
+                    e.preventDefault();
+                    if (contract) {
+                      showPaymentModalFunc(client.id, 2, contract.amount / 2);
+                    }
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = '#f0f8ff';
+                    e.currentTarget.style.transform = 'translateX(5px)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'white';
+                    e.currentTarget.style.transform = 'translateX(0)';
+                  }}
+                >
+                  <strong style={{ color: '#1a4d1a' }}>{client.name}</strong>
+                  {' - '}
+                  <span style={{ color: '#666' }}>{client.address}</span>
+                  {' '}
+                  <span style={{ color: '#856404', fontSize: '12px' }}>
+                    (1er versement: {client.firstPaymentDate})
+                  </span>
+                  <div style={{ 
+                    fontSize: '11px', 
+                    color: '#28a745', 
+                    marginTop: '4px',
+                    fontWeight: 'bold'
+                  }}>
+                    👆 Cliquez pour marquer le 2e paiement
+                  </div>
+                </li>
+              );
+            })}
         </ul>
       </div>
-    );
-  }
-  return null;
-})()}           
+      
+      <div style={{ 
+        marginTop: '15px', 
+        padding: '10px', 
+        background: '#fff3cd',
+        borderRadius: '6px',
+        fontSize: '12px',
+        color: '#856404'
+      }}>
+        💡 <strong>Astuce :</strong> Cliquez directement sur un nom pour marquer le 2e paiement comme reçu
+      </div>
+    </div>
+  );
+})()}         
   {/* Liste des clients avec méthodes de paiement */}
             {getAdvancedFilteredClients().length > 0 ? (
               <div style={{ overflowX: 'auto' }}>
