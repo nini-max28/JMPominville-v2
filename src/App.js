@@ -4504,6 +4504,8 @@ Merci de votre patience!
     Aucun client trouvé avec ces critères de recherche.
   </div>
 )}
+          </div>
+        )}
 {/* SECTION CONTRATS */}
        {activeTab === 'contracts' && (
   <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
