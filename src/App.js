@@ -1317,11 +1317,27 @@ const renewContract = (oldContractId) => {
   alert(summaryMessage);
 };
 // FONCTION DE RENOUVELLEMENT EN MASSE AMÉLIORÉE
+// ✅ Fonctionne même si les contrats sont archivés
+// ✅ Fonction utilitaire : trouve le dernier contrat de chaque client
+// qui n'a pas encore été renouvelé (archivé ou non)
+const getRenewableContracts = () => {
+  const renewedFromIds = new Set(contracts.map(c => c.renewedFrom).filter(Boolean));
+  const latestPerClient = {};
+  contracts.forEach(c => {
+    if (renewedFromIds.has(c.id)) return; // déjà renouvelé une fois, on ignore
+    const existing = latestPerClient[c.clientId];
+    if (!existing || new Date(c.endDate) > new Date(existing.endDate)) {
+      latestPerClient[c.clientId] = c;
+    }
+  });
+  return Object.values(latestPerClient);
+};
+
 const renewMultipleContracts = () => {
-  const activeContracts = contracts.filter(c => !c.archived && c.status === 'actif');
-  
+  const activeContracts = getRenewableContracts();
+
   if (activeContracts.length === 0) {
-    alert('Aucun contrat actif à renouveler');
+    alert('Aucun contrat à renouveler');
     return;
   }
 
@@ -1374,23 +1390,51 @@ const renewMultipleContracts = () => {
     return;
   }
 
+  // 💰 NOUVELLE ÉTAPE : MAJORATION DU MONTANT POUR TOUS
+  const majorationInput = window.prompt(
+    `Voulez-vous appliquer une majoration du montant pour TOUS les ${activeContracts.length} contrats?\n\n` +
+    `Tapez un pourcentage (ex: 5 pour +5%)\n` +
+    `Tapez un montant fixe précédé de "+" (ex: +50 pour +50$ par contrat)\n` +
+    `Laissez vide pour aucune majoration`,
+    ''
+  );
+
+  let majorationType = null;
+  let majorationValue = 0;
+  if (majorationInput && majorationInput.trim() !== '') {
+    const trimmed = majorationInput.trim();
+    if (trimmed.startsWith('+')) {
+      majorationType = 'fixed';
+      majorationValue = parseFloat(trimmed.slice(1)) || 0;
+    } else {
+      majorationType = 'percent';
+      majorationValue = parseFloat(trimmed) || 0;
+    }
+  }
+
+  const applyMajoration = (amount) => {
+    if (majorationType === 'percent') return amount * (1 + majorationValue / 100);
+    if (majorationType === 'fixed') return amount + majorationValue;
+    return amount;
+  };
+
   // 📅 CONFIGURATION DES DATES - UNE SEULE FOIS POUR TOUS
-const paymentStructure = window.prompt(
-  `Configuration des paiements pour TOUS les ${activeContracts.length} clients\n\n` +
-  `Structure de paiement?\n` +
-  `Tapez "1" pour 1 versement unique\n` +
-  `Tapez "2" pour 2 versements\n` +
-  `Tapez "3" pour 3 versements\n` +
-  `Tapez "4" pour 4 versements`,
-  '2'
-);
+  const paymentStructure = window.prompt(
+    `Configuration des paiements pour TOUS les ${activeContracts.length} clients\n\n` +
+    `Structure de paiement?\n` +
+    `Tapez "1" pour 1 versement unique\n` +
+    `Tapez "2" pour 2 versements\n` +
+    `Tapez "3" pour 3 versements\n` +
+    `Tapez "4" pour 4 versements`,
+    '2'
+  );
 
-if (!paymentStructure || !['1', '2', '3', '4'].includes(paymentStructure)) {
-  alert('Renouvellement annulé');
-  return;
-}
+  if (!paymentStructure || !['1', '2', '3', '4'].includes(paymentStructure)) {
+    alert('Renouvellement annulé');
+    return;
+  }
 
-// Demander les dates selon le nombre de versements...
+  // Demander les dates selon le nombre de versements...
   // Date du 1er paiement (avec l'année de la saison choisie)
   const firstPaymentDate = window.prompt(
     `Date du ${paymentStructure === '1' ? 'paiement unique' : '1er versement'} pour TOUS les clients?\n\n` +
@@ -1445,6 +1489,9 @@ if (!paymentStructure || !['1', '2', '3', '4'].includes(paymentStructure)) {
     `Nombre de contrats: ${activeContracts.length}\n` +
     `Saison: ${seasonStartYear}-${seasonEndYear}\n` +
     `Période: ${startDate} au ${endDate}\n\n` +
+    (majorationType
+      ? `💰 Majoration: ${majorationType === 'percent' ? '+' + majorationValue + '%' : '+' + majorationValue + '$'} par contrat\n\n`
+      : `💰 Aucune majoration appliquée\n\n`) +
     `💰 Configuration des paiements:\n` +
     `• Structure: ${paymentStructure} versement${paymentStructure === '2' ? 's' : ''}\n` +
     `• 1er paiement: ${firstPaymentDate} (${firstPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant'})\n` +
@@ -1464,14 +1511,14 @@ if (!paymentStructure || !['1', '2', '3', '4'].includes(paymentStructure)) {
   let updatedClients = [...clients];
 
   activeContracts.forEach(oldContract => {
-    // Créer nouveau contrat
+    // Créer nouveau contrat (avec majoration appliquée)
     const newContract = {
       id: Date.now() + renewedCount,
       clientId: oldContract.clientId,
       type: oldContract.type,
       startDate: startDate,
       endDate: endDate,
-      amount: oldContract.amount,
+      amount: applyMajoration(oldContract.amount),
       status: 'actif',
       notes: oldContract.notes || '',
       createdAt: new Date().toISOString(),
@@ -1513,7 +1560,7 @@ if (!paymentStructure || !['1', '2', '3', '4'].includes(paymentStructure)) {
   // Sauvegarder
   setContracts(updatedContracts);
   setClients(updatedClients);
-  
+
   saveToStorage('contracts', updatedContracts);
   saveToStorage('clients', updatedClients);
 
@@ -1522,6 +1569,9 @@ if (!paymentStructure || !['1', '2', '3', '4'].includes(paymentStructure)) {
     `${renewedCount} contrat(s) renouvelé(s)\n` +
     `Saison: ${seasonStartYear}-${seasonEndYear}\n` +
     `Période: ${startDate} au ${endDate}\n\n` +
+    (majorationType
+      ? `💰 Majoration appliquée: ${majorationType === 'percent' ? '+' + majorationValue + '%' : '+' + majorationValue + '$'}\n\n`
+      : ``) +
     `💰 Configuration appliquée:\n` +
     `• ${paymentStructure} versement${paymentStructure === '2' ? 's' : ''}\n` +
     `• 1er paiement: ${firstPaymentDate} (${firstPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant'})\n` +
