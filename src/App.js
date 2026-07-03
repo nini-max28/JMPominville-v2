@@ -81,12 +81,12 @@ const [notificationLogs, setNotificationLogs] = useState([]);
 
   const [contractForm, setContractForm] = useState({
     clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: ''
+    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: ''
   });
 
   const [editContractForm, setEditContractForm] = useState({
     clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: ''
+    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: ''
   });
 
   const [invoiceForm, setInvoiceForm] = useState({
@@ -1255,6 +1255,7 @@ const renewContract = (oldContractId) => {
     serviceScope: oldContract.serviceScope || '',
     entreesCompletes: oldContract.entreesCompletes || 0,
     devantsTempo: oldContract.devantsTempo || 0,
+    stationnementsCommerciaux: oldContract.stationnementsCommerciaux || 0,
     createdAt: new Date().toISOString(),
     renewedFrom: oldContract.id,
     archived: false
@@ -1442,9 +1443,11 @@ const renewMultipleContracts = () => {
     const proposedAmount = computeDefaultAmount(oldContract.amount);
     const nbEntrees = oldContract.entreesCompletes || 0;
     const nbTempo = oldContract.devantsTempo || 0;
+    const nbCommercial = oldContract.stationnementsCommerciaux || 0;
     const scopeParts = [];
     if (nbEntrees > 0) scopeParts.push(`${nbEntrees} entrée${nbEntrees > 1 ? 's' : ''} complète${nbEntrees > 1 ? 's' : ''}`);
     if (nbTempo > 0) scopeParts.push(`${nbTempo} devant${nbTempo > 1 ? 's' : ''} tempo`);
+    if (nbCommercial > 0) scopeParts.push(`${nbCommercial} stationnement${nbCommercial > 1 ? 's' : ''} commercial${nbCommercial > 1 ? 'aux' : ''}`);
     const scopeLabel = scopeParts.length > 0 ? scopeParts.join(' + ') : null;
 
     if (reviewIndividually) {
@@ -1581,6 +1584,7 @@ const renewMultipleContracts = () => {
       serviceScope: oldContract.serviceScope || '',
       entreesCompletes: oldContract.entreesCompletes || 0,
       devantsTempo: oldContract.devantsTempo || 0,
+      stationnementsCommerciaux: oldContract.stationnementsCommerciaux || 0,
       createdAt: new Date().toISOString(),
       renewedFrom: oldContract.id,
       archived: false
@@ -1657,12 +1661,13 @@ const addContract = () => {
     status: contractForm.status,
     notes: contractForm.notes,
     entreesCompletes: parseInt(contractForm.entreesCompletes) || 0,
-    devantsTempo: parseInt(contractForm.devantsTempo) || 0
+    devantsTempo: parseInt(contractForm.devantsTempo) || 0,
+    stationnementsCommerciaux: parseInt(contractForm.stationnementsCommerciaux) || 0
   };
   const newContracts = [...contracts, contract];
   setContracts(newContracts);
   saveToStorage('contracts', newContracts);
-  setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '' });
+  setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: '' });
   setClientSearch('');
 };
 
@@ -1685,7 +1690,8 @@ const startEditContract = (contract) => {
     status: contract.status,
     notes: contract.notes,
     entreesCompletes: contract.entreesCompletes || 0,
-    devantsTempo: contract.devantsTempo || 0
+    devantsTempo: contract.devantsTempo || 0,
+    stationnementsCommerciaux: contract.stationnementsCommerciaux || 0
   });
 };
 
@@ -1737,6 +1743,7 @@ const saveEditContract = () => {
           notes: editContractForm.notes || '',
           entreesCompletes: parseInt(editContractForm.entreesCompletes) || 0,
           devantsTempo: parseInt(editContractForm.devantsTempo) || 0,
+          stationnementsCommerciaux: parseInt(editContractForm.stationnementsCommerciaux) || 0,
           archived: contract.archived || false
         };
         
@@ -4923,6 +4930,15 @@ Merci de votre patience!
                     style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
                   />
                 </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre de stationnements commerciaux / blocs multi-logements</label>
+                  <input
+                    type="number" min="0" step="1" value={contractForm.stationnementsCommerciaux}
+                    onChange={(e) => setContractForm({ ...contractForm, stationnementsCommerciaux: e.target.value })}
+                    placeholder="0"
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                  />
+                </div>
               </div>
 
               <div style={{ marginBottom: '15px' }}>
@@ -6713,6 +6729,14 @@ Merci de votre patience!
                 <input
                   type="number" min="0" step="1" value={editContractForm.devantsTempo}
                   onChange={(e) => setEditContractForm({ ...editContractForm, devantsTempo: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre de stationnements commerciaux / blocs multi-logements</label>
+                <input
+                  type="number" min="0" step="1" value={editContractForm.stationnementsCommerciaux}
+                  onChange={(e) => setEditContractForm({ ...editContractForm, stationnementsCommerciaux: e.target.value })}
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
                 />
               </div>
