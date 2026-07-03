@@ -1174,8 +1174,8 @@ const renewContract = (oldContractId) => {
   const currentYear = new Date().getFullYear();
   const nextYear = currentYear + 1;
 
-  const startDate = `${currentYear}-11-01`;
-  const endDate = `${nextYear}-03-31`;
+  const startDate = `${currentYear}-10-15`;
+  const endDate = `${nextYear}-04-01`;
 
   // Structure de paiement
   const paymentStructure = window.prompt(
@@ -1374,8 +1374,8 @@ const renewMultipleContracts = () => {
   }
 
   const seasonEndYear = seasonStartYear + 1;
-  const startDate = `${seasonStartYear}-11-01`;
-  const endDate = `${seasonEndYear}-03-31`;
+  const startDate = `${seasonStartYear}-10-15`;
+  const endDate = `${seasonEndYear}-04-01`;
 
   // Confirmation de la saison choisie
   const confirmSeason = window.confirm(
