@@ -81,12 +81,12 @@ const [notificationLogs, setNotificationLogs] = useState([]);
 
   const [contractForm, setContractForm] = useState({
     clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: '', serviceScope: ''
+    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: ''
   });
 
   const [editContractForm, setEditContractForm] = useState({
     clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: '', serviceScope: ''
+    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: ''
   });
 
   const [invoiceForm, setInvoiceForm] = useState({
@@ -1253,6 +1253,8 @@ const renewContract = (oldContractId) => {
     status: 'actif',
     notes: oldContract.notes || '',
     serviceScope: oldContract.serviceScope || '',
+    entreesCompletes: oldContract.entreesCompletes || 0,
+    devantsTempo: oldContract.devantsTempo || 0,
     createdAt: new Date().toISOString(),
     renewedFrom: oldContract.id,
     archived: false
@@ -1432,23 +1434,23 @@ const renewMultipleContracts = () => {
     `Annuler = Non, applique la majoration par défaut à tous sans révision`
   );
 
-  const serviceScopeLabels = {
-    'entree-complete': 'Entrée complète',
-    'devant-tempo': 'Devant seulement (tempo)'
-  };
-
   const finalAmounts = {}; // contractId -> montant final
 
   activeContracts.forEach(oldContract => {
     const client = clients.find(c => c.id === oldContract.clientId);
     const clientName = client ? client.name : 'Client inconnu';
     const proposedAmount = computeDefaultAmount(oldContract.amount);
-    const scopeLabel = serviceScopeLabels[oldContract.serviceScope] || null;
+    const nbEntrees = oldContract.entreesCompletes || 0;
+    const nbTempo = oldContract.devantsTempo || 0;
+    const scopeParts = [];
+    if (nbEntrees > 0) scopeParts.push(`${nbEntrees} entrée${nbEntrees > 1 ? 's' : ''} complète${nbEntrees > 1 ? 's' : ''}`);
+    if (nbTempo > 0) scopeParts.push(`${nbTempo} devant${nbTempo > 1 ? 's' : ''} tempo`);
+    const scopeLabel = scopeParts.length > 0 ? scopeParts.join(' + ') : null;
 
     if (reviewIndividually) {
       const amountInput = window.prompt(
         `${clientName}\n` +
-        (scopeLabel ? `🔧 Étendue du service: ${scopeLabel}\n` : '') +
+        (scopeLabel ? `🔧 Service: ${scopeLabel}\n` : '') +
         (oldContract.notes ? `📝 Notes: ${oldContract.notes}\n` : '') +
         `\nMontant actuel: ${oldContract.amount.toFixed(2)}$\n` +
         `Montant proposé (avec majoration par défaut): ${proposedAmount.toFixed(2)}$\n\n` +
@@ -1577,6 +1579,8 @@ const renewMultipleContracts = () => {
       status: 'actif',
       notes: oldContract.notes || '',
       serviceScope: oldContract.serviceScope || '',
+      entreesCompletes: oldContract.entreesCompletes || 0,
+      devantsTempo: oldContract.devantsTempo || 0,
       createdAt: new Date().toISOString(),
       renewedFrom: oldContract.id,
       archived: false
@@ -1652,12 +1656,13 @@ const addContract = () => {
     amount: parseFloat(contractForm.amount),
     status: contractForm.status,
     notes: contractForm.notes,
-    serviceScope: contractForm.serviceScope || ''
+    entreesCompletes: parseInt(contractForm.entreesCompletes) || 0,
+    devantsTempo: parseInt(contractForm.devantsTempo) || 0
   };
   const newContracts = [...contracts, contract];
   setContracts(newContracts);
   saveToStorage('contracts', newContracts);
-  setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '', serviceScope: '' });
+  setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '' });
   setClientSearch('');
 };
 
@@ -1679,7 +1684,8 @@ const startEditContract = (contract) => {
     amount: contract.amount,
     status: contract.status,
     notes: contract.notes,
-    serviceScope: contract.serviceScope || ''
+    entreesCompletes: contract.entreesCompletes || 0,
+    devantsTempo: contract.devantsTempo || 0
   });
 };
 
@@ -1729,7 +1735,8 @@ const saveEditContract = () => {
           startDate: editContractForm.startDate || contract.startDate,
           endDate: editContractForm.endDate || contract.endDate,
           notes: editContractForm.notes || '',
-          serviceScope: editContractForm.serviceScope || '',
+          entreesCompletes: parseInt(editContractForm.entreesCompletes) || 0,
+          devantsTempo: parseInt(editContractForm.devantsTempo) || 0,
           archived: contract.archived || false
         };
         
@@ -4899,16 +4906,22 @@ Merci de votre patience!
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Étendue du service</label>
-                  <select
-                    value={contractForm.serviceScope}
-                    onChange={(e) => setContractForm({ ...contractForm, serviceScope: e.target.value })}
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre d'entrées complètes</label>
+                  <input
+                    type="number" min="0" step="1" value={contractForm.entreesCompletes}
+                    onChange={(e) => setContractForm({ ...contractForm, entreesCompletes: e.target.value })}
+                    placeholder="0"
                     style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                  >
-                    <option value="">Sélectionner...</option>
-                    <option value="entree-complete">Entrée complète</option>
-                    <option value="devant-tempo">Devant seulement (tempo)</option>
-                  </select>
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre de devants seulement (tempo)</label>
+                  <input
+                    type="number" min="0" step="1" value={contractForm.devantsTempo}
+                    onChange={(e) => setContractForm({ ...contractForm, devantsTempo: e.target.value })}
+                    placeholder="0"
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                  />
                 </div>
               </div>
 
@@ -6688,16 +6701,20 @@ Merci de votre patience!
                 </select>
               </div>
               <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Étendue du service</label>
-                <select
-                  value={editContractForm.serviceScope}
-                  onChange={(e) => setEditContractForm({ ...editContractForm, serviceScope: e.target.value })}
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre d'entrées complètes</label>
+                <input
+                  type="number" min="0" step="1" value={editContractForm.entreesCompletes}
+                  onChange={(e) => setEditContractForm({ ...editContractForm, entreesCompletes: e.target.value })}
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                >
-                  <option value="">Sélectionner...</option>
-                  <option value="entree-complete">Entrée complète</option>
-                  <option value="devant-tempo">Devant seulement (tempo)</option>
-                </select>
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre de devants seulement (tempo)</label>
+                <input
+                  type="number" min="0" step="1" value={editContractForm.devantsTempo}
+                  onChange={(e) => setEditContractForm({ ...editContractForm, devantsTempo: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                />
               </div>
             </div>
 
