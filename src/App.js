@@ -1390,33 +1390,80 @@ const renewMultipleContracts = () => {
     return;
   }
 
-  // 💰 NOUVELLE ÉTAPE : MAJORATION DU MONTANT POUR TOUS
-  const majorationInput = window.prompt(
-    `Voulez-vous appliquer une majoration du montant pour TOUS les ${activeContracts.length} contrats?\n\n` +
+  // 💰 NOUVELLE ÉTAPE : MONTANT AJUSTABLE INDIVIDUELLEMENT PAR CONTRAT
+  // (Les notes du contrat servent à distinguer le type de service, ex: "devant de tempo" vs "entrée complète")
+
+  // D'abord, un raccourci optionnel : majoration par défaut à appliquer à tous,
+  // que l'on pourra ensuite ajuster contrat par contrat.
+  const defaultMajorationInput = window.prompt(
+    `Majoration PAR DÉFAUT pour TOUS les ${activeContracts.length} contrats?\n\n` +
     `Tapez un pourcentage (ex: 5 pour +5%)\n` +
     `Tapez un montant fixe précédé de "+" (ex: +50 pour +50$ par contrat)\n` +
-    `Laissez vide pour aucune majoration`,
+    `Laissez vide pour aucune majoration par défaut\n\n` +
+    `⚠️ Tu pourras ensuite ajuster le montant final pour chaque client individuellement.`,
     ''
   );
 
-  let majorationType = null;
-  let majorationValue = 0;
-  if (majorationInput && majorationInput.trim() !== '') {
-    const trimmed = majorationInput.trim();
+  let defaultMajType = null;
+  let defaultMajValue = 0;
+  if (defaultMajorationInput && defaultMajorationInput.trim() !== '') {
+    const trimmed = defaultMajorationInput.trim();
     if (trimmed.startsWith('+')) {
-      majorationType = 'fixed';
-      majorationValue = parseFloat(trimmed.slice(1)) || 0;
+      defaultMajType = 'fixed';
+      defaultMajValue = parseFloat(trimmed.slice(1)) || 0;
     } else {
-      majorationType = 'percent';
-      majorationValue = parseFloat(trimmed) || 0;
+      defaultMajType = 'percent';
+      defaultMajValue = parseFloat(trimmed) || 0;
     }
   }
 
-  const applyMajoration = (amount) => {
-    if (majorationType === 'percent') return amount * (1 + majorationValue / 100);
-    if (majorationType === 'fixed') return amount + majorationValue;
+  const computeDefaultAmount = (amount) => {
+    if (defaultMajType === 'percent') return amount * (1 + defaultMajValue / 100);
+    if (defaultMajType === 'fixed') return amount + defaultMajValue;
     return amount;
   };
+
+  // Révision individuelle : on montre le client, ses notes et le montant proposé,
+  // et on laisse la possibilité d'ajuster pour ce contrat précis.
+  const reviewIndividually = window.confirm(
+    `Veux-tu réviser le montant final CONTRAT PAR CONTRAT?\n\n` +
+    `OK = Oui, je veux voir et ajuster chaque montant (recommandé si les prix varient selon le service, ex: "devant de tempo" vs "entrée complète")\n` +
+    `Annuler = Non, applique la majoration par défaut à tous sans révision`
+  );
+
+  const finalAmounts = {}; // contractId -> montant final
+
+  activeContracts.forEach(oldContract => {
+    const client = clients.find(c => c.id === oldContract.clientId);
+    const clientName = client ? client.name : 'Client inconnu';
+    const proposedAmount = computeDefaultAmount(oldContract.amount);
+
+    if (reviewIndividually) {
+      const amountInput = window.prompt(
+        `${clientName}\n` +
+        (oldContract.notes ? `📝 Notes: ${oldContract.notes}\n` : '') +
+        `\nMontant actuel: ${oldContract.amount.toFixed(2)}$\n` +
+        `Montant proposé (avec majoration par défaut): ${proposedAmount.toFixed(2)}$\n\n` +
+        `Entre le montant final pour ce contrat, ou laisse tel quel:`,
+        proposedAmount.toFixed(2)
+      );
+      const parsed = amountInput !== null ? parseFloat(amountInput) : NaN;
+      finalAmounts[oldContract.id] = !isNaN(parsed) ? parsed : proposedAmount;
+    } else {
+      finalAmounts[oldContract.id] = proposedAmount;
+    }
+  });
+
+  const applyMajoration = (amount, contractId) => {
+    return finalAmounts.hasOwnProperty(contractId) ? finalAmounts[contractId] : amount;
+  };
+
+  const majorationSummaryLines = reviewIndividually
+    ? `Montants révisés individuellement pour ${activeContracts.length} contrat(s)`
+    : (defaultMajType
+        ? `Majoration par défaut: ${defaultMajType === 'percent' ? '+' + defaultMajValue + '%' : '+' + defaultMajValue + '$'} pour tous`
+        : 'Aucune majoration');
+
 
   // 📅 CONFIGURATION DES DATES - UNE SEULE FOIS POUR TOUS
   const paymentStructure = window.prompt(
@@ -1489,8 +1536,8 @@ const renewMultipleContracts = () => {
     `Nombre de contrats: ${activeContracts.length}\n` +
     `Saison: ${seasonStartYear}-${seasonEndYear}\n` +
     `Période: ${startDate} au ${endDate}\n\n` +
-    (majorationType
-      ? `💰 Majoration: ${majorationType === 'percent' ? '+' + majorationValue + '%' : '+' + majorationValue + '$'} par contrat\n\n`
+    (majorationSummaryLines
+      ? `💰 ${majorationSummaryLines}\n\n`
       : `💰 Aucune majoration appliquée\n\n`) +
     `💰 Configuration des paiements:\n` +
     `• Structure: ${paymentStructure} versement${paymentStructure === '2' ? 's' : ''}\n` +
@@ -1518,7 +1565,7 @@ const renewMultipleContracts = () => {
       type: oldContract.type,
       startDate: startDate,
       endDate: endDate,
-      amount: applyMajoration(oldContract.amount),
+      amount: applyMajoration(oldContract.amount, oldContract.id),
       status: 'actif',
       notes: oldContract.notes || '',
       createdAt: new Date().toISOString(),
@@ -1569,8 +1616,8 @@ const renewMultipleContracts = () => {
     `${renewedCount} contrat(s) renouvelé(s)\n` +
     `Saison: ${seasonStartYear}-${seasonEndYear}\n` +
     `Période: ${startDate} au ${endDate}\n\n` +
-    (majorationType
-      ? `💰 Majoration appliquée: ${majorationType === 'percent' ? '+' + majorationValue + '%' : '+' + majorationValue + '$'}\n\n`
+    (majorationSummaryLines
+      ? `💰 ${majorationSummaryLines}\n\n`
       : ``) +
     `💰 Configuration appliquée:\n` +
     `• ${paymentStructure} versement${paymentStructure === '2' ? 's' : ''}\n` +
