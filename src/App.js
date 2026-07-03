@@ -44,7 +44,7 @@ const [notificationsHistory, setNotificationsHistory] = useState([]);
 const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
   const [showAddClientModal, setShowAddClientModal] = useState(false);
-  const [clientSortMode, setClientMode] = useState('street'); // 'street' ou 'name'
+  const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
   const [clientSearchFilters, setClientSearchFilters] = useState({
     searchTerm: '',
     type: '', 
