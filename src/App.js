@@ -81,12 +81,12 @@ const [notificationLogs, setNotificationLogs] = useState([]);
 
   const [contractForm, setContractForm] = useState({
     clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: ''
+    amount: '', status: 'actif', notes: '', serviceScope: ''
   });
 
   const [editContractForm, setEditContractForm] = useState({
     clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: ''
+    amount: '', status: 'actif', notes: '', serviceScope: ''
   });
 
   const [invoiceForm, setInvoiceForm] = useState({
@@ -1252,6 +1252,7 @@ const renewContract = (oldContractId) => {
     amount: oldContract.amount,
     status: 'actif',
     notes: oldContract.notes || '',
+    serviceScope: oldContract.serviceScope || '',
     createdAt: new Date().toISOString(),
     renewedFrom: oldContract.id,
     archived: false
@@ -1431,16 +1432,23 @@ const renewMultipleContracts = () => {
     `Annuler = Non, applique la majoration par défaut à tous sans révision`
   );
 
+  const serviceScopeLabels = {
+    'entree-complete': 'Entrée complète',
+    'devant-tempo': 'Devant seulement (tempo)'
+  };
+
   const finalAmounts = {}; // contractId -> montant final
 
   activeContracts.forEach(oldContract => {
     const client = clients.find(c => c.id === oldContract.clientId);
     const clientName = client ? client.name : 'Client inconnu';
     const proposedAmount = computeDefaultAmount(oldContract.amount);
+    const scopeLabel = serviceScopeLabels[oldContract.serviceScope] || null;
 
     if (reviewIndividually) {
       const amountInput = window.prompt(
         `${clientName}\n` +
+        (scopeLabel ? `🔧 Étendue du service: ${scopeLabel}\n` : '') +
         (oldContract.notes ? `📝 Notes: ${oldContract.notes}\n` : '') +
         `\nMontant actuel: ${oldContract.amount.toFixed(2)}$\n` +
         `Montant proposé (avec majoration par défaut): ${proposedAmount.toFixed(2)}$\n\n` +
@@ -1568,6 +1576,7 @@ const renewMultipleContracts = () => {
       amount: applyMajoration(oldContract.amount, oldContract.id),
       status: 'actif',
       notes: oldContract.notes || '',
+      serviceScope: oldContract.serviceScope || '',
       createdAt: new Date().toISOString(),
       renewedFrom: oldContract.id,
       archived: false
@@ -1642,12 +1651,13 @@ const addContract = () => {
     endDate: contractForm.endDate,
     amount: parseFloat(contractForm.amount),
     status: contractForm.status,
-    notes: contractForm.notes
+    notes: contractForm.notes,
+    serviceScope: contractForm.serviceScope || ''
   };
   const newContracts = [...contracts, contract];
   setContracts(newContracts);
   saveToStorage('contracts', newContracts);
-  setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '' });
+  setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '', serviceScope: '' });
   setClientSearch('');
 };
 
@@ -1668,7 +1678,8 @@ const startEditContract = (contract) => {
     endDate: contract.endDate,
     amount: contract.amount,
     status: contract.status,
-    notes: contract.notes
+    notes: contract.notes,
+    serviceScope: contract.serviceScope || ''
   });
 };
 
@@ -1718,6 +1729,7 @@ const saveEditContract = () => {
           startDate: editContractForm.startDate || contract.startDate,
           endDate: editContractForm.endDate || contract.endDate,
           notes: editContractForm.notes || '',
+          serviceScope: editContractForm.serviceScope || '',
           archived: contract.archived || false
         };
         
@@ -4886,6 +4898,18 @@ Merci de votre patience!
                     <option value="terminé">Terminé</option>
                   </select>
                 </div>
+                <div>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Étendue du service</label>
+                  <select
+                    value={contractForm.serviceScope}
+                    onChange={(e) => setContractForm({ ...contractForm, serviceScope: e.target.value })}
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                  >
+                    <option value="">Sélectionner...</option>
+                    <option value="entree-complete">Entrée complète</option>
+                    <option value="devant-tempo">Devant seulement (tempo)</option>
+                  </select>
+                </div>
               </div>
 
               <div style={{ marginBottom: '15px' }}>
@@ -6662,6 +6686,18 @@ Merci de votre patience!
                   <option value="actif">Actif</option>
                   <option value="suspendu">Suspendu</option>
                   <option value="terminé">Terminé</option>
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Étendue du service</label>
+                <select
+                  value={editContractForm.serviceScope}
+                  onChange={(e) => setEditContractForm({ ...editContractForm, serviceScope: e.target.value })}
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                >
+                  <option value="">Sélectionner...</option>
+                  <option value="entree-complete">Entrée complète</option>
+                  <option value="devant-tempo">Devant seulement (tempo)</option>
                 </select>
               </div>
             </div>
