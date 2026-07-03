@@ -5018,27 +5018,26 @@ Merci de votre patience!
       📄 Contrat PDF
     </button>
     
+    <button
+      onClick={() => startEditContract(contract)}
+      style={{
+        padding: '5px 10px', fontSize: '12px', background: '#007bff', color: 'white',
+        border: 'none', borderRadius: '4px', cursor: 'pointer'
+      }}
+    >
+      ✏️ Modifier
+    </button>
+
     {!contract.archived && (
-      <>
-        <button
-          onClick={() => startEditContract(contract)}
-          style={{
-            padding: '5px 10px', fontSize: '12px', background: '#007bff', color: 'white',
-            border: 'none', borderRadius: '4px', cursor: 'pointer'
-          }}
-        >
-          ✏️ Modifier
-        </button>
-        <button
-          onClick={() => deleteContract(contract.id)}
-          style={{
-            padding: '5px 10px', fontSize: '12px', background: '#dc3545', color: 'white',
-            border: 'none', borderRadius: '4px', cursor: 'pointer'
-          }}
-        >
-          🗑️ Supprimer
-        </button>
-      </>
+      <button
+        onClick={() => deleteContract(contract.id)}
+        style={{
+          padding: '5px 10px', fontSize: '12px', background: '#dc3545', color: 'white',
+          border: 'none', borderRadius: '4px', cursor: 'pointer'
+        }}
+      >
+        🗑️ Supprimer
+      </button>
     )}
     
     {contract.archived && (
