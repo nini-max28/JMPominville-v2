@@ -1913,6 +1913,69 @@ const cancelEditContract = () => {
   });
 };
   // FONCTION POUR IMPRIMER PLUSIEURS CONTRATS
+const bulkFixDates = () => {
+  if (selectedContracts.length === 0) {
+    alert('Aucun contrat sélectionné. Coche les contrats à corriger d\'abord (case à cocher dans la liste).');
+    return;
+  }
+
+  const confirmStart = window.confirm(
+    `Corriger les dates pour ${selectedContracts.length} contrat(s)?\n\n` +
+    `Pour chaque client, tu verras la date de fin du contrat et la date du 2e versement actuelles, ` +
+    `et tu pourras les corriger une par une (ou laisser tel quel si c'est déjà bon).`
+  );
+  if (!confirmStart) return;
+
+  let updatedContracts = [...contracts];
+  let updatedClients = [...clients];
+  let fixedCount = 0;
+
+  selectedContracts.forEach(contractId => {
+    const contractIndex = updatedContracts.findIndex(c => c.id === contractId);
+    if (contractIndex === -1) return;
+    const contract = { ...updatedContracts[contractIndex] };
+
+    const clientIndex = updatedClients.findIndex(c => c.id === contract.clientId);
+    const client = clientIndex !== -1 ? { ...updatedClients[clientIndex] } : null;
+    const clientName = client ? client.name : 'Client inconnu';
+    const clientAddress = client ? client.address : '';
+
+    // Date de fin du contrat
+    const newEndDate = window.prompt(
+      `${clientName}` + (clientAddress ? ` — ${clientAddress}` : '') + `\n\n` +
+      `📅 Date de fin du contrat actuelle: ${contract.endDate || 'non définie'}\n\n` +
+      `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
+      contract.endDate || ''
+    );
+    if (newEndDate !== null && newEndDate.trim() !== '') {
+      contract.endDate = newEndDate.trim();
+      updatedContracts[contractIndex] = contract;
+    }
+
+    // Date du 2e versement (sur le client, seulement si structure à 2+ versements)
+    if (client && (client.paymentStructure || '2') !== '1') {
+      const newSecondDate = window.prompt(
+        `${clientName} — 💰 Date du 2e versement actuelle: ${client.secondPaymentDate || 'non définie'}\n\n` +
+        `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
+        client.secondPaymentDate || ''
+      );
+      if (newSecondDate !== null && newSecondDate.trim() !== '') {
+        client.secondPaymentDate = newSecondDate.trim();
+        updatedClients[clientIndex] = client;
+      }
+    }
+
+    fixedCount++;
+  });
+
+  setContracts(updatedContracts);
+  saveToStorage('contracts', updatedContracts);
+  setClients(updatedClients);
+  saveToStorage('clients', updatedClients);
+
+  alert(`✅ ${fixedCount} contrat(s) vérifié(s)/corrigé(s).`);
+};
+
 const printMultipleContracts = () => {
   if (selectedContracts.length === 0) {
     alert('Aucun contrat sélectionné');
@@ -4924,6 +4987,21 @@ Merci de votre patience!
       }}
     >
       🖨️ Imprimer sélection ({selectedContracts.length})
+    </button>
+
+    <button
+      onClick={() => bulkFixDates()}
+      disabled={selectedContracts.length === 0}
+      style={{
+        padding: '8px 16px', 
+        background: selectedContracts.length === 0 ? '#ccc' : '#fd7e14', 
+        color: 'white',
+        border: 'none', borderRadius: '6px', 
+        cursor: selectedContracts.length === 0 ? 'not-allowed' : 'pointer', 
+        fontWeight: 'bold'
+      }}
+    >
+      📅 Corriger dates sélection ({selectedContracts.length})
     </button>
   </div>
 )}
