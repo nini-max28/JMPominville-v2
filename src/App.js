@@ -1557,33 +1557,45 @@ const renewMultipleContracts = () => {
 
 
   // 📅 CONFIGURATION DES DATES - UNE SEULE FOIS POUR TOUS
-  const paymentStructure = window.prompt(
-    `Configuration des paiements pour TOUS les ${activeContracts.length} clients\n\n` +
-    `Structure de paiement?\n` +
-    `Tapez "1" pour 1 versement unique\n` +
-    `Tapez "2" pour 2 versements\n` +
-    `Tapez "3" pour 3 versements\n` +
-    `Tapez "4" pour 4 versements`,
-    '2'
-  );
-
-  if (!paymentStructure || !['1', '2', '3', '4'].includes(paymentStructure)) {
-    alert('Renouvellement annulé');
-    return;
+  let paymentStructure = null;
+  while (true) {
+    paymentStructure = window.prompt(
+      `Configuration des paiements pour TOUS les ${activeContracts.length} clients\n\n` +
+      `Structure de paiement?\n` +
+      `Tapez "1" pour 1 versement unique\n` +
+      `Tapez "2" pour 2 versements\n` +
+      `Tapez "3" pour 3 versements\n` +
+      `Tapez "4" pour 4 versements`,
+      '2'
+    );
+    if (paymentStructure && ['1', '2', '3', '4'].includes(paymentStructure)) break;
+    const abandonner = window.confirm(
+      `Réponse invalide ou vide.\n\n` +
+      `Veux-tu vraiment ANNULER tout le renouvellement?\n\n` +
+      `⚠️ Tu perdras les montants déjà entrés pour chaque contrat.\n\n` +
+      `OK = Oui, tout annuler\nAnnuler = Non, je veux réessayer`
+    );
+    if (abandonner) { alert('Renouvellement annulé'); return; }
   }
 
   // Demander les dates selon le nombre de versements...
   // Date du 1er paiement (avec l'année de la saison choisie)
-  const firstPaymentDate = window.prompt(
-    `Date du ${paymentStructure === '1' ? 'paiement unique' : '1er versement'} pour TOUS les clients?\n\n` +
-    `Format: AAAA-MM-JJ (ex: ${seasonStartYear}-11-15)\n\n` +
-    `Cette date sera appliquée à tous les ${activeContracts.length} contrats.`,
-    `${seasonStartYear}-11-15`
-  );
-
-  if (!firstPaymentDate) {
-    alert('Renouvellement annulé - Date du 1er paiement requise');
-    return;
+  let firstPaymentDate = null;
+  while (true) {
+    firstPaymentDate = window.prompt(
+      `Date du ${paymentStructure === '1' ? 'paiement unique' : '1er versement'} pour TOUS les clients?\n\n` +
+      `Format: AAAA-MM-JJ (ex: ${seasonStartYear}-11-15)\n\n` +
+      `Cette date sera appliquée à tous les ${activeContracts.length} contrats.`,
+      `${seasonStartYear}-11-15`
+    );
+    if (firstPaymentDate) break;
+    const abandonner = window.confirm(
+      `Date requise.\n\n` +
+      `Veux-tu vraiment ANNULER tout le renouvellement?\n\n` +
+      `⚠️ Tu perdras les montants déjà entrés pour chaque contrat.\n\n` +
+      `OK = Oui, tout annuler\nAnnuler = Non, je veux réessayer`
+    );
+    if (abandonner) { alert('Renouvellement annulé - Date du 1er paiement requise'); return; }
   }
 
   // Méthode du 1er paiement
