@@ -1921,7 +1921,7 @@ const bulkFixDates = () => {
 
   const confirmStart = window.confirm(
     `Corriger les dates pour ${selectedContracts.length} contrat(s)?\n\n` +
-    `Pour chaque client, tu verras la date de fin du contrat et la date du 2e versement actuelles, ` +
+    `Pour chaque client, tu verras la date de fin du contrat et les dates de versement actuelles, ` +
     `et tu pourras les corriger une par une (ou laisser tel quel si c'est déjà bon).`
   );
   if (!confirmStart) return;
@@ -1939,6 +1939,7 @@ const bulkFixDates = () => {
     const client = clientIndex !== -1 ? { ...updatedClients[clientIndex] } : null;
     const clientName = client ? client.name : 'Client inconnu';
     const clientAddress = client ? client.address : '';
+    const nbVersements = parseInt(client?.paymentStructure || '2', 10);
 
     // Date de fin du contrat
     const newEndDate = window.prompt(
@@ -1952,16 +1953,55 @@ const bulkFixDates = () => {
       updatedContracts[contractIndex] = contract;
     }
 
-    // Date du 2e versement (sur le client, seulement si structure à 2+ versements)
-    if (client && (client.paymentStructure || '2') !== '1') {
-      const newSecondDate = window.prompt(
-        `${clientName} — 💰 Date du 2e versement actuelle: ${client.secondPaymentDate || 'non définie'}\n\n` +
+    if (client) {
+      // Date du 1er versement (toujours applicable)
+      const newFirstDate = window.prompt(
+        `${clientName} — 💰 Date du ${nbVersements === 1 ? 'paiement unique' : '1er versement'} actuelle: ${client.firstPaymentDate || 'non définie'}\n\n` +
         `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
-        client.secondPaymentDate || ''
+        client.firstPaymentDate || ''
       );
-      if (newSecondDate !== null && newSecondDate.trim() !== '') {
-        client.secondPaymentDate = newSecondDate.trim();
+      if (newFirstDate !== null && newFirstDate.trim() !== '') {
+        client.firstPaymentDate = newFirstDate.trim();
         updatedClients[clientIndex] = client;
+      }
+
+      // Date du 2e versement (si 2+ versements)
+      if (nbVersements >= 2) {
+        const newSecondDate = window.prompt(
+          `${clientName} — 💰 Date du 2e versement actuelle: ${client.secondPaymentDate || 'non définie'}\n\n` +
+          `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
+          client.secondPaymentDate || ''
+        );
+        if (newSecondDate !== null && newSecondDate.trim() !== '') {
+          client.secondPaymentDate = newSecondDate.trim();
+          updatedClients[clientIndex] = client;
+        }
+      }
+
+      // Date du 3e versement (si 3+ versements)
+      if (nbVersements >= 3) {
+        const newThirdDate = window.prompt(
+          `${clientName} — 💰 Date du 3e versement actuelle: ${client.thirdPaymentDate || 'non définie'}\n\n` +
+          `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
+          client.thirdPaymentDate || ''
+        );
+        if (newThirdDate !== null && newThirdDate.trim() !== '') {
+          client.thirdPaymentDate = newThirdDate.trim();
+          updatedClients[clientIndex] = client;
+        }
+      }
+
+      // Date du 4e versement (si 4 versements)
+      if (nbVersements >= 4) {
+        const newFourthDate = window.prompt(
+          `${clientName} — 💰 Date du 4e versement actuelle: ${client.fourthPaymentDate || 'non définie'}\n\n` +
+          `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
+          client.fourthPaymentDate || ''
+        );
+        if (newFourthDate !== null && newFourthDate.trim() !== '') {
+          client.fourthPaymentDate = newFourthDate.trim();
+          updatedClients[clientIndex] = client;
+        }
       }
     }
 
