@@ -391,6 +391,7 @@ const checkAndMarkPaymentsReceived = () => {
       const alreadyReceived = newPayments.some(p => 
         p.clientId === client.id && 
         p.paymentNumber === 1 && 
+        p.contractId === contract.id &&
         p.received
       );
       
@@ -404,6 +405,7 @@ const checkAndMarkPaymentsReceived = () => {
         const payment = {
           id: Date.now() + Math.random(),
           clientId: client.id,
+          contractId: contract.id,
           paymentNumber: 1,
           amount: parseFloat(amount),
           date: client.firstPaymentDate,
@@ -448,6 +450,7 @@ const checkAndMarkPaymentsReceived = () => {
       const alreadyReceived = newPayments.some(p => 
         p.clientId === client.id && 
         p.paymentNumber === 2 && 
+        p.contractId === contract.id &&
         p.received
       );
 
@@ -459,6 +462,7 @@ const checkAndMarkPaymentsReceived = () => {
         const payment = {
           id: Date.now() + Math.random() + 2,
           clientId: client.id,
+          contractId: contract.id,
           paymentNumber: 2,
           amount: parseFloat(amount),
           date: client.secondPaymentDate,
@@ -501,6 +505,7 @@ if ((client.paymentStructure === '3' || client.paymentStructure === '4') &&
   const alreadyReceived = newPayments.some(p => 
     p.clientId === client.id && 
     p.paymentNumber === 3 && 
+    p.contractId === contract.id &&
     p.received
   );
 
@@ -512,6 +517,7 @@ if ((client.paymentStructure === '3' || client.paymentStructure === '4') &&
     const payment = {
       id: Date.now() + Math.random() + 4,
       clientId: client.id,
+      contractId: contract.id,
       paymentNumber: 3,
       amount: parseFloat(amount),
       date: client.thirdPaymentDate,
@@ -554,6 +560,7 @@ if (client.paymentStructure === '4' &&
   const alreadyReceived = newPayments.some(p => 
     p.clientId === client.id && 
     p.paymentNumber === 4 && 
+    p.contractId === contract.id &&
     p.received
   );
 
@@ -565,6 +572,7 @@ if (client.paymentStructure === '4' &&
     const payment = {
       id: Date.now() + Math.random() + 6,
       clientId: client.id,
+      contractId: contract.id,
       paymentNumber: 4,
       amount: parseFloat(amount),
       date: client.fourthPaymentDate,
@@ -1913,6 +1921,45 @@ const cancelEditContract = () => {
   });
 };
   // FONCTION POUR IMPRIMER PLUSIEURS CONTRATS
+const bulkSetStartDate = () => {
+  if (selectedContracts.length === 0) {
+    alert('Aucun contrat sélectionné. Coche les contrats à corriger d\'abord (case à cocher dans la liste).');
+    return;
+  }
+
+  const newStartDate = window.prompt(
+    `Nouvelle date de DÉBUT du contrat pour les ${selectedContracts.length} contrat(s) sélectionné(s)?\n\n` +
+    `Format: AAAA-MM-JJ\n\n` +
+    `⚠️ Cette même date sera appliquée à TOUS les contrats sélectionnés.`,
+    ''
+  );
+
+  if (!newStartDate || newStartDate.trim() === '') {
+    alert('Aucune date entrée. Correction annulée.');
+    return;
+  }
+
+  const cleanDate = newStartDate.trim();
+
+  const confirmApply = window.confirm(
+    `Appliquer la date de début ${cleanDate} à ${selectedContracts.length} contrat(s)?\n\n` +
+    `Cette action va écraser la date de début actuelle de chacun de ces contrats.`
+  );
+  if (!confirmApply) return;
+
+  const updatedContracts = contracts.map(contract => {
+    if (selectedContracts.includes(contract.id)) {
+      return { ...contract, startDate: cleanDate };
+    }
+    return contract;
+  });
+
+  setContracts(updatedContracts);
+  saveToStorage('contracts', updatedContracts);
+
+  alert(`✅ Date de début mise à jour pour ${selectedContracts.length} contrat(s).`);
+};
+
 const bulkFixDates = () => {
   if (selectedContracts.length === 0) {
     alert('Aucun contrat sélectionné. Coche les contrats à corriger d\'abord (case à cocher dans la liste).');
@@ -2292,10 +2339,13 @@ const handlePaymentMethodSelect = (method) => {
     return;
   }
 
+  const activeContractForPayment = contracts.find(c => c.clientId === client.id && !c.archived);
+
   // Créer l'enregistrement de paiement
   const payment = {
     id: Date.now(),
     clientId: paymentModal.clientId,
+    contractId: activeContractForPayment ? activeContractForPayment.id : null,
     paymentNumber: paymentModal.paymentNumber,
     amount: finalAmount,  // ✅ Utilise le montant final (modifié ou non)
     date: new Date().toISOString().split('T')[0],
@@ -2360,7 +2410,32 @@ const handlePaymentMethodSelect = (method) => {
   });
 };
   // FONCTIONS UTILITAIRES
-  const isPaymentReceived = (clientId, paymentNumber) => {
+  const isPaymentReceived = (clientId, paymentNumber, contractId = null) => {
+    const contractForCheck = contractId ? contracts.find(c => c.id === contractId) : null;
+
+    if (contractForCheck) {
+      // 1) Paiement explicitement lié à CE contrat (nouvelle méthode, la plus fiable)
+      const matchForContract = payments.some(payment =>
+        payment.clientId === clientId &&
+        payment.paymentNumber === paymentNumber &&
+        payment.contractId === contractId &&
+        payment.received
+      );
+      if (matchForContract) return true;
+
+      // 2) Repli pour les paiements enregistrés AVANT ce correctif (pas de contractId) :
+      // on ne les compte pour CE contrat que si leur date tombe après le début de celui-ci,
+      // pour éviter qu'un paiement de la saison précédente soit compté pour la nouvelle saison.
+      const legacyMatch = payments.some(payment =>
+        payment.clientId === clientId &&
+        payment.paymentNumber === paymentNumber &&
+        payment.received &&
+        !payment.contractId &&
+        (!contractForCheck.startDate || !payment.date || new Date(payment.date) >= new Date(contractForCheck.startDate))
+      );
+      return legacyMatch;
+    }
+
     return payments.some(payment =>
       payment.clientId === clientId &&
       payment.paymentNumber === paymentNumber &&
@@ -2368,14 +2443,33 @@ const handlePaymentMethodSelect = (method) => {
     );
   };
 
+  // Retourne l'enregistrement de paiement pertinent pour LA SAISON du contrat donné
+  // (même logique que isPaymentReceived, mais retourne l'objet complet pour affichage des détails)
+  const getPaymentRecord = (clientId, paymentNumber, contract) => {
+    if (contract) {
+      const forThisContract = payments.find(p =>
+        p.clientId === clientId && p.paymentNumber === paymentNumber && p.contractId === contract.id
+      );
+      if (forThisContract) return forThisContract;
+
+      return payments.find(p =>
+        p.clientId === clientId &&
+        p.paymentNumber === paymentNumber &&
+        !p.contractId &&
+        (!contract.startDate || !p.date || new Date(p.date) >= new Date(contract.startDate))
+      );
+    }
+    return payments.find(p => p.clientId === clientId && p.paymentNumber === paymentNumber);
+  };
+
   const getPaymentAlerts = () => {
     const today = new Date();
     const alerts = [];
     clients.forEach(client => {
-      const contract = contracts.find(c => c.clientId === client.id);
+      const contract = contracts.find(c => c.clientId === client.id && !c.archived);
       if (!contract) return;
-      const firstPaymentReceived = isPaymentReceived(client.id, 1);
-      const secondPaymentReceived = isPaymentReceived(client.id, 2);
+      const firstPaymentReceived = isPaymentReceived(client.id, 1, contract.id);
+      const secondPaymentReceived = isPaymentReceived(client.id, 2, contract.id);
 
       if (client.firstPaymentDate && !firstPaymentReceived) {
         const firstPaymentDate = new Date(client.firstPaymentDate);
@@ -2531,8 +2625,9 @@ const handlePaymentMethodSelect = (method) => {
 
       let matchesPaymentStatus = true;
       if (clientSearchFilters.paymentStatus) {
-        const firstPaid = isPaymentReceived(client.id, 1);
-        const secondPaid = isPaymentReceived(client.id, 2);
+        const activeContractForFilter = contracts.find(c => c.clientId === client.id && !c.archived);
+        const firstPaid = isPaymentReceived(client.id, 1, activeContractForFilter?.id);
+        const secondPaid = isPaymentReceived(client.id, 2, activeContractForFilter?.id);
         const paymentStructure = client.paymentStructure || '2';
 
         switch (clientSearchFilters.paymentStatus) {
@@ -3429,8 +3524,8 @@ Merci de votre patience!
                       .sort((a, b) => a.address.toLowerCase().localeCompare(b.address.toLowerCase()))
                       .map(client => {
                         const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-                        const firstPaymentReceived = isPaymentReceived(client.id, 1);
-                        const secondPaymentReceived = isPaymentReceived(client.id, 2);
+                        const firstPaymentReceived = isPaymentReceived(client.id, 1, contract?.id);
+                        const secondPaymentReceived = isPaymentReceived(client.id, 2, contract?.id);
                         const paymentStructure = client.paymentStructure || '2';
                         
                         //  global
@@ -4328,8 +4423,8 @@ Merci de votre patience!
     const paymentStructure = client.paymentStructure || '2';
     if (paymentStructure !== '2') return false;
     
-    const firstPaid = isPaymentReceived(client.id, 1);
-    const secondPaid = isPaymentReceived(client.id, 2);
+    const firstPaid = isPaymentReceived(client.id, 1, contract.id);
+    const secondPaid = isPaymentReceived(client.id, 2, contract.id);
     
     // ⭐ Afficher seulement si:
     // - Structure à 2 versements
@@ -4504,10 +4599,10 @@ Merci de votre patience!
             .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
             .map(client => {
               const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-              const firstPaymentReceived = isPaymentReceived(client.id, 1);
-              const secondPaymentReceived = isPaymentReceived(client.id, 2);
-              const firstPayment = payments.find(p => p.clientId === client.id && p.paymentNumber === 1);
-              const secondPayment = payments.find(p => p.clientId === client.id && p.paymentNumber === 2);
+              const firstPaymentReceived = isPaymentReceived(client.id, 1, contract?.id);
+              const secondPaymentReceived = isPaymentReceived(client.id, 2, contract?.id);
+              const firstPayment = getPaymentRecord(client.id, 1, contract);
+              const secondPayment = getPaymentRecord(client.id, 2, contract);
 
               return (
                 <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
@@ -4717,10 +4812,10 @@ Merci de votre patience!
                       .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
                       .map(client => {
                         const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-                        const firstPaymentReceived = isPaymentReceived(client.id, 1);
-                        const secondPaymentReceived = isPaymentReceived(client.id, 2);
-                        const firstPayment = payments.find(p => p.clientId === client.id && p.paymentNumber === 1);
-                        const secondPayment = payments.find(p => p.clientId === client.id && p.paymentNumber === 2);
+                        const firstPaymentReceived = isPaymentReceived(client.id, 1, contract?.id);
+                        const secondPaymentReceived = isPaymentReceived(client.id, 2, contract?.id);
+                        const firstPayment = getPaymentRecord(client.id, 1, contract);
+                        const secondPayment = getPaymentRecord(client.id, 2, contract);
 
                         return (
                           <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
@@ -5042,6 +5137,21 @@ Merci de votre patience!
       }}
     >
       📅 Corriger dates sélection ({selectedContracts.length})
+    </button>
+
+    <button
+      onClick={() => bulkSetStartDate()}
+      disabled={selectedContracts.length === 0}
+      style={{
+        padding: '8px 16px', 
+        background: selectedContracts.length === 0 ? '#ccc' : '#6f42c1', 
+        color: 'white',
+        border: 'none', borderRadius: '6px', 
+        cursor: selectedContracts.length === 0 ? 'not-allowed' : 'pointer', 
+        fontWeight: 'bold'
+      }}
+    >
+      📅 Date début (même pour tous) ({selectedContracts.length})
     </button>
   </div>
 )}
@@ -5927,8 +6037,9 @@ Merci de votre patience!
               <div style={{ background: '#fff3cd', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
                 <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#856404', marginBottom: '5px' }}>
                   {clients.filter(client => {
-                    const firstPaid = isPaymentReceived(client.id, 1);
-                    const secondPaid = isPaymentReceived(client.id, 2);
+                    const contractForStat = contracts.find(c => c.clientId === client.id && !c.archived);
+                    const firstPaid = isPaymentReceived(client.id, 1, contractForStat?.id);
+                    const secondPaid = isPaymentReceived(client.id, 2, contractForStat?.id);
                     const paymentStructure = client.paymentStructure || '2';
                     return paymentStructure === '1' ? !firstPaid : !(firstPaid && secondPaid);
                   }).length}
@@ -5977,8 +6088,8 @@ Merci de votre patience!
                         .sort((a, b) => a.address.toLowerCase().localeCompare(b.address.toLowerCase()))
                         .map(client => {
                           const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-                          const firstPaid = isPaymentReceived(client.id, 1);
-                          const secondPaid = isPaymentReceived(client.id, 2);
+                          const firstPaid = isPaymentReceived(client.id, 1, contract?.id);
+                          const secondPaid = isPaymentReceived(client.id, 2, contract?.id);
                           const paymentStructure = client.paymentStructure || '2';
                           
                           let paymentStatus = 'Non payé';
