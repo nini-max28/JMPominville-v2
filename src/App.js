@@ -81,12 +81,14 @@ const [notificationLogs, setNotificationLogs] = useState([]);
 
   const [contractForm, setContractForm] = useState({
     clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: ''
+    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: '',
+    instructionsEntrees: '', instructionsTempo: '', instructionsCommercial: ''
   });
 
   const [editContractForm, setEditContractForm] = useState({
     clientId: '', type: '', startDate: '', endDate: '',
-    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: ''
+    amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: '',
+    instructionsEntrees: '', instructionsTempo: '', instructionsCommercial: ''
   });
 
   const [invoiceForm, setInvoiceForm] = useState({
@@ -1000,7 +1002,8 @@ const addClient = () => {
     // 4e paiement (nouveau)
     fourthPaymentDate: clientForm.fourthPaymentDate || '',
     fourthPaymentMethod: clientForm.fourthPaymentMethod || '',
-    fourthPaymentReceived: false
+    fourthPaymentReceived: false,
+    notes: ''
   }; // ← UNE SEULE accolade fermante ici
 
   // ✅ CRÉER LE CONTRAT AUTOMATIQUEMENT
@@ -1068,7 +1071,8 @@ const addClient = () => {
       firstPaymentMethod: client.firstPaymentMethod || '',
       secondPaymentMethod: client.secondPaymentMethod || '',
       firstPaymentDateReelle: client.firstPaymentDateReelle || '',
-      secondPaymnetDateReelle: client.secondPaymentDateReelle || ''
+      secondPaymnetDateReelle: client.secondPaymentDateReelle || '',
+      notes: client.notes || ''
     });
   };
 
@@ -1108,7 +1112,8 @@ const saveEditClient = () => {
           thirdPaymentDate: editClientForm.thirdPaymentDate || client.thirdPaymentDate,
           thirdPaymentMethod: editClientForm.thirdPaymentMethod || client.thirdPaymentMethod,
           fourthPaymentDate: editClientForm.fourthPaymentDate || client.fourthPaymentDate,
-          fourthPaymentMethod: editClientForm.fourthPaymentMethod || client.fourthPaymentMethod
+          fourthPaymentMethod: editClientForm.fourthPaymentMethod || client.fourthPaymentMethod,
+          notes: editClientForm.notes || ''
         };
       }
       return client;
@@ -1256,6 +1261,9 @@ const renewContract = (oldContractId) => {
     entreesCompletes: oldContract.entreesCompletes || 0,
     devantsTempo: oldContract.devantsTempo || 0,
     stationnementsCommerciaux: oldContract.stationnementsCommerciaux || 0,
+    instructionsEntrees: oldContract.instructionsEntrees || '',
+    instructionsTempo: oldContract.instructionsTempo || '',
+    instructionsCommercial: oldContract.instructionsCommercial || '',
     createdAt: new Date().toISOString(),
     renewedFrom: oldContract.id,
     archived: false
@@ -1397,31 +1405,70 @@ const renewMultipleContracts = () => {
   // 💰 NOUVELLE ÉTAPE : MONTANT AJUSTABLE INDIVIDUELLEMENT PAR CONTRAT
   // (Les notes du contrat servent à distinguer le type de service, ex: "devant de tempo" vs "entrée complète")
 
-  // D'abord, un raccourci optionnel : majoration par défaut à appliquer à tous,
-  // que l'on pourra ensuite ajuster contrat par contrat.
-  const defaultMajorationInput = window.prompt(
-    `Majoration PAR DÉFAUT pour TOUS les ${activeContracts.length} contrats?\n\n` +
-    `Tapez un pourcentage (ex: 5 pour +5%)\n` +
-    `Tapez un montant fixe précédé de "+" (ex: +50 pour +50$ par contrat)\n` +
-    `Laissez vide pour aucune majoration par défaut\n\n` +
-    `⚠️ Tu pourras ensuite ajuster le montant final pour chaque client individuellement.`,
-    ''
+  const useUnitPricing = window.confirm(
+    `Comment veux-tu calculer le montant par défaut de chaque contrat?\n\n` +
+    `OK = Utiliser un PRIX FIXE PAR TYPE DE SERVICE (ex: X$ par entrée complète, Y$ par devant tempo, Z$ par stationnement commercial). ` +
+    `Le montant total sera calculé automatiquement selon le nombre de chaque type sur le contrat.\n\n` +
+    `Annuler = Utiliser un pourcentage ou un montant fixe appliqué sur l'ancien prix (comme avant)`
   );
 
   let defaultMajType = null;
   let defaultMajValue = 0;
-  if (defaultMajorationInput && defaultMajorationInput.trim() !== '') {
-    const trimmed = defaultMajorationInput.trim();
-    if (trimmed.startsWith('+')) {
-      defaultMajType = 'fixed';
-      defaultMajValue = parseFloat(trimmed.slice(1)) || 0;
-    } else {
-      defaultMajType = 'percent';
-      defaultMajValue = parseFloat(trimmed) || 0;
+  let prixEntree = 0, prixTempo = 0, prixCommercial = 0;
+
+  if (useUnitPricing) {
+    const prixEntreeInput = window.prompt(
+      `Prix PAR entrée complète (laisse vide pour ne pas changer les contrats concernés):`, ''
+    );
+    prixEntree = prixEntreeInput && prixEntreeInput.trim() !== '' ? parseFloat(prixEntreeInput) || 0 : null;
+
+    const prixTempoInput = window.prompt(
+      `Prix PAR devant seulement (tempo) (laisse vide pour ne pas changer les contrats concernés):`, ''
+    );
+    prixTempo = prixTempoInput && prixTempoInput.trim() !== '' ? parseFloat(prixTempoInput) || 0 : null;
+
+    const prixCommercialInput = window.prompt(
+      `Prix PAR stationnement commercial / bloc multi-logements (laisse vide pour ne pas changer les contrats concernés):`, ''
+    );
+    prixCommercial = prixCommercialInput && prixCommercialInput.trim() !== '' ? parseFloat(prixCommercialInput) || 0 : null;
+  } else {
+    // D'abord, un raccourci optionnel : majoration par défaut à appliquer à tous,
+    // que l'on pourra ensuite ajuster contrat par contrat.
+    const defaultMajorationInput = window.prompt(
+      `Majoration PAR DÉFAUT pour TOUS les ${activeContracts.length} contrats?\n\n` +
+      `Tapez un pourcentage (ex: 5 pour +5%)\n` +
+      `Tapez un montant fixe précédé de "+" (ex: +50 pour +50$ par contrat)\n` +
+      `Laissez vide pour aucune majoration par défaut\n\n` +
+      `⚠️ Tu pourras ensuite ajuster le montant final pour chaque client individuellement.`,
+      ''
+    );
+
+    if (defaultMajorationInput && defaultMajorationInput.trim() !== '') {
+      const trimmed = defaultMajorationInput.trim();
+      if (trimmed.startsWith('+')) {
+        defaultMajType = 'fixed';
+        defaultMajValue = parseFloat(trimmed.slice(1)) || 0;
+      } else {
+        defaultMajType = 'percent';
+        defaultMajValue = parseFloat(trimmed) || 0;
+      }
     }
   }
 
-  const computeDefaultAmount = (amount) => {
+  const computeDefaultAmount = (oldContract) => {
+    const amount = oldContract.amount;
+    if (useUnitPricing) {
+      const nbEntrees = oldContract.entreesCompletes || 0;
+      const nbTempo = oldContract.devantsTempo || 0;
+      const nbCommercial = oldContract.stationnementsCommerciaux || 0;
+      // Si aucun compteur n'est rempli sur ce contrat, on ne peut pas calculer -> on garde l'ancien montant
+      if (nbEntrees === 0 && nbTempo === 0 && nbCommercial === 0) return amount;
+      let total = 0;
+      total += nbEntrees * (prixEntree !== null ? prixEntree : 0);
+      total += nbTempo * (prixTempo !== null ? prixTempo : 0);
+      total += nbCommercial * (prixCommercial !== null ? prixCommercial : 0);
+      return total;
+    }
     if (defaultMajType === 'percent') return amount * (1 + defaultMajValue / 100);
     if (defaultMajType === 'fixed') return amount + defaultMajValue;
     return amount;
@@ -1432,7 +1479,7 @@ const renewMultipleContracts = () => {
   const reviewIndividually = window.confirm(
     `Veux-tu réviser le montant final CONTRAT PAR CONTRAT?\n\n` +
     `OK = Oui, je veux voir et ajuster chaque montant (recommandé si les prix varient selon le service, ex: "devant de tempo" vs "entrée complète")\n` +
-    `Annuler = Non, applique la majoration par défaut à tous sans révision`
+    `Annuler = Non, applique le calcul par défaut à tous sans révision`
   );
 
   const finalAmounts = {}; // contractId -> montant final
@@ -1440,7 +1487,7 @@ const renewMultipleContracts = () => {
   activeContracts.forEach(oldContract => {
     const client = clients.find(c => c.id === oldContract.clientId);
     const clientName = client ? client.name : 'Client inconnu';
-    const proposedAmount = computeDefaultAmount(oldContract.amount);
+    const proposedAmount = computeDefaultAmount(oldContract);
     const nbEntrees = oldContract.entreesCompletes || 0;
     const nbTempo = oldContract.devantsTempo || 0;
     const nbCommercial = oldContract.stationnementsCommerciaux || 0;
@@ -1454,9 +1501,12 @@ const renewMultipleContracts = () => {
       const amountInput = window.prompt(
         `${clientName}\n` +
         (scopeLabel ? `🔧 Service: ${scopeLabel}\n` : '') +
+        (oldContract.instructionsEntrees ? `📌 Instructions entrée(s): ${oldContract.instructionsEntrees}\n` : '') +
+        (oldContract.instructionsTempo ? `📌 Instructions tempo: ${oldContract.instructionsTempo}\n` : '') +
+        (oldContract.instructionsCommercial ? `📌 Instructions commercial: ${oldContract.instructionsCommercial}\n` : '') +
         (oldContract.notes ? `📝 Notes: ${oldContract.notes}\n` : '') +
         `\nMontant actuel: ${oldContract.amount.toFixed(2)}$\n` +
-        `Montant proposé (avec majoration par défaut): ${proposedAmount.toFixed(2)}$\n\n` +
+        `Montant proposé: ${proposedAmount.toFixed(2)}$\n\n` +
         `Entre le montant final pour ce contrat, ou laisse tel quel:`,
         proposedAmount.toFixed(2)
       );
@@ -1473,9 +1523,11 @@ const renewMultipleContracts = () => {
 
   const majorationSummaryLines = reviewIndividually
     ? `Montants révisés individuellement pour ${activeContracts.length} contrat(s)`
-    : (defaultMajType
-        ? `Majoration par défaut: ${defaultMajType === 'percent' ? '+' + defaultMajValue + '%' : '+' + defaultMajValue + '$'} pour tous`
-        : 'Aucune majoration');
+    : useUnitPricing
+      ? `Prix par unité — Entrée: ${prixEntree !== null ? prixEntree + '$' : 'inchangé'}, Tempo: ${prixTempo !== null ? prixTempo + '$' : 'inchangé'}, Commercial: ${prixCommercial !== null ? prixCommercial + '$' : 'inchangé'}`
+      : (defaultMajType
+          ? `Majoration par défaut: ${defaultMajType === 'percent' ? '+' + defaultMajValue + '%' : '+' + defaultMajValue + '$'} pour tous`
+          : 'Aucune majoration');
 
 
   // 📅 CONFIGURATION DES DATES - UNE SEULE FOIS POUR TOUS
@@ -1585,6 +1637,9 @@ const renewMultipleContracts = () => {
       entreesCompletes: oldContract.entreesCompletes || 0,
       devantsTempo: oldContract.devantsTempo || 0,
       stationnementsCommerciaux: oldContract.stationnementsCommerciaux || 0,
+      instructionsEntrees: oldContract.instructionsEntrees || '',
+      instructionsTempo: oldContract.instructionsTempo || '',
+      instructionsCommercial: oldContract.instructionsCommercial || '',
       createdAt: new Date().toISOString(),
       renewedFrom: oldContract.id,
       archived: false
@@ -1662,12 +1717,15 @@ const addContract = () => {
     notes: contractForm.notes,
     entreesCompletes: parseInt(contractForm.entreesCompletes) || 0,
     devantsTempo: parseInt(contractForm.devantsTempo) || 0,
-    stationnementsCommerciaux: parseInt(contractForm.stationnementsCommerciaux) || 0
+    stationnementsCommerciaux: parseInt(contractForm.stationnementsCommerciaux) || 0,
+    instructionsEntrees: contractForm.instructionsEntrees || '',
+    instructionsTempo: contractForm.instructionsTempo || '',
+    instructionsCommercial: contractForm.instructionsCommercial || ''
   };
   const newContracts = [...contracts, contract];
   setContracts(newContracts);
   saveToStorage('contracts', newContracts);
-  setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: '' });
+  setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: '', instructionsEntrees: '', instructionsTempo: '', instructionsCommercial: '' });
   setClientSearch('');
 };
 
@@ -1691,7 +1749,10 @@ const startEditContract = (contract) => {
     notes: contract.notes,
     entreesCompletes: contract.entreesCompletes || 0,
     devantsTempo: contract.devantsTempo || 0,
-    stationnementsCommerciaux: contract.stationnementsCommerciaux || 0
+    stationnementsCommerciaux: contract.stationnementsCommerciaux || 0,
+    instructionsEntrees: contract.instructionsEntrees || '',
+    instructionsTempo: contract.instructionsTempo || '',
+    instructionsCommercial: contract.instructionsCommercial || ''
   });
 };
 
@@ -1744,6 +1805,9 @@ const saveEditContract = () => {
           entreesCompletes: parseInt(editContractForm.entreesCompletes) || 0,
           devantsTempo: parseInt(editContractForm.devantsTempo) || 0,
           stationnementsCommerciaux: parseInt(editContractForm.stationnementsCommerciaux) || 0,
+          instructionsEntrees: editContractForm.instructionsEntrees || '',
+          instructionsTempo: editContractForm.instructionsTempo || '',
+          instructionsCommercial: editContractForm.instructionsCommercial || '',
           archived: contract.archived || false
         };
         
@@ -4942,6 +5006,36 @@ Merci de votre patience!
               </div>
 
               <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Instructions - Entrée(s) complète(s)</label>
+                <textarea
+                  rows="2" value={contractForm.instructionsEntrees}
+                  onChange={(e) => setContractForm({ ...contractForm, instructionsEntrees: e.target.value })}
+                  placeholder="Ex: Ne pas bloquer le garage, faire attention au chien..."
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Instructions - Devant(s) tempo</label>
+                <textarea
+                  rows="2" value={contractForm.instructionsTempo}
+                  onChange={(e) => setContractForm({ ...contractForm, instructionsTempo: e.target.value })}
+                  placeholder="Ex: Juste dégager assez pour sortir l'auto..."
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Instructions - Stationnement(s) commercial / multi-logements</label>
+                <textarea
+                  rows="2" value={contractForm.instructionsCommercial}
+                  onChange={(e) => setContractForm({ ...contractForm, instructionsCommercial: e.target.value })}
+                  placeholder="Ex: Dégager les cases réservées aux visiteurs en premier..."
+                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                />
+              </div>
+
+              <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Notes spéciales</label>
                 <textarea
                   rows="3" value={contractForm.notes}
@@ -6316,7 +6410,7 @@ Merci de votre patience!
               paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
               firstPaymentMethod: '', secondPaymentMethod: '',
               thirdPaymentDate: '', thirdPaymentMethod: '',
-              fourthPaymentDate: '', fourthPaymentMethod: ''
+              fourthPaymentDate: '', fourthPaymentMethod: '', notes: ''
             });
           }}
           style={{
@@ -6444,6 +6538,28 @@ Merci de votre patience!
             type="text" 
             value={editClientForm.address}
             onChange={(e) => setEditClientForm({ ...editClientForm, address: e.target.value })}
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#1a4d1a'}
+            onBlur={(e) => e.target.style.borderColor = '#ced4da'}
+          />
+        </div>
+
+        {/* Instructions spéciales */}
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Instructions spéciales
+          </label>
+          <textarea
+            rows="3"
+            value={editClientForm.notes || ''}
+            onChange={(e) => setEditClientForm({ ...editClientForm, notes: e.target.value })}
+            placeholder="Ex: Accès par l'arrière, chien sur le terrain, clé sous le tapis..."
             style={{ 
               width: '100%', 
               padding: '10px 12px', 
@@ -6635,7 +6751,7 @@ Merci de votre patience!
               paymentStructure: '2', firstPaymentDate: '', secondPaymentDate: '',
               firstPaymentMethod: '', secondPaymentMethod: '',
               thirdPaymentDate: '', thirdPaymentMethod: '',
-              fourthPaymentDate: '', fourthPaymentMethod: ''
+              fourthPaymentDate: '', fourthPaymentMethod: '', notes: ''
             });
           }}
           style={{
@@ -6740,6 +6856,36 @@ Merci de votre patience!
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
                 />
               </div>
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Instructions - Entrée(s) complète(s)</label>
+              <textarea
+                rows="2" value={editContractForm.instructionsEntrees}
+                onChange={(e) => setEditContractForm({ ...editContractForm, instructionsEntrees: e.target.value })}
+                placeholder="Ex: Ne pas bloquer le garage, faire attention au chien..."
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Instructions - Devant(s) tempo</label>
+              <textarea
+                rows="2" value={editContractForm.instructionsTempo}
+                onChange={(e) => setEditContractForm({ ...editContractForm, instructionsTempo: e.target.value })}
+                placeholder="Ex: Juste dégager assez pour sortir l'auto..."
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+              />
+            </div>
+
+            <div style={{ marginBottom: '15px' }}>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Instructions - Stationnement(s) commercial / multi-logements</label>
+              <textarea
+                rows="2" value={editContractForm.instructionsCommercial}
+                onChange={(e) => setEditContractForm({ ...editContractForm, instructionsCommercial: e.target.value })}
+                placeholder="Ex: Dégager les cases réservées aux visiteurs en premier..."
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+              />
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
