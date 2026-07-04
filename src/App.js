@@ -39,12 +39,15 @@ const [isTrackingActive, setIsTrackingActive] = useState(false);
 const [trackingInterval, setTrackingInterval] = useState(null);
 const [selectedStreets, setSelectedStreets] = useState([]);
 const [streetSearchTerm, setStreetSearchTerm] = useState('');
+const [quickNotifClientSearch, setQuickNotifClientSearch] = useState('');
+const [quickNotifClientId, setQuickNotifClientId] = useState('');
 const [needsBackup, setNeedsBackup] = useState(false);
 const [notificationsHistory, setNotificationsHistory] = useState([]);
 const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
+  const [contractSortMode, setContractSortMode] = useState('street'); // 'street' ou 'name'
   const [clientSearchFilters, setClientSearchFilters] = useState({
     searchTerm: '',
     type: '', 
@@ -5420,6 +5423,46 @@ Merci de votre patience!
 
             {/* Liste des contrats */}
             {getAdvancedFilteredContracts().length > 0 && (
+              <>
+              <div style={{ 
+                background: '#f8f9fa', 
+                padding: '15px', 
+                borderRadius: '8px', 
+                marginBottom: '20px',
+                display: 'flex',
+                gap: '10px',
+                alignItems: 'center'
+              }}>
+                <label style={{ fontWeight: 'bold', color: '#495057' }}>Trier par :</label>
+                <button
+                  onClick={() => setContractSortMode('name')}
+                  style={{
+                    padding: '8px 16px',
+                    background: contractSortMode === 'name' ? '#1a4d1a' : 'white',
+                    color: contractSortMode === 'name' ? 'white' : '#1a4d1a',
+                    border: '2px solid #1a4d1a',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  👤 Par nom
+                </button>
+                <button
+                  onClick={() => setContractSortMode('street')}
+                  style={{
+                    padding: '8px 16px',
+                    background: contractSortMode === 'street' ? '#1a4d1a' : 'white',
+                    color: contractSortMode === 'street' ? 'white' : '#1a4d1a',
+                    border: '2px solid #1a4d1a',
+                    borderRadius: '6px',
+                    cursor: 'pointer',
+                    fontWeight: 'bold'
+                  }}
+                >
+                  🏘️ Par rue
+                </button>
+              </div>
               <div style={{ overflowX: 'auto' }}>
                 <table style={{
                   width: '100%', borderCollapse: 'collapse',
@@ -5437,7 +5480,23 @@ Merci de votre patience!
                     </tr>
                   </thead>
                   <tbody>
-                    {getAdvancedFilteredContracts().map(contract => {
+                    {getAdvancedFilteredContracts()
+                      .slice()
+                      .sort((a, b) => {
+                        const clientA = clients.find(c => c.id === a.clientId);
+                        const clientB = clients.find(c => c.id === b.clientId);
+                        if (contractSortMode === 'street') {
+                          const streetA = extractStreetName(clientA?.address || '');
+                          const streetB = extractStreetName(clientB?.address || '');
+                          const cmp = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
+                          if (cmp !== 0) return cmp;
+                          const numA = parseInt((clientA?.address || '').match(/^\d+/)?.[0] || '0', 10);
+                          const numB = parseInt((clientB?.address || '').match(/^\d+/)?.[0] || '0', 10);
+                          return numA - numB;
+                        }
+                        return (clientA?.name || '').toLowerCase().localeCompare((clientB?.name || '').toLowerCase());
+                      })
+                      .map(contract => {
                       const client = clients.find(c => c.id === contract.clientId);
                       return (
                         <tr key={contract.id} style={{ borderBottom: '1px solid #dee2e6' }}>
@@ -5552,6 +5611,7 @@ Merci de votre patience!
                   </tbody>
                 </table>
               </div>
+              </>
             )}
           </div>
         )}
@@ -6185,14 +6245,42 @@ Merci de votre patience!
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Client:</label>
-                  <select style={{
+                  <input
+                    type="text"
+                    value={quickNotifClientSearch}
+                    onChange={(e) => {
+                      setQuickNotifClientSearch(e.target.value);
+                      setQuickNotifClientId('');
+                    }}
+                    placeholder="Tape quelques lettres du nom..."
+                    style={{
+                      width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd',
+                      marginBottom: '6px'
+                    }}
+                  />
+                  <select
+                    value={quickNotifClientId}
+                    onChange={(e) => {
+                      setQuickNotifClientId(e.target.value);
+                      const chosen = clients.find(c => c.id === parseInt(e.target.value));
+                      if (chosen) setQuickNotifClientSearch(chosen.name);
+                    }}
+                    style={{
                     width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd'
                   }}>
-                    <option value="">Sélectionner un client...</option>
+                    <option value="">
+                      {quickNotifClientSearch.trim() ? 'Sélectionner dans les résultats...' : 'Sélectionner un client...'}
+                    </option>
                     {clients
                       .filter(client => {
                         const contract = contracts.find(c => c.clientId === client.id && !c.archived);
                         return contract;
+                      })
+                      .filter(client => {
+                        if (!quickNotifClientSearch.trim()) return true;
+                        const term = quickNotifClientSearch.trim().toLowerCase();
+                        return client.name.toLowerCase().includes(term) ||
+                               (client.address || '').toLowerCase().includes(term);
                       })
                       .map(client => (
                         <option key={client.id} value={client.id}>
