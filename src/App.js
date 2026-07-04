@@ -70,7 +70,13 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   contractAmount: '',
   startDate: '',
   endDate: '',
-  contractNotes: ''
+  contractNotes: '',
+  entreesCompletes: '',
+  devantsTempo: '',
+  stationnementsCommerciaux: '',
+  instructionsEntrees: '',
+  instructionsTempo: '',
+  instructionsCommercial: ''
 });
   const [editClientForm, setEditClientForm] = useState({
     name: '', phone: '', email: '', type: '', address: '',
@@ -1016,6 +1022,12 @@ const addClient = () => {
     amount: parseFloat(clientForm.contractAmount),
     status: 'actif',
     notes: clientForm.contractNotes,
+    entreesCompletes: parseInt(clientForm.entreesCompletes) || 0,
+    devantsTempo: parseInt(clientForm.devantsTempo) || 0,
+    stationnementsCommerciaux: parseInt(clientForm.stationnementsCommerciaux) || 0,
+    instructionsEntrees: clientForm.instructionsEntrees || '',
+    instructionsTempo: clientForm.instructionsTempo || '',
+    instructionsCommercial: clientForm.instructionsCommercial || '',
     createdAt: new Date().toISOString()
   };
 
@@ -1050,7 +1062,13 @@ const addClient = () => {
     contractAmount: '',
     startDate: '',
     endDate: '',
-    contractNotes: ''
+    contractNotes: '',
+    entreesCompletes: '',
+    devantsTempo: '',
+    stationnementsCommerciaux: '',
+    instructionsEntrees: '',
+    instructionsTempo: '',
+    instructionsCommercial: ''
   });
 
   alert(`✅ Client "${client.name}" et contrat créés avec succès!\n\nMontant: ${contract.amount.toFixed(2)}$\nDébut: ${contract.startDate}\nFin: ${contract.endDate}`);
@@ -3857,6 +3875,66 @@ Merci de votre patience!
               style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
             />
           </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre d'entrées complètes</label>
+            <input
+              type="number" min="0" step="1" value={clientForm.entreesCompletes}
+              onChange={(e) => setClientForm({ ...clientForm, entreesCompletes: e.target.value })}
+              placeholder="0"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre de devants seulement (tempo)</label>
+            <input
+              type="number" min="0" step="1" value={clientForm.devantsTempo}
+              onChange={(e) => setClientForm({ ...clientForm, devantsTempo: e.target.value })}
+              placeholder="0"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Nombre de stationnements commerciaux / blocs multi-logements</label>
+            <input
+              type="number" min="0" step="1" value={clientForm.stationnementsCommerciaux}
+              onChange={(e) => setClientForm({ ...clientForm, stationnementsCommerciaux: e.target.value })}
+              placeholder="0"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
+          </div>
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Instructions - Entrée(s) complète(s)</label>
+          <textarea
+            rows="2" value={clientForm.instructionsEntrees}
+            onChange={(e) => setClientForm({ ...clientForm, instructionsEntrees: e.target.value })}
+            placeholder="Ex: Ne pas bloquer le garage, faire attention au chien..."
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Instructions - Devant(s) tempo</label>
+          <textarea
+            rows="2" value={clientForm.instructionsTempo}
+            onChange={(e) => setClientForm({ ...clientForm, instructionsTempo: e.target.value })}
+            placeholder="Ex: Juste dégager assez pour sortir l'auto..."
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          />
+        </div>
+
+        <div style={{ marginBottom: '15px' }}>
+          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Instructions - Stationnement(s) commercial / multi-logements</label>
+          <textarea
+            rows="2" value={clientForm.instructionsCommercial}
+            onChange={(e) => setClientForm({ ...clientForm, instructionsCommercial: e.target.value })}
+            placeholder="Ex: Dégager les cases réservées aux visiteurs en premier..."
+            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+          />
         </div>
 
         <div style={{ marginBottom: '15px' }}>
