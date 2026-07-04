@@ -1355,6 +1355,7 @@ const getRenewableContracts = () => {
   const latestPerClient = {};
   contracts.forEach(c => {
     if (renewedFromIds.has(c.id)) return; // déjà renouvelé une fois, on ignore
+    if (!clients.some(cl => cl.id === c.clientId)) return; // client supprimé, on ignore (à supprimer manuellement plutôt qu'à renouveler)
     const existing = latestPerClient[c.clientId];
     if (!existing || new Date(c.endDate) > new Date(existing.endDate)) {
       latestPerClient[c.clientId] = c;
@@ -1511,6 +1512,7 @@ const renewMultipleContracts = () => {
   activeContracts.forEach(oldContract => {
     const client = clients.find(c => c.id === oldContract.clientId);
     const clientName = client ? client.name : 'Client inconnu';
+    const clientAddress = client ? client.address : '';
     const proposedAmount = computeDefaultAmount(oldContract);
     const nbEntrees = oldContract.entreesCompletes || 0;
     const nbTempo = oldContract.devantsTempo || 0;
@@ -1523,7 +1525,7 @@ const renewMultipleContracts = () => {
 
     if (reviewIndividually) {
       const amountInput = window.prompt(
-        `${clientName}\n` +
+        `${clientName}` + (clientAddress ? ` — ${clientAddress}` : '') + `\n` +
         (scopeLabel ? `🔧 Service: ${scopeLabel}\n` : '') +
         (oldContract.instructionsEntrees ? `📌 Instructions entrée(s): ${oldContract.instructionsEntrees}\n` : '') +
         (oldContract.instructionsTempo ? `📌 Instructions tempo: ${oldContract.instructionsTempo}\n` : '') +
@@ -5258,7 +5260,7 @@ Merci de votre patience!
       ✏️ Modifier
     </button>
 
-    {!contract.archived && (
+    {(!contract.archived || !client) && (
       <button
         onClick={() => deleteContract(contract.id)}
         style={{
@@ -5270,12 +5272,21 @@ Merci de votre patience!
       </button>
     )}
     
-    {contract.archived && (
+    {contract.archived && client && (
       <span style={{
         padding: '5px 10px', fontSize: '11px', background: '#6c757d', 
         color: 'white', borderRadius: '4px', textAlign: 'center'
       }}>
         📦 Archivé {contract.yearArchived || ''}
+      </span>
+    )}
+
+    {contract.archived && !client && (
+      <span style={{
+        padding: '5px 10px', fontSize: '11px', background: '#6c757d', 
+        color: 'white', borderRadius: '4px', textAlign: 'center'
+      }}>
+        📦 Archivé — client supprimé
       </span>
     )}
   </div>
