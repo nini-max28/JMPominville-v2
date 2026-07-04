@@ -1928,7 +1928,22 @@ const printMultipleContracts = () => {
 
   let allContractsHTML = '';
 
-  selectedContracts.forEach((contractId, index) => {
+  // Trier par rue (puis par numéro civique) pour que l'impression suive un ordre logique de tournée
+  const sortedContractIds = [...selectedContracts].sort((idA, idB) => {
+    const contractA = contracts.find(c => c.id === idA);
+    const contractB = contracts.find(c => c.id === idB);
+    const clientA = clients.find(c => c.id === contractA?.clientId);
+    const clientB = clients.find(c => c.id === contractB?.clientId);
+    const streetA = extractStreetName(clientA?.address || '');
+    const streetB = extractStreetName(clientB?.address || '');
+    const streetCompare = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
+    if (streetCompare !== 0) return streetCompare;
+    const numA = parseInt((clientA?.address || '').match(/^\d+/)?.[0] || '0', 10);
+    const numB = parseInt((clientB?.address || '').match(/^\d+/)?.[0] || '0', 10);
+    return numA - numB;
+  });
+
+  sortedContractIds.forEach((contractId, index) => {
     const contract = contracts.find(c => c.id === contractId);
     const client = clients.find(c => c.id === contract?.clientId);
 
