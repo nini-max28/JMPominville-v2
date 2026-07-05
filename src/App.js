@@ -754,6 +754,15 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     console.log('✅ Résultat:', result);
     
     if (result.success) {
+      // Enregistrer un marqueur pour le suivi des retards de paiement
+      if (type === 'payment_due_reminder' || type === 'late_payment') {
+        const markerField = type === 'payment_due_reminder' ? 'paymentReminderSentAt' : 'latePaymentWarningSentAt';
+        const updatedClientsMarker = clients.map(c =>
+          c.id === clientId ? { ...c, [markerField]: new Date().toISOString() } : c
+        );
+        setClients(updatedClientsMarker);
+        saveToStorage('clients', updatedClientsMarker);
+      }
       alert(`✅ Notification envoyée à ${client.name}`);
     } else {
       throw new Error(result.error || 'Erreur inconnue');
@@ -2504,6 +2513,50 @@ const handlePaymentMethodSelect = (method) => {
     return payments.find(p => p.clientId === clientId && p.paymentNumber === paymentNumber);
   };
 
+  // Liste réutilisable des clients en retard de paiement, avec sévérité et marqueurs d'envoi
+  const getLatePaymentClients = () => {
+    const today = new Date();
+    const results = [];
+
+    clients.forEach(client => {
+      const contract = contracts.find(c => c.clientId === client.id && !c.archived);
+      if (!contract) return;
+
+      const paymentStructure = client.paymentStructure || '2';
+      const firstPaid = isPaymentReceived(client.id, 1, contract.id);
+      const secondPaid = isPaymentReceived(client.id, 2, contract.id);
+
+      const dueChecks = [{ paid: firstPaid, date: client.firstPaymentDate }];
+      if (paymentStructure !== '1') {
+        dueChecks.push({ paid: secondPaid, date: client.secondPaymentDate });
+      }
+
+      let maxDaysLate = 0;
+      let hasUnpaidDue = false;
+      dueChecks.forEach(c => {
+        if (c.paid || !c.date) return;
+        const daysLate = (today - new Date(c.date)) / (1000 * 60 * 60 * 24);
+        if (daysLate >= 1) {
+          hasUnpaidDue = true;
+          if (daysLate > maxDaysLate) maxDaysLate = daysLate;
+        }
+      });
+
+      if (hasUnpaidDue) {
+        results.push({
+          client,
+          contract,
+          daysLate: Math.floor(maxDaysLate),
+          severity: maxDaysLate > 7 ? 'late' : 'reminder',
+          reminderSentAt: client.paymentReminderSentAt || null,
+          warningSentAt: client.latePaymentWarningSentAt || null
+        });
+      }
+    });
+
+    return results.sort((a, b) => b.daysLate - a.daysLate);
+  };
+
   const getPaymentAlerts = () => {
     const today = new Date();
     const alerts = [];
@@ -3480,6 +3533,77 @@ Merci de votre patience!
                 <div style={{ fontSize: '1.1em' }}>Revenus Total</div>
               </div>
             </div>
+
+            {/* SUIVI DES RETARDS DE PAIEMENT */}
+            {getLatePaymentClients().length > 0 && (
+              <div style={{ marginBottom: '30px' }}>
+                <h3 style={{ color: '#1a4d1a', marginBottom: '15px' }}>
+                  🔔 Suivi des retards de paiement ({getLatePaymentClients().length})
+                </h3>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{
+                    width: '100%', borderCollapse: 'collapse',
+                    background: 'white', borderRadius: '12px', overflow: 'hidden',
+                    boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                  }}>
+                    <thead>
+                      <tr style={{ background: '#f8f9fa' }}>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>Client</th>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>Jours de retard</th>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>Statut d'envoi</th>
+                        <th style={{ padding: '12px', textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {getLatePaymentClients().map(({ client, daysLate, severity, reminderSentAt, warningSentAt }) => (
+                        <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                          <td style={{ padding: '12px' }}>
+                            <div style={{ fontWeight: 'bold' }}>{client.name}</div>
+                            <div style={{ fontSize: '12px', color: '#666' }}>{client.address}</div>
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <span style={{
+                              padding: '4px 10px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold',
+                              background: severity === 'late' ? '#f8d7da' : '#fff3cd',
+                              color: severity === 'late' ? '#721c24' : '#856404'
+                            }}>
+                              {daysLate} jour{daysLate > 1 ? 's' : ''} {severity === 'late' ? '⚠️ Sévère' : '📅 Récent'}
+                            </span>
+                          </td>
+                          <td style={{ padding: '12px', fontSize: '12px' }}>
+                            {warningSentAt ? (
+                              <div style={{ color: '#721c24' }}>⚠️ Avertissement envoyé le {new Date(warningSentAt).toLocaleDateString('fr-CA')}</div>
+                            ) : reminderSentAt ? (
+                              <div style={{ color: '#856404' }}>📅 Rappel envoyé le {new Date(reminderSentAt).toLocaleDateString('fr-CA')}</div>
+                            ) : (
+                              <div style={{ color: '#999' }}>Aucun envoi</div>
+                            )}
+                          </td>
+                          <td style={{ padding: '12px' }}>
+                            <button
+                              onClick={() => {
+                                const type = severity === 'late' ? 'late_payment' : 'payment_due_reminder';
+                                const label = severity === 'late' ? 'un avertissement de retard sévère' : 'un rappel de paiement';
+                                if (window.confirm(`Envoyer ${label} à ${client.name}?`)) {
+                                  sendNotificationViaBackend(client.id, type, '');
+                                }
+                              }}
+                              style={{
+                                padding: '5px 10px', fontSize: '12px',
+                                background: severity === 'late' ? '#dc3545' : '#fd7e14',
+                                color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'
+                              }}
+                            >
+                              {severity === 'late' ? '⚠️ Envoyer avertissement' : '📅 Envoyer rappel'}
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
 
             {/* FEUILLE DE SUIVI IMPRIMABLE */}
             <div style={{ marginBottom: '30px' }}>
@@ -6063,6 +6187,7 @@ Merci de votre patience!
                   <option value="enroute">🚛 Équipe en route</option>
                   <option value="arrived">📍 Équipe arrivée</option>
                   <option value="completed">✅ Service terminé</option>
+                  <option value="payment_due_reminder">📅 Rappel paiement (échéance dépassée)</option>
                   <option value="late_payment">⚠️ Retard de paiement</option>
                   <option value="custom">✏️ Message personnalisé</option>
                 </select>
@@ -6219,6 +6344,12 @@ Merci de votre patience!
                           const isLatePayment = dueChecks.some(c =>
                             !c.paid && c.date && (today - new Date(c.date)) / (1000 * 60 * 60 * 24) > 7
                           );
+                          // Échéance dépassée depuis 1 à 7 jours (rappel avant le retard sévère)
+                          const isJustPastDue = !isLatePayment && dueChecks.some(c => {
+                            if (c.paid || !c.date) return false;
+                            const daysLate = (today - new Date(c.date)) / (1000 * 60 * 60 * 24);
+                            return daysLate >= 1 && daysLate <= 7;
+                          });
 
                           return (
                             <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
@@ -6265,6 +6396,22 @@ Merci de votre patience!
                                     }}
                                   >
                                     ⚠️ Retard
+                                  </button>
+                                )}
+                                {isJustPastDue && (
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm(`Envoyer un rappel de paiement à ${client.name}?\n\nLe message indique que l'échéance est dépassée et que les piquets seront retirés si le paiement n'est pas reçu dans les prochains jours.`)) {
+                                        sendNotificationViaBackend(client.id, 'payment_due_reminder', '')
+                                      }
+                                    }}
+                                    style={{
+                                      padding: '4px 8px', background: '#fd7e14', color: 'white',
+                                      border: 'none', borderRadius: '4px', fontSize: '10px',
+                                      cursor: 'pointer', marginLeft: '5px'
+                                    }}
+                                  >
+                                    📅 Rappel
                                   </button>
                                 )}
                               </td>
@@ -6371,6 +6518,7 @@ Merci de votre patience!
                     <option value="enroute">🚛 En route</option>
                     <option value="arrived">📍 Arrivé</option>
                     <option value="completed">✅ Terminé</option>
+                    <option value="payment_due_reminder">📅 Rappel paiement (échéance dépassée)</option>
                     <option value="late_payment">⚠️ Retard de paiement</option>
                     <option value="custom">✏️ Personnalisé</option>
                   </select>
@@ -6457,6 +6605,7 @@ Merci de votre patience!
                     <option value="enroute">🚛 Équipe en route</option>
                     <option value="arrived">📍 Équipe arrivée</option>
                     <option value="completed">✅ Service terminé</option>
+                    <option value="payment_due_reminder">📅 Rappel paiement (échéance dépassée)</option>
                     <option value="late_payment">⚠️ Retard de paiement</option>
                     <option value="custom">✏️ Message personnalisé</option>
                   </select>
