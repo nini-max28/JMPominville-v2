@@ -41,6 +41,8 @@ const [selectedStreets, setSelectedStreets] = useState([]);
 const [streetSearchTerm, setStreetSearchTerm] = useState('');
 const [quickNotifClientSearch, setQuickNotifClientSearch] = useState('');
 const [quickNotifClientId, setQuickNotifClientId] = useState('');
+const [quickNotifType, setQuickNotifType] = useState('enroute');
+const [quickNotifCustomMessage, setQuickNotifCustomMessage] = useState('');
 const [needsBackup, setNeedsBackup] = useState(false);
 const [notificationsHistory, setNotificationsHistory] = useState([]);
 const [notificationLogs, setNotificationLogs] = useState([]);
@@ -1969,12 +1971,34 @@ const bulkFixDates = () => {
     return;
   }
 
-  const confirmStart = window.confirm(
-    `Corriger les dates pour ${selectedContracts.length} contrat(s)?\n\n` +
-    `Pour chaque client, tu verras la date de fin du contrat et les dates de versement actuelles, ` +
-    `et tu pourras les corriger une par une (ou laisser tel quel si c'est déjà bon).`
+  // Date de fin de contrat — une seule fois pour tout le monde
+  const newEndDate = window.prompt(
+    `Nouvelle date de FIN de contrat pour les ${selectedContracts.length} contrat(s) sélectionné(s)?\n\n` +
+    `Format: AAAA-MM-JJ\n\n` +
+    `⚠️ Cette même date sera appliquée à TOUS les contrats sélectionnés.\n` +
+    `Laisse vide pour ne pas y toucher.`,
+    ''
   );
-  if (!confirmStart) return;
+  const cleanEndDate = newEndDate && newEndDate.trim() !== '' ? newEndDate.trim() : null;
+
+  // Date du 1er versement — une seule fois pour tout le monde
+  const newFirstDate = window.prompt(
+    `Nouvelle date du 1er versement (ou paiement unique) pour les ${selectedContracts.length} contrat(s)?\n\n` +
+    `Format: AAAA-MM-JJ\n\n` +
+    `⚠️ Cette même date sera appliquée à TOUS les clients sélectionnés.\n` +
+    `Laisse vide pour ne pas y toucher.`,
+    ''
+  );
+  const cleanFirstDate = newFirstDate && newFirstDate.trim() !== '' ? newFirstDate.trim() : null;
+
+  if (cleanEndDate || cleanFirstDate) {
+    const confirmApply = window.confirm(
+      `Confirmer l'application ${cleanEndDate ? `de la date de fin ${cleanEndDate}` : ''}` +
+      (cleanEndDate && cleanFirstDate ? ` et ` : '') +
+      `${cleanFirstDate ? `du 1er versement ${cleanFirstDate}` : ''} à ${selectedContracts.length} contrat(s)?`
+    );
+    if (!confirmApply) return;
+  }
 
   let updatedContracts = [...contracts];
   let updatedClients = [...clients];
@@ -1987,72 +2011,16 @@ const bulkFixDates = () => {
 
     const clientIndex = updatedClients.findIndex(c => c.id === contract.clientId);
     const client = clientIndex !== -1 ? { ...updatedClients[clientIndex] } : null;
-    const clientName = client ? client.name : 'Client inconnu';
-    const clientAddress = client ? client.address : '';
     const nbVersements = parseInt(client?.paymentStructure || '2', 10);
 
-    // Date de fin du contrat
-    const newEndDate = window.prompt(
-      `${clientName}` + (clientAddress ? ` — ${clientAddress}` : '') + `\n\n` +
-      `📅 Date de fin du contrat actuelle: ${contract.endDate || 'non définie'}\n\n` +
-      `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
-      contract.endDate || ''
-    );
-    if (newEndDate !== null && newEndDate.trim() !== '') {
-      contract.endDate = newEndDate.trim();
+    if (cleanEndDate) {
+      contract.endDate = cleanEndDate;
       updatedContracts[contractIndex] = contract;
     }
 
-    if (client) {
-      // Date du 1er versement (toujours applicable)
-      const newFirstDate = window.prompt(
-        `${clientName} — 💰 Date du ${nbVersements === 1 ? 'paiement unique' : '1er versement'} actuelle: ${client.firstPaymentDate || 'non définie'}\n\n` +
-        `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
-        client.firstPaymentDate || ''
-      );
-      if (newFirstDate !== null && newFirstDate.trim() !== '') {
-        client.firstPaymentDate = newFirstDate.trim();
-        updatedClients[clientIndex] = client;
-      }
-
-      // Date du 2e versement (si 2+ versements)
-      if (nbVersements >= 2) {
-        const newSecondDate = window.prompt(
-          `${clientName} — 💰 Date du 2e versement actuelle: ${client.secondPaymentDate || 'non définie'}\n\n` +
-          `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
-          client.secondPaymentDate || ''
-        );
-        if (newSecondDate !== null && newSecondDate.trim() !== '') {
-          client.secondPaymentDate = newSecondDate.trim();
-          updatedClients[clientIndex] = client;
-        }
-      }
-
-      // Date du 3e versement (si 3+ versements)
-      if (nbVersements >= 3) {
-        const newThirdDate = window.prompt(
-          `${clientName} — 💰 Date du 3e versement actuelle: ${client.thirdPaymentDate || 'non définie'}\n\n` +
-          `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
-          client.thirdPaymentDate || ''
-        );
-        if (newThirdDate !== null && newThirdDate.trim() !== '') {
-          client.thirdPaymentDate = newThirdDate.trim();
-          updatedClients[clientIndex] = client;
-        }
-      }
-
-      // Date du 4e versement (si 4 versements)
-      if (nbVersements >= 4) {
-        const newFourthDate = window.prompt(
-          `${clientName} — 💰 Date du 4e versement actuelle: ${client.fourthPaymentDate || 'non définie'}\n\n` +
-          `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
-          client.fourthPaymentDate || ''
-        );
-        if (newFourthDate !== null && newFourthDate.trim() !== '') {
-          client.fourthPaymentDate = newFourthDate.trim();
-          updatedClients[clientIndex] = client;
-        }
-      }
+    if (client && cleanFirstDate) {
+      client.firstPaymentDate = cleanFirstDate;
+      updatedClients[clientIndex] = client;
     }
 
     fixedCount++;
@@ -2062,6 +2030,74 @@ const bulkFixDates = () => {
   saveToStorage('contracts', updatedContracts);
   setClients(updatedClients);
   saveToStorage('clients', updatedClients);
+
+  // Pour les clients ayant PLUS D'UN versement, on passe en revue individuelle
+  // pour les versements additionnels (2e, 3e, 4e), qui varient souvent d'un client à l'autre.
+  const clientsAvecPlusieursVersements = selectedContracts.filter(contractId => {
+    const contract = updatedContracts.find(c => c.id === contractId);
+    const client = updatedClients.find(c => c.id === contract?.clientId);
+    return client && parseInt(client.paymentStructure || '2', 10) >= 2;
+  });
+
+  if (clientsAvecPlusieursVersements.length > 0) {
+    const reviewMore = window.confirm(
+      `${clientsAvecPlusieursVersements.length} client(s) ont plus d'un versement.\n\n` +
+      `Veux-tu réviser leurs dates de versements additionnels (2e, 3e, 4e) un par un?\n\n` +
+      `OK = Oui\nAnnuler = Non, j'ai terminé`
+    );
+
+    if (reviewMore) {
+      let updatedContracts2 = [...updatedContracts];
+      let updatedClients2 = [...updatedClients];
+
+      clientsAvecPlusieursVersements.forEach(contractId => {
+        const contractIndex = updatedContracts2.findIndex(c => c.id === contractId);
+        const contract = updatedContracts2[contractIndex];
+        const clientIndex = updatedClients2.findIndex(c => c.id === contract.clientId);
+        const client = { ...updatedClients2[clientIndex] };
+        const clientName = client.name || 'Client inconnu';
+        const clientAddress = client.address || '';
+        const nbVersements = parseInt(client.paymentStructure || '2', 10);
+
+        const newSecondDate = window.prompt(
+          `${clientName}` + (clientAddress ? ` — ${clientAddress}` : '') + `\n\n` +
+          `💰 Date du 2e versement actuelle: ${client.secondPaymentDate || 'non définie'}\n\n` +
+          `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
+          client.secondPaymentDate || ''
+        );
+        if (newSecondDate !== null && newSecondDate.trim() !== '') {
+          client.secondPaymentDate = newSecondDate.trim();
+        }
+
+        if (nbVersements >= 3) {
+          const newThirdDate = window.prompt(
+            `${clientName} — 💰 Date du 3e versement actuelle: ${client.thirdPaymentDate || 'non définie'}\n\n` +
+            `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
+            client.thirdPaymentDate || ''
+          );
+          if (newThirdDate !== null && newThirdDate.trim() !== '') {
+            client.thirdPaymentDate = newThirdDate.trim();
+          }
+        }
+
+        if (nbVersements >= 4) {
+          const newFourthDate = window.prompt(
+            `${clientName} — 💰 Date du 4e versement actuelle: ${client.fourthPaymentDate || 'non définie'}\n\n` +
+            `Entre la date correcte (AAAA-MM-JJ), ou laisse tel quel et clique OK:`,
+            client.fourthPaymentDate || ''
+          );
+          if (newFourthDate !== null && newFourthDate.trim() !== '') {
+            client.fourthPaymentDate = newFourthDate.trim();
+          }
+        }
+
+        updatedClients2[clientIndex] = client;
+      });
+
+      setClients(updatedClients2);
+      saveToStorage('clients', updatedClients2);
+    }
+  }
 
   alert(`✅ ${fixedCount} contrat(s) vérifié(s)/corrigé(s).`);
 };
@@ -6027,6 +6063,7 @@ Merci de votre patience!
                   <option value="enroute">🚛 Équipe en route</option>
                   <option value="arrived">📍 Équipe arrivée</option>
                   <option value="completed">✅ Service terminé</option>
+                  <option value="late_payment">⚠️ Retard de paiement</option>
                   <option value="custom">✏️ Message personnalisé</option>
                 </select>
               </div>
@@ -6173,6 +6210,16 @@ Merci de votre patience!
                             }
                           }
 
+                          // Retard de plus de 7 jours sur un versement dû mais non payé
+                          const today = new Date();
+                          const dueChecks = [{ paid: firstPaid, date: client.firstPaymentDate }];
+                          if (paymentStructure !== '1') {
+                            dueChecks.push({ paid: secondPaid, date: client.secondPaymentDate });
+                          }
+                          const isLatePayment = dueChecks.some(c =>
+                            !c.paid && c.date && (today - new Date(c.date)) / (1000 * 60 * 60 * 24) > 7
+                          );
+
                           return (
                             <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
                               <td style={{ padding: '10px', fontSize: '13px' }}>
@@ -6204,6 +6251,22 @@ Merci de votre patience!
                                 >
                                   📱 Notifier
                                 </button>
+                                {isLatePayment && (
+                                  <button
+                                    onClick={() => {
+                                      if (window.confirm(`Envoyer un avertissement de retard de paiement à ${client.name}?\n\nLe message indique que les piquets seront retirés et le contrat résilié pour le reste de la saison si le retard n'est pas régularisé.`)) {
+                                        sendNotificationViaBackend(client.id, 'late_payment', '')
+                                      }
+                                    }}
+                                    style={{
+                                      padding: '4px 8px', background: '#dc3545', color: 'white',
+                                      border: 'none', borderRadius: '4px', fontSize: '10px',
+                                      cursor: 'pointer', marginLeft: '5px'
+                                    }}
+                                  >
+                                    ⚠️ Retard
+                                  </button>
+                                )}
                               </td>
                             </tr>
                           );
@@ -6299,18 +6362,54 @@ Merci de votre patience!
                 
                 <div>
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type:</label>
-                  <select style={{
+                  <select
+                    value={quickNotifType}
+                    onChange={(e) => setQuickNotifType(e.target.value)}
+                    style={{
                     width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd'
                   }}>
                     <option value="enroute">🚛 En route</option>
                     <option value="arrived">📍 Arrivé</option>
                     <option value="completed">✅ Terminé</option>
+                    <option value="late_payment">⚠️ Retard de paiement</option>
                     <option value="custom">✏️ Personnalisé</option>
                   </select>
                 </div>
               </div>
+
+              {quickNotifType === 'custom' && (
+                <div style={{ marginBottom: '15px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Message personnalisé:</label>
+                  <textarea
+                    rows="3"
+                    value={quickNotifCustomMessage}
+                    onChange={(e) => setQuickNotifCustomMessage(e.target.value)}
+                    placeholder="Écris ton message ici..."
+                    style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+                  />
+                </div>
+              )}
               
-              <button style={{
+              <button
+                onClick={() => {
+                  if (!quickNotifClientId) {
+                    alert('Sélectionne un client d\'abord.');
+                    return;
+                  }
+                  if (quickNotifType === 'custom' && !quickNotifCustomMessage.trim()) {
+                    alert('Écris un message personnalisé ou choisis un autre type.');
+                    return;
+                  }
+                  sendNotificationViaBackend(
+                    parseInt(quickNotifClientId),
+                    quickNotifType,
+                    quickNotifType === 'custom' ? quickNotifCustomMessage.trim() : ''
+                  );
+                  setQuickNotifClientId('');
+                  setQuickNotifClientSearch('');
+                  setQuickNotifCustomMessage('');
+                }}
+                style={{
                 padding: '10px 20px', background: '#007bff', color: 'white',
                 border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
               }}>
@@ -6358,6 +6457,7 @@ Merci de votre patience!
                     <option value="enroute">🚛 Équipe en route</option>
                     <option value="arrived">📍 Équipe arrivée</option>
                     <option value="completed">✅ Service terminé</option>
+                    <option value="late_payment">⚠️ Retard de paiement</option>
                     <option value="custom">✏️ Message personnalisé</option>
                   </select>
                 </div>
