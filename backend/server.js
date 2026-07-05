@@ -14,7 +14,7 @@ const twilioClient = twilio(
 
 // Configuration Brevo (API web pour l'envoi de courriels - évite le blocage SMTP de Render)
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
-const BREVO_SENDER_EMAIL = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER;
+const BREVO_SENDER_EMAIL = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_FROM || process.env.EMAIL_USER || process.env.EWAIL_USER;
 const BREVO_SENDER_NAME = process.env.EMAIL_FROM_NAME || 'JM Pominville';
 
 // Middleware
@@ -24,6 +24,12 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
+
+if (!BREVO_SENDER_EMAIL) {
+  console.warn('⚠️ ATTENTION: aucune adresse expéditeur trouvée (EMAIL_FROM_ADDRESS / EMAIL_FROM / EMAIL_USER). Les courriels vont échouer tant que ce n\'est pas corrigé.');
+} else {
+  console.log(`📧 Adresse expéditeur Brevo utilisée: ${BREVO_SENDER_EMAIL}`);
+}
 
 // Test route
 app.get('/api/test', (req, res) => {
