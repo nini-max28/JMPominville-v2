@@ -2155,8 +2155,7 @@ const paymentAmount = contract.amount / numPayments;
 
     const contractHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 12px; line-height: 1.3; font-size: 10px; page-break-after: always;">
-        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 18px 12px; border-radius: 10px; text-align: center; margin-bottom: 15px;">
-          <div style="font-size: 34px; margin-bottom: 6px;">🚜</div>
+        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 10px 12px; border-radius: 8px; text-align: center; margin-bottom: 8px;">
           <h1 style="color: white; margin-bottom: 8px; font-size: 20px; font-weight: bold;">CONTRAT DE SERVICE DE DÉNEIGEMENT</h1>
           <h2 style="color: white; margin-bottom: 4px; font-size: 14px; font-weight: bold;">JM Pominville</h2>
           <p style="font-style: italic; color: #d4e8d4; margin-bottom: 8px; font-size: 10px;">Service fiable et rapide</p>
@@ -2759,8 +2758,7 @@ const paymentAmount = contract.amount / numPayments;
     
     const contractHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 12px; line-height: 1.3; font-size: 10px;">
-        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 18px 12px; border-radius: 10px; text-align: center; margin-bottom: 15px;">
-          <div style="font-size: 34px; margin-bottom: 6px;">🚜</div>
+        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 10px 12px; border-radius: 8px; text-align: center; margin-bottom: 8px;">
           <h1 style="color: white; margin-bottom: 8px; font-size: 20px; font-weight: bold;">CONTRAT DE SERVICE DE DÉNEIGEMENT</h1>
           <h2 style="color: white; margin-bottom: 4px; font-size: 14px; font-weight: bold;">JM Pominville</h2>
           <p style="font-style: italic; color: #d4e8d4; margin-bottom: 8px; font-size: 10px;">Service fiable et rapide</p>
