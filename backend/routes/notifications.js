@@ -107,6 +107,9 @@ router.post('/send', async (req, res) => {
         case 'reminder':
           message = `Bonjour ${clientName}, ceci est un rappel concernant votre paiement pour les services de déneigement JM Pominville.`;
           break;
+        case 'late_payment':
+          message = `Bonjour ${clientName}, votre paiement pour les services de déneigement JM Pominville accuse un retard de plus de 7 jours. Sans régularisation rapide, nous procéderons au retrait de vos piquets et à la résiliation du contrat pour le reste de la période de déneigement. Merci de communiquer avec nous au 514-444-6324 dès que possible.`;
+          break;
         case 'custom':
           message = customMessage || `Notification de JM Pominville pour ${clientName}`;
           break;
@@ -182,7 +185,7 @@ router.post('/send', async (req, res) => {
           const emailResult = await emailTransporter.sendMail({
             from: `"JM Pominville" <${process.env.EMAIL_USER || 'jmpominvilledeneigement@gmail.com'}>`,
             to: clientEmail,
-            subject: `JM Pominville - ${type === 'enroute' ? 'Équipe en route' : type === 'completion' ? 'Service terminé' : 'Notification'}`,
+            subject: `JM Pominville - ${type === 'enroute' ? 'Équipe en route' : type === 'completion' ? 'Service terminé' : type === 'late_payment' ? 'Retard de paiement - Action requise' : 'Notification'}`,
             text: message,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
