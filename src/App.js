@@ -29,6 +29,7 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz
   const [editingContract, setEditingContract] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
   const [bulkNotificationType, setBulkNotificationType] = useState('enroute');
+  const [bulkNotificationChannels, setBulkNotificationChannels] = useState('both'); // 'sms', 'email', 'both'
 const [bulkCustomMessage, setBulkCustomMessage] = useState('');
 const [isSendingBulk, setIsSendingBulk] = useState(false);
 const [gpsPosition, setGpsPosition] = useState(null);
@@ -43,6 +44,7 @@ const [quickNotifClientSearch, setQuickNotifClientSearch] = useState('');
 const [quickNotifClientId, setQuickNotifClientId] = useState('');
 const [quickNotifType, setQuickNotifType] = useState('enroute');
 const [quickNotifCustomMessage, setQuickNotifCustomMessage] = useState('');
+const [quickNotifChannels, setQuickNotifChannels] = useState('both'); // 'sms', 'email', 'both'
 const [needsBackup, setNeedsBackup] = useState(false);
 const [notificationsHistory, setNotificationsHistory] = useState([]);
 const [notificationLogs, setNotificationLogs] = useState([]);
@@ -696,7 +698,7 @@ const formatPhoneForTwilio = (phone) => {
   return null;
 };
   // ENVOI NOTIFICATIONS VIA BACKEND
-const sendNotificationViaBackend = async (clientId, type, customMessage = '') => {
+const sendNotificationViaBackend = async (clientId, type, customMessage = '', channels = { sendSms: true, sendEmail: true }) => {
   const client = clients.find(c => c.id === clientId);
   if (!client) {
     alert('Client non trouvé');
@@ -713,11 +715,11 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
   console.log('Client:', client.name);
   console.log('Backend URL:', API_BASE_URL);
 
-  const formattedPhone = formatPhoneForTwilio(client.phone);
-  const clientEmail = client.email?.trim() || null;
+  const formattedPhone = channels.sendSms ? formatPhoneForTwilio(client.phone) : null;
+  const clientEmail = channels.sendEmail ? (client.email?.trim() || null) : null;
 
   if (!formattedPhone && !clientEmail) {
-    alert(`❌ Aucun contact valide pour ${client.name}\nTéléphone: ${client.phone}\nEmail: ${client.email}`);
+    alert(`❌ Aucun contact valide pour ${client.name} avec le(s) canal(aux) choisi(s)\nTéléphone: ${client.phone}\nEmail: ${client.email}`);
     return;
   }
 
@@ -727,7 +729,9 @@ const sendNotificationViaBackend = async (clientId, type, customMessage = '') =>
     clientPhone: formattedPhone,
     clientEmail: clientEmail,
     type: type,
-    customMessage: customMessage
+    customMessage: customMessage,
+    sendSms: !!channels.sendSms,
+    sendEmail: !!channels.sendEmail
   };
   
   console.log('📦 Données envoyées:', JSON.stringify(notificationData, null, 2));
@@ -6535,6 +6539,24 @@ Merci de votre patience!
                   />
                 </div>
               )}
+
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Envoyer par:</label>
+                <div style={{ display: 'flex', gap: '15px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                    <input type="radio" checked={quickNotifChannels === 'both'} onChange={() => setQuickNotifChannels('both')} />
+                    📱✉️ Les deux
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                    <input type="radio" checked={quickNotifChannels === 'sms'} onChange={() => setQuickNotifChannels('sms')} />
+                    📱 SMS seulement
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                    <input type="radio" checked={quickNotifChannels === 'email'} onChange={() => setQuickNotifChannels('email')} />
+                    ✉️ Courriel seulement
+                  </label>
+                </div>
+              </div>
               
               <button
                 onClick={() => {
@@ -6549,7 +6571,11 @@ Merci de votre patience!
                   sendNotificationViaBackend(
                     parseInt(quickNotifClientId),
                     quickNotifType,
-                    quickNotifType === 'custom' ? quickNotifCustomMessage.trim() : ''
+                    quickNotifType === 'custom' ? quickNotifCustomMessage.trim() : '',
+                    {
+                      sendSms: quickNotifChannels === 'both' || quickNotifChannels === 'sms',
+                      sendEmail: quickNotifChannels === 'both' || quickNotifChannels === 'email'
+                    }
                   );
                   setQuickNotifClientId('');
                   setQuickNotifClientSearch('');
@@ -6628,6 +6654,25 @@ Merci de votre patience!
                   />
                 </div>
               )}
+
+              {/* Choix du canal d'envoi */}
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Envoyer par:</label>
+                <div style={{ display: 'flex', gap: '15px' }}>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                    <input type="radio" checked={bulkNotificationChannels === 'both'} onChange={() => setBulkNotificationChannels('both')} />
+                    📱✉️ Les deux
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                    <input type="radio" checked={bulkNotificationChannels === 'sms'} onChange={() => setBulkNotificationChannels('sms')} />
+                    📱 SMS seulement
+                  </label>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '5px', cursor: 'pointer' }}>
+                    <input type="radio" checked={bulkNotificationChannels === 'email'} onChange={() => setBulkNotificationChannels('email')} />
+                    ✉️ Courriel seulement
+                  </label>
+                </div>
+              </div>
 
               {/* Liste des rues avec sélection multiple */}
               <div style={{ marginBottom: '15px' }}>
@@ -6761,7 +6806,8 @@ Merci de votre patience!
       clientsToNotify = [...clientsToNotify, ...streetClients];
     });
 
-    const confirmMessage = `Envoyer notifications "${bulkNotificationType}" à ${clientsToNotify.length} clients sur ${selectedStreets.length} rue${selectedStreets.length !== 1 ? 's' : ''} ?\n\nRues sélectionnées:\n${selectedStreets.join('\n')}`;
+    const channelLabel = bulkNotificationChannels === 'both' ? 'SMS + Courriel' : bulkNotificationChannels === 'sms' ? 'SMS seulement' : 'Courriel seulement';
+    const confirmMessage = `Envoyer notifications "${bulkNotificationType}" à ${clientsToNotify.length} clients sur ${selectedStreets.length} rue${selectedStreets.length !== 1 ? 's' : ''} ?\n\nCanal: ${channelLabel}\n\nRues sélectionnées:\n${selectedStreets.join('\n')}`;
 
     if (window.confirm(confirmMessage)) {
       setIsSendingBulk(true);
@@ -6771,7 +6817,10 @@ Merci de votre patience!
       for (const client of clientsToNotify) {
         try {
           await new Promise(resolve => setTimeout(resolve, 2000)); // Pause 2 sec entre chaque
-          await sendNotificationViaBackend(client.id, bulkNotificationType, bulkCustomMessage);
+          await sendNotificationViaBackend(client.id, bulkNotificationType, bulkCustomMessage, {
+            sendSms: bulkNotificationChannels === 'both' || bulkNotificationChannels === 'sms',
+            sendEmail: bulkNotificationChannels === 'both' || bulkNotificationChannels === 'email'
+          });
           successCount++;
         } catch (error) {
           console.error(`Erreur envoi à ${client.name}:`, error);
