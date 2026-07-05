@@ -2,7 +2,6 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const twilio = require('twilio');
-const nodemailer = require('nodemailer');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -13,17 +12,10 @@ const twilioClient = twilio(
   process.env.TWILIO_AUTH_TOKEN
 );
 
-// Configuration Email avec timeout augmenté
-const emailPassword = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: emailPassword
-  },
-  connectionTimeout: 30000, // 30 secondes
-  greetingTimeout: 30000
-});
+// Configuration Brevo (API web pour l'envoi de courriels - évite le blocage SMTP de Render)
+const BREVO_API_KEY = process.env.BREVO_API_KEY;
+const BREVO_SENDER_EMAIL = process.env.EMAIL_FROM_ADDRESS || process.env.EMAIL_USER;
+const BREVO_SENDER_NAME = process.env.EMAIL_FROM_NAME || 'JM Pominville';
 
 // Middleware
 app.use(cors({
@@ -43,18 +35,70 @@ app.get('/api/test', (req, res) => {
   });
 });
 
+// Envoi d'un courriel via l'API web de Brevo (HTTPS, pas de blocage SMTP)
+async function sendEmailViaBrevo(toEmail, subject, message) {
+  if (!BREVO_API_KEY) {
+    throw new Error('Configuration Brevo manquante (BREVO_API_KEY)');
+  }
+
+  const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'accept': 'application/json',
+      'api-key': BREVO_API_KEY,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify({
+      sender: { name: BREVO_SENDER_NAME, email: BREVO_SENDER_EMAIL },
+      to: [{ email: toEmail }],
+      subject: subject,
+      textContent: message,
+      htmlContent: `
+        <div style="font-family: Arial; padding: 20px; background: #f5f5f5;">
+          <div style="background: white; padding: 20px; border-radius: 10px;">
+            <h2 style="color: #1a4d1a;">JM Pominville - Service de Déneigement</h2>
+            <p style="font-size: 16px; line-height: 1.5;">${message}</p>
+            <hr style="border: 1px solid #ddd; margin: 20px 0;">
+            <p style="color: #666; font-size: 12px;">
+              Ce message a été envoyé automatiquement. Pour toute question, 
+              contactez-nous au 514-444-6324.
+            </p>
+          </div>
+        </div>
+      `
+    })
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || `Erreur Brevo (HTTP ${response.status})`);
+  }
+
+  return data;
+}
+
 // Route d'envoi de notifications
 app.post('/api/notifications/send', async (req, res) => {
-  const { clientName, clientPhone, clientEmail, type, customMessage } = req.body;
+  const {
+    clientName,
+    clientPhone,
+    clientEmail,
+    type,
+    customMessage,
+    sendSms = true,
+    sendEmail = true
+  } = req.body;
 
   console.log('=== RÉCEPTION NOTIFICATION ===');
   console.log('Client:', clientName);
   console.log('Téléphone:', clientPhone);
   console.log('Email:', clientEmail);
   console.log('Type:', type);
+  console.log('Canaux demandés — SMS:', sendSms, '| Email:', sendEmail);
 
-  let smsResult = { success: false, error: null };
-  let emailResult = { success: false, error: null };
+  let smsResult = { success: false, error: null, skipped: !sendSms };
+  let emailResult = { success: false, error: null, skipped: !sendEmail };
 
   // Messages prédéfinis
   const messages = {
@@ -68,12 +112,11 @@ app.post('/api/notifications/send', async (req, res) => {
 
   const message = messages[type] || messages.custom;
 
-  // 1. Envoi SMS (si numéro valide)
-  if (clientPhone) {
+  // 1. Envoi SMS (si demandé ET numéro valide)
+  if (sendSms && clientPhone) {
     try {
       console.log(`Tentative envoi SMS à ${clientPhone}...`);
       
-      // Vérification config Twilio
       if (!process.env.TWILIO_ACCOUNT_SID || !process.env.TWILIO_AUTH_TOKEN) {
         throw new Error('Configuration Twilio manquante');
       }
@@ -93,35 +136,18 @@ app.post('/api/notifications/send', async (req, res) => {
     }
   }
 
-  // 2. Envoi Email (si email valide)
-  if (clientEmail) {
+  // 2. Envoi Email via Brevo (si demandé ET email valide)
+  if (sendEmail && clientEmail) {
     try {
-      console.log(`Tentative envoi Email à ${clientEmail}...`);
+      console.log(`Tentative envoi Email (Brevo) à ${clientEmail}...`);
 
-      // Vérification config Email
-      if (!process.env.EMAIL_USER || !emailPassword) {
-        throw new Error('Configuration Email manquante');
-      }
+      const subject = type === 'late_payment'
+        ? 'JM Pominville - Retard de paiement - Action requise'
+        : type === 'payment_due_reminder'
+          ? 'JM Pominville - Rappel de paiement'
+          : 'JM Pominville - Notification de Service';
 
-      await transporter.sendMail({
-        from: `"JM Pominville" <${process.env.EMAIL_USER}>`,
-        to: clientEmail,
-        subject: type === 'late_payment' ? 'JM Pominville - Retard de paiement - Action requise' : type === 'payment_due_reminder' ? 'JM Pominville - Rappel de paiement' : 'JM Pominville - Notification de Service',
-        text: message,
-        html: `
-          <div style="font-family: Arial; padding: 20px; background: #f5f5f5;">
-            <div style="background: white; padding: 20px; border-radius: 10px;">
-              <h2 style="color: #1a4d1a;">JM Pominville - Service de Déneigement</h2>
-              <p style="font-size: 16px; line-height: 1.5;">${message}</p>
-              <hr style="border: 1px solid #ddd; margin: 20px 0;">
-              <p style="color: #666; font-size: 12px;">
-                Ce message a été envoyé automatiquement. Pour toute question, 
-                contactez-nous au 514-444-6324.
-              </p>
-            </div>
-          </div>
-        `
-      });
+      await sendEmailViaBrevo(clientEmail, subject, message);
 
       console.log(`✅ Email envoyé avec succès à ${clientEmail}`);
       emailResult.success = true;
@@ -158,7 +184,7 @@ app.listen(PORT, '0.0.0.0', () => {
 
 📋 Configuration:
    - Twilio: ${process.env.TWILIO_ACCOUNT_SID ? '✅' : '❌'}
-   - Email: ${process.env.EMAIL_USER && emailPassword ? '✅' : '❌'}
+   - Brevo (Email): ${BREVO_API_KEY ? '✅' : '❌ (ajouter BREVO_API_KEY dans les variables environnement)'}
 
 En attente de requêtes...
   `);
