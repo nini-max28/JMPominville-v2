@@ -14,11 +14,12 @@ const twilioClient = twilio(
 );
 
 // Configuration Email avec timeout augmenté
+const emailPassword = process.env.EMAIL_PASSWORD || process.env.EMAIL_PASS;
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
     user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASSWORD
+    pass: emailPassword
   },
   connectionTimeout: 30000, // 30 secondes
   greetingTimeout: 30000
@@ -60,6 +61,7 @@ app.post('/api/notifications/send', async (req, res) => {
     enroute: `🚛 JM Pominville - Notre équipe est en route vers votre secteur. Merci de libérer votre entrée!`,
     arrived: `📍 JM Pominville - Notre équipe est arrivée dans votre secteur et commence le déneigement.`,
     completed: `✅ JM Pominville - Le déneigement de votre entrée est terminé. Merci de votre confiance!`,
+    payment_due_reminder: `📅 JM Pominville - Bonjour ${clientName}, votre paiement pour les services de déneigement était dû hier. Si nous ne recevons pas votre paiement dans les prochains jours, nous devrons procéder au retrait de vos piquets. Merci de régulariser rapidement ou de communiquer avec nous au 514-444-6324.`,
     late_payment: `⚠️ JM Pominville - Bonjour ${clientName}, votre paiement accuse un retard de plus de 7 jours. Sans régularisation rapide, nous procéderons au retrait de vos piquets et à la résiliation du contrat pour le reste de la période de déneigement. Merci de communiquer avec nous au 514-444-6324 dès que possible.`,
     custom: customMessage || ''
   };
@@ -97,14 +99,14 @@ app.post('/api/notifications/send', async (req, res) => {
       console.log(`Tentative envoi Email à ${clientEmail}...`);
 
       // Vérification config Email
-      if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+      if (!process.env.EMAIL_USER || !emailPassword) {
         throw new Error('Configuration Email manquante');
       }
 
       await transporter.sendMail({
         from: `"JM Pominville" <${process.env.EMAIL_USER}>`,
         to: clientEmail,
-        subject: type === 'late_payment' ? 'JM Pominville - Retard de paiement - Action requise' : 'JM Pominville - Notification de Service',
+        subject: type === 'late_payment' ? 'JM Pominville - Retard de paiement - Action requise' : type === 'payment_due_reminder' ? 'JM Pominville - Rappel de paiement' : 'JM Pominville - Notification de Service',
         text: message,
         html: `
           <div style="font-family: Arial; padding: 20px; background: #f5f5f5;">
@@ -156,7 +158,7 @@ app.listen(PORT, '0.0.0.0', () => {
 
 📋 Configuration:
    - Twilio: ${process.env.TWILIO_ACCOUNT_SID ? '✅' : '❌'}
-   - Email: ${process.env.EMAIL_USER ? '✅' : '❌'}
+   - Email: ${process.env.EMAIL_USER && emailPassword ? '✅' : '❌'}
 
 En attente de requêtes...
   `);
