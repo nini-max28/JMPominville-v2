@@ -60,6 +60,7 @@ app.post('/api/notifications/send', async (req, res) => {
     enroute: `🚛 JM Pominville - Notre équipe est en route vers votre secteur. Merci de libérer votre entrée!`,
     arrived: `📍 JM Pominville - Notre équipe est arrivée dans votre secteur et commence le déneigement.`,
     completed: `✅ JM Pominville - Le déneigement de votre entrée est terminé. Merci de votre confiance!`,
+    late_payment: `⚠️ JM Pominville - Bonjour ${clientName}, votre paiement accuse un retard de plus de 7 jours. Sans régularisation rapide, nous procéderons au retrait de vos piquets et à la résiliation du contrat pour le reste de la période de déneigement. Merci de communiquer avec nous au 514-444-6324 dès que possible.`,
     custom: customMessage || ''
   };
 
@@ -103,7 +104,7 @@ app.post('/api/notifications/send', async (req, res) => {
       await transporter.sendMail({
         from: `"JM Pominville" <${process.env.EMAIL_USER}>`,
         to: clientEmail,
-        subject: 'JM Pominville - Notification de Service',
+        subject: type === 'late_payment' ? 'JM Pominville - Retard de paiement - Action requise' : 'JM Pominville - Notification de Service',
         text: message,
         html: `
           <div style="font-family: Arial; padding: 20px; background: #f5f5f5;">
