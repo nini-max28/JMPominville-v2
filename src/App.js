@@ -2234,7 +2234,7 @@ ${paymentStructure === '1' ? `
             <p style="margin: 5px 0;">(Signature)</p>
             <hr style="border: none; border-top: 1px solid #000; margin: 20px 0;">
             <p style="margin: 5px 0;">(Nom en lettres moulées)</p>
-            <p style="margin: 15px 0;"><strong>Date :</strong> ${today}</p>
+            <p style="margin: 15px 0;"><strong>Date :</strong> ______________________</p>
           </div>
           <div style="width: 45%;">
             <p style="margin: 5px 0; font-weight: bold;">Signature du Représentant de JM Pominville :</p>
@@ -2797,7 +2797,7 @@ ${paymentStructure === '1' ? `
             <p style="margin: 5px 0;">(Signature)</p>
             <hr style="border: none; border-top: 1px solid #000; margin: 20px 0;">
             <p style="margin: 5px 0;">(Nom en lettres moulées)</p>
-            <p style="margin: 15px 0;"><strong>Date :</strong> ${today}</p>
+            <p style="margin: 15px 0;"><strong>Date :</strong> ______________________</p>
           </div>
           <div style="width: 45%;">
             <p style="margin: 5px 0; font-weight: bold;">Signature du Représentant de JM Pominville :</p>
