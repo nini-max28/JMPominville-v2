@@ -2158,8 +2158,8 @@ const paymentAmount = contract.amount / numPayments;
     const today = new Date().toLocaleDateString('fr-CA');
 
     const contractHTML = `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 12px; line-height: 1.3; font-size: 10px; page-break-after: always;">
-        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 10px 12px; border-radius: 8px; text-align: center; margin-bottom: 8px;">
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 12px; line-height: 1.2; font-size: 10px; page-break-after: always;">
+        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 6px 12px; border-radius: 8px; text-align: center; margin-bottom: 4px;">
           <h1 style="color: white; margin-bottom: 8px; font-size: 20px; font-weight: bold;">CONTRAT DE SERVICE DE DÉNEIGEMENT</h1>
           <h2 style="color: white; margin-bottom: 4px; font-size: 14px; font-weight: bold;">JM Pominville</h2>
           <p style="font-style: italic; color: #d4e8d4; margin-bottom: 8px; font-size: 10px;">Service fiable et rapide</p>
@@ -2168,8 +2168,8 @@ const paymentAmount = contract.amount / numPayments;
           <p style="color: white; margin-bottom: 0; font-size: 10px;"><strong>Adresse: 10330 Du Plein-air, Mirabel, Québec, J7J-1S8</strong></p>
         </div>
         
-        <div style="margin-bottom: 12px;">
-  <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Informations du Client :</h3>
+        <div style="margin-bottom: 5px;">
+  <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Informations du Client :</h3>
   <p style="margin: 4px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
   <p style="margin: 4px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
   <p style="margin: 4px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
@@ -2177,9 +2177,9 @@ const paymentAmount = contract.amount / numPayments;
   ${client.email ? `<p style="margin: 4px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
 </div>        
 ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnementsCommerciaux) ? `
-<hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
-<div style="margin-bottom: 12px;">
-  <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Détails du Service :</h3>
+<hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
+<div style="margin-bottom: 5px;">
+  <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Détails du Service :</h3>
   ${contract.entreesCompletes ? `<p style="margin: 4px 0;"><strong>• Entrée(s) complète(s) :</strong> ${contract.entreesCompletes}</p>` : ''}
   ${contract.instructionsEntrees ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsEntrees}</p>` : ''}
   ${contract.devantsTempo ? `<p style="margin: 4px 0;"><strong>• Devant(s) seulement (tempo) :</strong> ${contract.devantsTempo}</p>` : ''}
@@ -2188,10 +2188,10 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
   ${contract.instructionsCommercial ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsCommercial}</p>` : ''}
 </div>
 ` : ''}
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
         
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Conditions Générales du Service :</h3>
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Conditions Générales du Service :</h3>
           <p style="margin-bottom: 8px;">Le présent contrat établit les termes et conditions du service de déneigement fourni par JM Pominville au client susmentionné pour la saison hivernale.</p>
           <p style="margin: 4px 0;"><strong>1. Déclenchement du Service :</strong> Le service de déneigement débutera lorsque l'accumulation de neige atteindra un minimum de cinq (5) centimètres.</p>
           <p style="margin: 4px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement.</p>
@@ -2201,26 +2201,26 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
         </div>
         
         ${contract.notes ? `
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Notes Spéciales :</h3>
-          <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Notes Spéciales :</h3>
+          <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 8px; margin: 2px 0;">
             <p style="margin: 0; font-style: italic; color: #495057;">${contract.notes}</p>
           </div>
         </div>
         ` : ''}
       
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
 
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Période de Validité :</h3>
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Période de Validité :</h3>
           <p style="margin: 4px 0;">Le présent contrat entre en vigueur le <strong>${contract.startDate}</strong> et demeure valide jusqu'au <strong>${contract.endDate || '31 mars ' + (new Date().getFullYear() + 1)}</strong>.</p>
         </div>
 
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
 
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Modalités de Tarification et de Paiement :</h3>
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Modalités de Tarification et de Paiement :</h3>
           <p style="margin: 4px 0;">Le tarif pour la saison de déneigement est fixe et établi comme suit :</p>
           <p style="margin: 4px 0; font-size: 12px;"><strong>• Montant Total du Contrat :</strong> ${contract.amount.toFixed(2)} $</p>
           
@@ -2268,10 +2268,10 @@ ${paymentStructure === '1' ? `
 `}
 </div>
         
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
         
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Acceptation du Contrat :</h3>
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Acceptation du Contrat :</h3>
           <p style="margin: 4px 0;">En signant ci-dessous, le client et le représentant de JM Pominville reconnaissent avoir lu, compris et accepté l'intégralité des clauses et conditions énoncées dans le présent contrat.</p>
         </div>
         
@@ -2761,8 +2761,8 @@ const paymentAmount = contract.amount / numPayments;
     const today = new Date().toLocaleDateString('fr-CA');
     
     const contractHTML = `
-      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 12px; line-height: 1.3; font-size: 10px;">
-        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 10px 12px; border-radius: 8px; text-align: center; margin-bottom: 8px;">
+      <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 12px; line-height: 1.2; font-size: 10px;">
+        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 6px 12px; border-radius: 8px; text-align: center; margin-bottom: 4px;">
           <h1 style="color: white; margin-bottom: 8px; font-size: 20px; font-weight: bold;">CONTRAT DE SERVICE DE DÉNEIGEMENT</h1>
           <h2 style="color: white; margin-bottom: 4px; font-size: 14px; font-weight: bold;">JM Pominville</h2>
           <p style="font-style: italic; color: #d4e8d4; margin-bottom: 8px; font-size: 10px;">Service fiable et rapide</p>
@@ -2771,8 +2771,8 @@ const paymentAmount = contract.amount / numPayments;
           <p style="color: white; margin-bottom: 0; font-size: 10px;"><strong>Adresse: 10330 Du Plein-air, Mirabel, Québec, J7J-1S8</strong></p>
         </div>
         
-     <div style="margin-bottom: 12px;">
-  <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Informations du Client :</h3>
+     <div style="margin-bottom: 5px;">
+  <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Informations du Client :</h3>
   <p style="margin: 4px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
   <p style="margin: 4px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
   <p style="margin: 4px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
@@ -2780,9 +2780,9 @@ const paymentAmount = contract.amount / numPayments;
   ${client.email ? `<p style="margin: 4px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
 </div>        
 ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnementsCommerciaux) ? `
-<hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
-<div style="margin-bottom: 12px;">
-  <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Détails du Service :</h3>
+<hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
+<div style="margin-bottom: 5px;">
+  <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Détails du Service :</h3>
   ${contract.entreesCompletes ? `<p style="margin: 4px 0;"><strong>• Entrée(s) complète(s) :</strong> ${contract.entreesCompletes}</p>` : ''}
   ${contract.instructionsEntrees ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsEntrees}</p>` : ''}
   ${contract.devantsTempo ? `<p style="margin: 4px 0;"><strong>• Devant(s) seulement (tempo) :</strong> ${contract.devantsTempo}</p>` : ''}
@@ -2791,10 +2791,10 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
   ${contract.instructionsCommercial ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsCommercial}</p>` : ''}
 </div>
 ` : ''}
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
         
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Conditions Générales du Service :</h3>
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Conditions Générales du Service :</h3>
           <p style="margin-bottom: 8px;">Le présent contrat établit les termes et conditions du service de déneigement fourni par JM Pominville au client susmentionné pour la saison hivernale.</p>
           <p style="margin: 4px 0;"><strong>1. Déclenchement du Service :</strong> Le service de déneigement débutera lorsque l'accumulation de neige atteindra un minimum de cinq (5) centimètres.</p>
           <p style="margin: 4px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement. JM Pominville déneigement se dégage de toute responsabilité quant aux dommages causés aux arbustes, aménagements paysager ou autres éléments décoratifs qui n'auront pas été adéquatement protégés par le client.</p>
@@ -2804,27 +2804,27 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
         </div>
         
         ${contract.notes ? `
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Notes Spéciales :</h3>
-          <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 15px; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Notes Spéciales :</h3>
+          <div style="background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px; padding: 8px; margin: 2px 0;">
             <p style="margin: 0; font-style: italic; color: #495057;">${contract.notes}</p>
           </div>
         </div>
         ` : ''}
       
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
 
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Période de Validité :</h3>
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Période de Validité :</h3>
           <p style="margin: 4px 0;">Le présent contrat entre en vigueur le <strong>${contract.startDate}</strong> et demeure valide jusqu'au <strong>${contract.endDate || '31 mars ' + (new Date().getFullYear() + 1)}</strong>.</p>
           <p style="margin: 4px 0;">Cette période couvre l'intégralité de la saison de déneigement ${new Date().getFullYear()}-${new Date().getFullYear() + 1}.</p>
         </div>
 
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
 
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Modalités de Tarification et de Paiement :</h3>
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Modalités de Tarification et de Paiement :</h3>
           <p style="margin: 4px 0;">Le tarif pour la saison de déneigement est fixe et établi comme suit :</p>
           <p style="margin: 4px 0; font-size: 12px;"><strong>• Montant Total du Contrat :</strong> ${contract.amount.toFixed(2)} $</p>
           
@@ -2877,10 +2877,10 @@ ${paymentStructure === '1' ? `
           <p style="margin: 4px 0; font-size: 11px;">Les paiements peuvent être effectués par chèque ou en argent comptant. Tous les chèques doivent être libellés à l'ordre de JM Pominville.</p>
         </div>
         
-        <hr style="border: 1px solid #a8c5a8; margin: 4px 0;">
+        <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
         
-        <div style="margin-bottom: 12px;">
-          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 8px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 4px;">Acceptation du Contrat :</h3>
+        <div style="margin-bottom: 5px;">
+          <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Acceptation du Contrat :</h3>
           <p style="margin: 4px 0;">En signant ci-dessous, le client et le représentant de JM Pominville reconnaissent avoir lu, compris et accepté l'intégralité des clauses et conditions énoncées dans le présent contrat.</p>
         </div>
         
