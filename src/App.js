@@ -3801,7 +3801,19 @@ Merci de votre patience!
                         const contract = contracts.find(c => c.clientId === client.id && !c.archived);
                         return contract;
                       })
-                      .sort((a, b) => a.address.toLowerCase().localeCompare(b.address.toLowerCase()))
+                      .sort((a, b) => {
+                        const streetA = extractStreetName(a.address);
+                        const streetB = extractStreetName(b.address);
+                        const streetCompare = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
+                        if (streetCompare !== 0) return streetCompare;
+                        const getHouseNumber = (addr) => {
+                          const leading = (addr || '').match(/^\d+/);
+                          if (leading) return parseInt(leading[0], 10);
+                          const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
+                          return trailing ? parseInt(trailing[1], 10) : 0;
+                        };
+                        return getHouseNumber(a.address) - getHouseNumber(b.address);
+                      })
                       .map(client => {
                         const contract = contracts.find(c => c.clientId === client.id && !c.archived);
                         const firstPaymentReceived = isPaymentReceived(client.id, 1, contract?.id);
@@ -6552,7 +6564,19 @@ Merci de votre patience!
                           const contract = contracts.find(c => c.clientId === client.id && !c.archived);
                           return contract;
                         })
-                        .sort((a, b) => a.address.toLowerCase().localeCompare(b.address.toLowerCase()))
+                        .sort((a, b) => {
+                        const streetA = extractStreetName(a.address);
+                        const streetB = extractStreetName(b.address);
+                        const streetCompare = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
+                        if (streetCompare !== 0) return streetCompare;
+                        const getHouseNumber = (addr) => {
+                          const leading = (addr || '').match(/^\d+/);
+                          if (leading) return parseInt(leading[0], 10);
+                          const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
+                          return trailing ? parseInt(trailing[1], 10) : 0;
+                        };
+                        return getHouseNumber(a.address) - getHouseNumber(b.address);
+                      })
                         .map(client => {
                           const contract = contracts.find(c => c.clientId === client.id && !c.archived);
                           const firstPaid = isPaymentReceived(client.id, 1, contract?.id);
