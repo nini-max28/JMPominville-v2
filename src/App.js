@@ -1407,6 +1407,7 @@ const getRenewableContracts = () => {
   const latestPerClient = {};
   contracts.forEach(c => {
     if (renewedFromIds.has(c.id)) return; // déjà renouvelé une fois, on ignore
+    if (c.archived) return; // archivé (renouvelé ou marqué "ne renouvelle pas"), on ignore
     if (!clients.some(cl => cl.id === c.clientId)) return; // client supprimé, on ignore (à supprimer manuellement plutôt qu'à renouveler)
     const existing = latestPerClient[c.clientId];
     if (!existing || new Date(c.endDate) > new Date(existing.endDate)) {
@@ -1817,6 +1818,30 @@ const addContract = () => {
   saveToStorage('contracts', newContracts);
   setContractForm({ clientId: '', type: '', startDate: '', endDate: '', amount: '', status: 'actif', notes: '', entreesCompletes: '', devantsTempo: '', stationnementsCommerciaux: '', instructionsEntrees: '', instructionsTempo: '', instructionsCommercial: '' });
   setClientSearch('');
+};
+
+// Marque un contrat comme "non renouvelé" pour la saison en cours, sans effacer le client ni l'historique
+const cancelContractNotRenewed = (id) => {
+  const contract = contracts.find(c => c.id === id);
+  if (!contract) return;
+  const client = clients.find(c => c.id === contract.clientId);
+  const clientName = client ? client.name : 'ce client';
+
+  if (window.confirm(
+    `Marquer le contrat de ${clientName} comme "ne renouvelle pas" pour cette saison?\n\n` +
+    `Le client et tout son historique resteront dans l'app — ce contrat sera simplement archivé ` +
+    `et retiré des listes actives (renouvellement, suivi des paiements, feuille de suivi, etc.). ` +
+    `Tu pourras toujours le consulter ou créer un nouveau contrat pour lui plus tard.`
+  )) {
+    const updatedContracts = contracts.map(c =>
+      c.id === id
+        ? { ...c, archived: true, notRenewed: true, yearArchived: new Date().getFullYear() }
+        : c
+    );
+    setContracts(updatedContracts);
+    saveToStorage('contracts', updatedContracts);
+    alert(`✅ ${clientName} marqué comme non renouvelé pour cette saison.`);
+  }
 };
 
 const deleteContract = (id) => {
@@ -5829,6 +5854,18 @@ Merci de votre patience!
         🔄 Renouveler
       </button>
     )}
+
+    {!contract.archived && (
+      <button
+        onClick={() => cancelContractNotRenewed(contract.id)}
+        style={{
+          padding: '5px 10px', fontSize: '12px', background: '#6c757d',
+          color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer'
+        }}
+      >
+        🚫 Ne renouvelle pas
+      </button>
+    )}
     
     <button
       onClick={() => generateContract(contract.id)}
@@ -5862,7 +5899,16 @@ Merci de votre patience!
       </button>
     )}
     
-    {contract.archived && client && (
+    {contract.archived && client && contract.notRenewed && (
+      <span style={{
+        padding: '5px 10px', fontSize: '11px', background: '#495057', 
+        color: 'white', borderRadius: '4px', textAlign: 'center'
+      }}>
+        🚫 Non renouvelé {contract.yearArchived || ''}
+      </span>
+    )}
+
+    {contract.archived && client && !contract.notRenewed && (
       <span style={{
         padding: '5px 10px', fontSize: '11px', background: '#6c757d', 
         color: 'white', borderRadius: '4px', textAlign: 'center'
