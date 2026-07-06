@@ -50,6 +50,7 @@ const [needsBackup, setNeedsBackup] = useState(false);
 const [notificationsHistory, setNotificationsHistory] = useState([]);
 const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
+  const [printByStreet, setPrintByStreet] = useState('');
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
   const [contractSortMode, setContractSortMode] = useState('street'); // 'street' ou 'name'
@@ -3381,6 +3382,38 @@ Merci de votre patience!
     }
   };
 
+  // Liste des rues distinctes parmi les contrats actifs (pour l'impression rue par rue)
+  const getDistinctStreetsForContracts = () => {
+    const streets = new Set();
+    contracts.filter(c => !c.archived).forEach(contract => {
+      const client = clients.find(cl => cl.id === contract.clientId);
+      if (client) streets.add(extractStreetName(client.address));
+    });
+    return Array.from(streets).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+  };
+
+  // Sélectionne tous les contrats actifs correspondant à la rue choisie
+  const selectContractsByStreet = (streetName) => {
+    if (!streetName) {
+      alert('Choisis une rue d\'abord.');
+      return;
+    }
+    const matchingIds = contracts
+      .filter(c => !c.archived)
+      .filter(contract => {
+        const client = clients.find(cl => cl.id === contract.clientId);
+        return client && extractStreetName(client.address) === streetName;
+      })
+      .map(c => c.id);
+
+    if (matchingIds.length === 0) {
+      alert(`Aucun contrat actif trouvé pour "${streetName}".`);
+      return;
+    }
+    setSelectedContracts(matchingIds);
+    alert(`✅ ${matchingIds.length} contrat(s) sélectionné(s) pour "${streetName}". Clique maintenant sur "🖨️ Imprimer sélection".`);
+  };
+
   // FONCTION DE GROUPEMENT PAR RUE
   const groupClientsByStreet = (clients) => {
     if (!Array.isArray(clients) || clients.length === 0) {
@@ -5430,6 +5463,30 @@ Merci de votre patience!
       {selectedContracts.length === getAdvancedFilteredContracts().filter(c => !c.archived).length 
         ? '❌ Tout désélectionner' 
         : '✅ Tout sélectionner'}
+    </button>
+
+    <select
+      value={printByStreet}
+      onChange={(e) => setPrintByStreet(e.target.value)}
+      style={{
+        padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontWeight: 'bold'
+      }}
+    >
+      <option value="">📍 Choisir une rue...</option>
+      {getDistinctStreetsForContracts().map(street => (
+        <option key={street} value={street}>{street}</option>
+      ))}
+    </select>
+
+    <button
+      onClick={() => selectContractsByStreet(printByStreet)}
+      disabled={!printByStreet}
+      style={{
+        padding: '8px 16px', background: !printByStreet ? '#ccc' : '#17a2b8', color: 'white',
+        border: 'none', borderRadius: '6px', cursor: !printByStreet ? 'not-allowed' : 'pointer', fontWeight: 'bold'
+      }}
+    >
+      📍 Sélectionner cette rue
     </button>
     
     <button
