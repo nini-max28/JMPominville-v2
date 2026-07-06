@@ -2159,7 +2159,7 @@ const paymentAmount = contract.amount / numPayments;
 
     const contractHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 12px; line-height: 1.2; font-size: 10px; page-break-after: always;">
-        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 6px 12px; border-radius: 8px; text-align: center; margin-bottom: 4px;">
+        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 4px 12px; border-radius: 6px; text-align: center; margin-bottom: 3px;">
           <h1 style="color: white; margin-bottom: 8px; font-size: 20px; font-weight: bold;">CONTRAT DE SERVICE DE DÉNEIGEMENT</h1>
           <h2 style="color: white; margin-bottom: 4px; font-size: 14px; font-weight: bold;">JM Pominville</h2>
           <p style="font-style: italic; color: #d4e8d4; margin-bottom: 8px; font-size: 10px;">Service fiable et rapide</p>
@@ -2278,9 +2278,9 @@ ${paymentStructure === '1' ? `
         <div style="margin-top: 4px; display: table; width: 100%; table-layout: fixed;">
           <div style="display: table-cell; width: 48%; vertical-align: top;">
             <p style="margin: 2px 0; font-weight: bold;">Signature du Client :</p>
-            <hr style="border: none; border-top: 1px solid #000; margin: 12px 0;">
+            <hr style="border: none; border-top: 1px solid #000; margin: 8px 0;">
             <p style="margin: 2px 0;">(Signature)</p>
-            <hr style="border: none; border-top: 1px solid #000; margin: 5px 0;">
+            <hr style="border: none; border-top: 1px solid #000; margin: 3px 0;">
             <p style="margin: 2px 0;">(Nom en lettres moulées)</p>
             <p style="margin: 2px 0;"><strong>Date :</strong> ______________________</p>
           </div>
@@ -2762,7 +2762,7 @@ const paymentAmount = contract.amount / numPayments;
     
     const contractHTML = `
       <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 12px; line-height: 1.2; font-size: 10px;">
-        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 6px 12px; border-radius: 8px; text-align: center; margin-bottom: 4px;">
+        <div style="background: linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%); color: white; padding: 4px 12px; border-radius: 6px; text-align: center; margin-bottom: 3px;">
           <h1 style="color: white; margin-bottom: 8px; font-size: 20px; font-weight: bold;">CONTRAT DE SERVICE DE DÉNEIGEMENT</h1>
           <h2 style="color: white; margin-bottom: 4px; font-size: 14px; font-weight: bold;">JM Pominville</h2>
           <p style="font-style: italic; color: #d4e8d4; margin-bottom: 8px; font-size: 10px;">Service fiable et rapide</p>
@@ -2887,9 +2887,9 @@ ${paymentStructure === '1' ? `
         <div style="margin-top: 4px; display: table; width: 100%; table-layout: fixed;">
           <div style="display: table-cell; width: 48%; vertical-align: top;">
             <p style="margin: 2px 0; font-weight: bold;">Signature du Client :</p>
-            <hr style="border: none; border-top: 1px solid #000; margin: 12px 0;">
+            <hr style="border: none; border-top: 1px solid #000; margin: 8px 0;">
             <p style="margin: 2px 0;">(Signature)</p>
-            <hr style="border: none; border-top: 1px solid #000; margin: 5px 0;">
+            <hr style="border: none; border-top: 1px solid #000; margin: 3px 0;">
             <p style="margin: 2px 0;">(Nom en lettres moulées)</p>
             <p style="margin: 2px 0;"><strong>Date :</strong> ______________________</p>
           </div>
