@@ -4936,6 +4936,14 @@ Merci de votre patience!
                   </td>
 
                   <td style={{ padding: '15px' }}>
+                    {!contract ? (
+                      <span style={{
+                        padding: '4px 8px', borderRadius: '8px', fontSize: '11px',
+                        background: '#e2e3e5', color: '#495057', fontWeight: 'bold'
+                      }}>
+                        ⏸️ Aucun contrat actif
+                      </span>
+                    ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                       <div 
                         style={{
@@ -5026,6 +5034,7 @@ Merci de votre patience!
                         </div>
                       )}
                     </div>
+                    )}
                   </td>
 
                   <td style={{ padding: '15px' }}>
