@@ -3346,8 +3346,12 @@ Merci de votre patience!
         streetPart = parts[0].trim();
       }
 
-      // Retire aussi un numéro civique placé à la FIN (ex: "Alpinisme De L' 17335" ou "17365-367")
-      streetPart = streetPart.replace(/\s+\d+\s*(-\s*\d+)?\s*$/i, '').trim();
+      // Coupe tout ce qui suit le premier chiffre rencontré (numéro civique collé ou séparé,
+      // avec ou sans espace, avec ou sans ville/code postal accolés sans virgule)
+      const beforeDigit = streetPart.split(/\d/)[0].trim();
+      if (beforeDigit) {
+        streetPart = beforeDigit;
+      }
 
       if (!streetPart) {
         streetPart = parts[0].trim();
