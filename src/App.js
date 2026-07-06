@@ -2192,8 +2192,8 @@ const printMultipleContracts = () => {
     const streetB = extractStreetName(clientB?.address || '');
     const streetCompare = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
     if (streetCompare !== 0) return streetCompare;
-    const numA = parseInt((clientA?.address || '').match(/^\d+/)?.[0] || '0', 10);
-    const numB = parseInt((clientB?.address || '').match(/^\d+/)?.[0] || '0', 10);
+    const numA = parseInt((clientA?.address || '').match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '0', 10);
+    const numB = parseInt((clientB?.address || '').match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '0', 10);
     return numA - numB;
   });
 
@@ -3345,6 +3345,13 @@ Merci de votre patience!
       if (!streetPart) {
         streetPart = parts[0].trim();
       }
+
+      // Retire aussi un numéro civique placé à la FIN (ex: "Alpinisme De L' 17335" ou "17365-367")
+      streetPart = streetPart.replace(/\s+\d+\s*(-\s*\d+)?\s*$/i, '').trim();
+
+      if (!streetPart) {
+        streetPart = parts[0].trim();
+      }
       
       streetPart = streetPart
         .replace(/^(rue\s+)/gi, 'Rue ')
@@ -3448,8 +3455,8 @@ Merci de votre patience!
       .forEach(streetName => {
         // Trier les clients dans chaque rue par numéro civique
         sortedGroups[streetName] = streetGroups[streetName].sort((a, b) => {
-          const numA = parseInt(a.address?.match(/^\d+/)?.[0] || '9999');
-          const numB = parseInt(b.address?.match(/^\d+/)?.[0] || '9999');
+          const numA = parseInt(a.address?.match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '9999');
+          const numB = parseInt(b.address?.match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '9999');
           return numA - numB;
         });
       });
@@ -5867,8 +5874,8 @@ Merci de votre patience!
                           const streetB = extractStreetName(clientB?.address || '');
                           const cmp = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
                           if (cmp !== 0) return cmp;
-                          const numA = parseInt((clientA?.address || '').match(/^\d+/)?.[0] || '0', 10);
-                          const numB = parseInt((clientB?.address || '').match(/^\d+/)?.[0] || '0', 10);
+                          const numA = parseInt((clientA?.address || '').match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '0', 10);
+                          const numB = parseInt((clientB?.address || '').match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '0', 10);
                           return numA - numB;
                         }
                         return (clientA?.name || '').toLowerCase().localeCompare((clientB?.name || '').toLowerCase());
