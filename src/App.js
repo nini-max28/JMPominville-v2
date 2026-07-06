@@ -28,6 +28,7 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz
   const [editingClient, setEditingClient] = useState(null);
   const [editingContract, setEditingContract] = useState(null);
   const [showArchived, setShowArchived] = useState(false);
+  const [showDuplicates, setShowDuplicates] = useState(false);
   const [bulkNotificationType, setBulkNotificationType] = useState('enroute');
   const [bulkNotificationChannels, setBulkNotificationChannels] = useState('both'); // 'sms', 'email', 'both'
 const [bulkCustomMessage, setBulkCustomMessage] = useState('');
@@ -1099,6 +1100,31 @@ const addClient = () => {
 
   alert(`✅ Client "${client.name}" et contrat créés avec succès!\n\nMontant: ${contract.amount.toFixed(2)}$\nDébut: ${contract.startDate}\nFin: ${contract.endDate}`);
 };
+  // Détecte les clients potentiellement en double par nom, téléphone ou adresse
+  const getDuplicateClients = () => {
+    const normalize = (str) => (str || '').toString().toLowerCase().trim().replace(/\s+/g, ' ');
+    const normalizePhone = (str) => (str || '').toString().replace(/\D/g, '');
+
+    const groups = {};
+
+    const addToGroup = (key, client, matchType) => {
+      if (!key) return;
+      if (!groups[key]) groups[key] = { matchType, clients: [] };
+      if (!groups[key].clients.some(c => c.id === client.id)) {
+        groups[key].clients.push(client);
+      }
+    };
+
+    clients.forEach(client => {
+      addToGroup('name:' + normalize(client.name), client, 'Nom identique');
+      const phone = normalizePhone(client.phone);
+      if (phone) addToGroup('phone:' + phone, client, 'Téléphone identique');
+      addToGroup('address:' + normalize(client.address), client, 'Adresse identique');
+    });
+
+    return Object.values(groups).filter(g => g.clients.length > 1);
+  };
+
   const deleteClient = (id) => {
   if (window.confirm('Supprimer ce client ?')) {
     const newClients = clients.filter(client => client.id !== id);
@@ -3930,6 +3956,80 @@ Merci de votre patience!
           <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
             <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>👥 Gestion des Clients</h2>
 
+            <div style={{ marginBottom: '20px' }}>
+              <button
+                onClick={() => setShowDuplicates(!showDuplicates)}
+                style={{
+                  padding: '10px 20px', background: showDuplicates ? '#6c757d' : '#fd7e14', color: 'white',
+                  border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
+                }}
+              >
+                🔍 {showDuplicates ? 'Cacher' : 'Détecter'} les clients en double ({getDuplicateClients().length})
+              </button>
+            </div>
+
+            {showDuplicates && (
+              <div style={{ marginBottom: '25px' }}>
+                {getDuplicateClients().length === 0 ? (
+                  <div style={{
+                    background: '#d4edda', border: '1px solid #c3e6cb', borderRadius: '8px',
+                    padding: '15px', color: '#155724'
+                  }}>
+                    ✅ Aucun doublon détecté (par nom, téléphone ou adresse).
+                  </div>
+                ) : (
+                  getDuplicateClients().map((group, idx) => (
+                    <div key={idx} style={{
+                      background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '8px',
+                      padding: '15px', marginBottom: '12px'
+                    }}>
+                      <div style={{ fontWeight: 'bold', color: '#856404', marginBottom: '10px' }}>
+                        ⚠️ {group.matchType} ({group.clients.length} clients)
+                      </div>
+                      {group.clients.map(client => {
+                        const contract = contracts.find(c => c.clientId === client.id && !c.archived);
+                        return (
+                          <div key={client.id} style={{
+                            background: 'white', borderRadius: '6px', padding: '10px 12px',
+                            marginBottom: '8px', display: 'flex', justifyContent: 'space-between',
+                            alignItems: 'center', flexWrap: 'wrap', gap: '8px'
+                          }}>
+                            <div>
+                              <div style={{ fontWeight: 'bold' }}>{client.name}</div>
+                              <div style={{ fontSize: '12px', color: '#666' }}>
+                                📍 {client.address || 'Adresse non définie'} · 📞 {client.phone || 'N/A'}
+                                {contract ? ` · Contrat actif: ${contract.amount}$` : ' · Aucun contrat actif'}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              <button
+                                onClick={() => startEditClient(client)}
+                                style={{
+                                  padding: '5px 10px', fontSize: '12px', background: '#007bff', color: 'white',
+                                  border: 'none', borderRadius: '4px', cursor: 'pointer'
+                                }}
+                              >
+                                ✏️ Voir/Modifier
+                              </button>
+                              <button
+                                onClick={() => deleteClient(client.id)}
+                                style={{
+                                  padding: '5px 10px', fontSize: '12px', background: '#dc3545', color: 'white',
+                                  border: 'none', borderRadius: '4px', cursor: 'pointer'
+                                }}
+                              >
+                                🗑️ Supprimer
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
             {/* Alertes de paiements si présentes */}
       {(() => {
   const alerts = getPaymentAlerts();
@@ -6503,16 +6603,28 @@ Merci de votre patience!
                         return contract;
                       })
                       .filter(client => {
+                        // Si le type choisi concerne un retard de paiement, ne montrer que les clients concernés
+                        if (quickNotifType === 'late_payment' || quickNotifType === 'payment_due_reminder') {
+                          const lateInfo = getLatePaymentClients().find(g => g.client.id === client.id);
+                          if (!lateInfo) return false;
+                          if (quickNotifType === 'late_payment') return lateInfo.severity === 'late';
+                          if (quickNotifType === 'payment_due_reminder') return lateInfo.severity === 'reminder';
+                        }
+                        return true;
+                      })
+                      .filter(client => {
                         if (!quickNotifClientSearch.trim()) return true;
                         const term = quickNotifClientSearch.trim().toLowerCase();
                         return client.name.toLowerCase().includes(term) ||
                                (client.address || '').toLowerCase().includes(term);
                       })
-                      .map(client => (
+                      .map(client => {
+                        const lateInfo = getLatePaymentClients().find(g => g.client.id === client.id);
+                        return (
                         <option key={client.id} value={client.id}>
-                          {client.name} - {client.address}
+                          {client.name} - {client.address}{lateInfo ? ` (${lateInfo.daysLate}j de retard)` : ''}
                         </option>
-                      ))
+                      );})
                     }
                   </select>
                 </div>
@@ -6521,7 +6633,11 @@ Merci de votre patience!
                   <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type:</label>
                   <select
                     value={quickNotifType}
-                    onChange={(e) => setQuickNotifType(e.target.value)}
+                    onChange={(e) => {
+                      setQuickNotifType(e.target.value);
+                      setQuickNotifClientId('');
+                      setQuickNotifClientSearch('');
+                    }}
                     style={{
                     width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd'
                   }}>
@@ -6532,6 +6648,11 @@ Merci de votre patience!
                     <option value="late_payment">⚠️ Retard de paiement</option>
                     <option value="custom">✏️ Personnalisé</option>
                   </select>
+                  {(quickNotifType === 'late_payment' || quickNotifType === 'payment_due_reminder') && (
+                    <p style={{ fontSize: '11px', color: '#856404', marginTop: '4px' }}>
+                      ℹ️ Seuls les clients en retard correspondant à ce type apparaissent dans la liste ci-dessus.
+                    </p>
+                  )}
                 </div>
               </div>
 
