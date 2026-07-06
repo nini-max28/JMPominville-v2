@@ -2170,21 +2170,21 @@ const paymentAmount = contract.amount / numPayments;
         
         <div style="margin-bottom: 5px;">
   <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Informations du Client :</h3>
-  <p style="margin: 4px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
-  <p style="margin: 4px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
-  <p style="margin: 4px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
-  ${client.phone2 ? `<p style="margin: 4px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
-  ${client.email ? `<p style="margin: 4px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
+  <p style="margin: 2px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
+  <p style="margin: 2px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
+  <p style="margin: 2px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
+  ${client.phone2 ? `<p style="margin: 2px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
+  ${client.email ? `<p style="margin: 2px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
 </div>        
 ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnementsCommerciaux) ? `
 <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
 <div style="margin-bottom: 5px;">
   <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Détails du Service :</h3>
-  ${contract.entreesCompletes ? `<p style="margin: 4px 0;"><strong>• Entrée(s) complète(s) :</strong> ${contract.entreesCompletes}</p>` : ''}
+  ${contract.entreesCompletes ? `<p style="margin: 2px 0;"><strong>• Entrée(s) complète(s) :</strong> ${contract.entreesCompletes}</p>` : ''}
   ${contract.instructionsEntrees ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsEntrees}</p>` : ''}
-  ${contract.devantsTempo ? `<p style="margin: 4px 0;"><strong>• Devant(s) seulement (tempo) :</strong> ${contract.devantsTempo}</p>` : ''}
+  ${contract.devantsTempo ? `<p style="margin: 2px 0;"><strong>• Devant(s) seulement (tempo) :</strong> ${contract.devantsTempo}</p>` : ''}
   ${contract.instructionsTempo ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsTempo}</p>` : ''}
-  ${contract.stationnementsCommerciaux ? `<p style="margin: 4px 0;"><strong>• Stationnement(s) commercial / multi-logements :</strong> ${contract.stationnementsCommerciaux}</p>` : ''}
+  ${contract.stationnementsCommerciaux ? `<p style="margin: 2px 0;"><strong>• Stationnement(s) commercial / multi-logements :</strong> ${contract.stationnementsCommerciaux}</p>` : ''}
   ${contract.instructionsCommercial ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsCommercial}</p>` : ''}
 </div>
 ` : ''}
@@ -2193,11 +2193,11 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
         <div style="margin-bottom: 5px;">
           <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Conditions Générales du Service :</h3>
           <p style="margin-bottom: 8px;">Le présent contrat établit les termes et conditions du service de déneigement fourni par JM Pominville au client susmentionné pour la saison hivernale.</p>
-          <p style="margin: 4px 0;"><strong>1. Déclenchement du Service :</strong> Le service de déneigement débutera lorsque l'accumulation de neige atteindra un minimum de cinq (5) centimètres.</p>
-          <p style="margin: 4px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement.</p>
-          <p style="margin: 4px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile avant chaque intervention de déneigement.</p>
-          <p style="margin: 4px 0;"><strong>4. Déplacement des Véhicules :</strong> Les véhicules doivent être retirés des entrées de stationnement avant 9h00 du matin le lendemain de la tempête pour permettre le déneigement complet. <strong style="color: #d32f2f;">Des frais supplémentaires de 30$ seront facturés si nous devons ressortir en raison de véhicules non déplacés ou d'obstacles non prévus.</strong></p>
-          <p style="margin: 4px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
+          <p style="margin: 2px 0;"><strong>1. Déclenchement du Service :</strong> Le service de déneigement débutera lorsque l'accumulation de neige atteindra un minimum de cinq (5) centimètres.</p>
+          <p style="margin: 2px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement.</p>
+          <p style="margin: 2px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile avant chaque intervention de déneigement.</p>
+          <p style="margin: 2px 0;"><strong>4. Déplacement des Véhicules :</strong> Les véhicules doivent être retirés des entrées de stationnement avant 9h00 du matin le lendemain de la tempête pour permettre le déneigement complet. <strong style="color: #d32f2f;">Des frais supplémentaires de 30$ seront facturés si nous devons ressortir en raison de véhicules non déplacés ou d'obstacles non prévus.</strong></p>
+          <p style="margin: 2px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
         </div>
         
         ${contract.notes ? `
@@ -2214,44 +2214,44 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
 
         <div style="margin-bottom: 5px;">
           <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Période de Validité :</h3>
-          <p style="margin: 4px 0;">Le présent contrat entre en vigueur le <strong>${contract.startDate}</strong> et demeure valide jusqu'au <strong>${contract.endDate || '31 mars ' + (new Date().getFullYear() + 1)}</strong>.</p>
+          <p style="margin: 2px 0;">Le présent contrat entre en vigueur le <strong>${contract.startDate}</strong> et demeure valide jusqu'au <strong>${contract.endDate || '31 mars ' + (new Date().getFullYear() + 1)}</strong>.</p>
         </div>
 
         <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
 
         <div style="margin-bottom: 5px;">
           <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Modalités de Tarification et de Paiement :</h3>
-          <p style="margin: 4px 0;">Le tarif pour la saison de déneigement est fixe et établi comme suit :</p>
+          <p style="margin: 2px 0;">Le tarif pour la saison de déneigement est fixe et établi comme suit :</p>
           <p style="margin: 4px 0; font-size: 12px;"><strong>• Montant Total du Contrat :</strong> ${contract.amount.toFixed(2)} $</p>
           
 ${paymentStructure === '1' ? `
-  <p style="margin: 4px 0;">Le paiement s'effectuera en un versement unique :</p>
-  <div style="margin: 4px 0;">
-    <p style="margin: 4px 0;"><strong>• Paiement Unique :</strong></p>
+  <p style="margin: 2px 0;">Le paiement s'effectuera en un versement unique :</p>
+  <div style="margin: 2px 0;">
+    <p style="margin: 2px 0;"><strong>• Paiement Unique :</strong></p>
     <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
     <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
   </div>
 ` : `
-  <p style="margin: 4px 0;">Le paiement s'effectuera en ${paymentStructure} versements :</p>
+  <p style="margin: 2px 0;">Le paiement s'effectuera en ${paymentStructure} versements :</p>
   
   <!-- 1er versement -->
-  <div style="margin: 4px 0;">
-    <p style="margin: 4px 0;"><strong>• 1er Versement :</strong></p>
+  <div style="margin: 2px 0;">
+    <p style="margin: 2px 0;"><strong>• 1er Versement :</strong></p>
     <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
     <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
   </div>
   
   <!-- 2e versement -->
-  <div style="margin: 4px 0;">
-    <p style="margin: 4px 0;"><strong>• 2e Versement :</strong></p>
+  <div style="margin: 2px 0;">
+    <p style="margin: 2px 0;"><strong>• 2e Versement :</strong></p>
     <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.secondPaymentDate || 'À déterminer'}</p>
     <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
   </div>
   
   ${(paymentStructure === '3' || paymentStructure === '4') ? `
     <!-- 3e versement -->
-    <div style="margin: 4px 0;">
-      <p style="margin: 4px 0;"><strong>• 3e Versement :</strong></p>
+    <div style="margin: 2px 0;">
+      <p style="margin: 2px 0;"><strong>• 3e Versement :</strong></p>
       <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.thirdPaymentDate || 'À déterminer'}</p>
       <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
     </div>
@@ -2259,8 +2259,8 @@ ${paymentStructure === '1' ? `
   
   ${paymentStructure === '4' ? `
     <!-- 4e versement -->
-    <div style="margin: 4px 0;">
-      <p style="margin: 4px 0;"><strong>• 4e Versement :</strong></p>
+    <div style="margin: 2px 0;">
+      <p style="margin: 2px 0;"><strong>• 4e Versement :</strong></p>
       <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.fourthPaymentDate || 'À déterminer'}</p>
       <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
     </div>
@@ -2272,17 +2272,17 @@ ${paymentStructure === '1' ? `
         
         <div style="margin-bottom: 5px;">
           <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Acceptation du Contrat :</h3>
-          <p style="margin: 4px 0;">En signant ci-dessous, le client et le représentant de JM Pominville reconnaissent avoir lu, compris et accepté l'intégralité des clauses et conditions énoncées dans le présent contrat.</p>
+          <p style="margin: 2px 0;">En signant ci-dessous, le client et le représentant de JM Pominville reconnaissent avoir lu, compris et accepté l'intégralité des clauses et conditions énoncées dans le présent contrat.</p>
         </div>
         
-        <div style="margin-top: 8px; display: table; width: 100%; table-layout: fixed;">
+        <div style="margin-top: 4px; display: table; width: 100%; table-layout: fixed;">
           <div style="display: table-cell; width: 48%; vertical-align: top;">
             <p style="margin: 2px 0; font-weight: bold;">Signature du Client :</p>
-            <hr style="border: none; border-top: 1px solid #000; margin: 18px 0;">
+            <hr style="border: none; border-top: 1px solid #000; margin: 12px 0;">
             <p style="margin: 2px 0;">(Signature)</p>
             <hr style="border: none; border-top: 1px solid #000; margin: 5px 0;">
             <p style="margin: 2px 0;">(Nom en lettres moulées)</p>
-            <p style="margin: 4px 0;"><strong>Date :</strong> ______________________</p>
+            <p style="margin: 2px 0;"><strong>Date :</strong> ______________________</p>
           </div>
           <div style="display: table-cell; width: 48%; vertical-align: top;">
             <p style="margin: 2px 0; font-weight: bold;">Signature du Représentant de JM Pominville :</p>
@@ -2291,7 +2291,7 @@ ${paymentStructure === '1' ? `
             </div>
             <p style="margin: 2px 0;">Maxim Pominville</p>
             <p style="margin: 2px 0; font-size: 11px;">JM Pominville</p>
-            <p style="margin: 4px 0;"><strong>Date :</strong> ${today}</p>
+            <p style="margin: 2px 0;"><strong>Date :</strong> ${today}</p>
           </div>
         </div>
       </div>
@@ -2773,21 +2773,21 @@ const paymentAmount = contract.amount / numPayments;
         
      <div style="margin-bottom: 5px;">
   <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Informations du Client :</h3>
-  <p style="margin: 4px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
-  <p style="margin: 4px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
-  <p style="margin: 4px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
-  ${client.phone2 ? `<p style="margin: 4px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
-  ${client.email ? `<p style="margin: 4px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
+  <p style="margin: 2px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
+  <p style="margin: 2px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
+  <p style="margin: 2px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
+  ${client.phone2 ? `<p style="margin: 2px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
+  ${client.email ? `<p style="margin: 2px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
 </div>        
 ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnementsCommerciaux) ? `
 <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
 <div style="margin-bottom: 5px;">
   <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Détails du Service :</h3>
-  ${contract.entreesCompletes ? `<p style="margin: 4px 0;"><strong>• Entrée(s) complète(s) :</strong> ${contract.entreesCompletes}</p>` : ''}
+  ${contract.entreesCompletes ? `<p style="margin: 2px 0;"><strong>• Entrée(s) complète(s) :</strong> ${contract.entreesCompletes}</p>` : ''}
   ${contract.instructionsEntrees ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsEntrees}</p>` : ''}
-  ${contract.devantsTempo ? `<p style="margin: 4px 0;"><strong>• Devant(s) seulement (tempo) :</strong> ${contract.devantsTempo}</p>` : ''}
+  ${contract.devantsTempo ? `<p style="margin: 2px 0;"><strong>• Devant(s) seulement (tempo) :</strong> ${contract.devantsTempo}</p>` : ''}
   ${contract.instructionsTempo ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsTempo}</p>` : ''}
-  ${contract.stationnementsCommerciaux ? `<p style="margin: 4px 0;"><strong>• Stationnement(s) commercial / multi-logements :</strong> ${contract.stationnementsCommerciaux}</p>` : ''}
+  ${contract.stationnementsCommerciaux ? `<p style="margin: 2px 0;"><strong>• Stationnement(s) commercial / multi-logements :</strong> ${contract.stationnementsCommerciaux}</p>` : ''}
   ${contract.instructionsCommercial ? `<p style="margin: 3px 0; margin-left: 20px; font-style: italic; color: #495057;">↳ ${contract.instructionsCommercial}</p>` : ''}
 </div>
 ` : ''}
@@ -2796,11 +2796,11 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
         <div style="margin-bottom: 5px;">
           <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Conditions Générales du Service :</h3>
           <p style="margin-bottom: 8px;">Le présent contrat établit les termes et conditions du service de déneigement fourni par JM Pominville au client susmentionné pour la saison hivernale.</p>
-          <p style="margin: 4px 0;"><strong>1. Déclenchement du Service :</strong> Le service de déneigement débutera lorsque l'accumulation de neige atteindra un minimum de cinq (5) centimètres.</p>
-          <p style="margin: 4px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement. JM Pominville déneigement se dégage de toute responsabilité quant aux dommages causés aux arbustes, aménagements paysager ou autres éléments décoratifs qui n'auront pas été adéquatement protégés par le client.</p>
-          <p style="margin: 4px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile(incluant, mais sans s'y limiter, les pelles, rallonges électriques, poubelles ou autres équipements) avant chaque intervention de déneigement. JM Pominville déneigement ne pourra en aucun cas être tenu responsable des dommages causés auxdits objets laissés dans l'aire à déneiger, ni des retards ou limitations dans la prestation du service qui pourraient en découler.</p>
-          <p style="margin: 4px 0;"><strong>4. Déplacement des Véhicules :</strong> Les véhicules doivent être retirés des entrées de stationnement avant 9h00 du matin le lendemain de la tempête pour permettre le déneigement complet.<strong style="color: #d32f2f;">Des frais supplémentaires de 30$ seront facturés si nous devons ressortir en raison de véhicules non déplacés ou d'obstacles non prévus.</strong></p>
-          <p style="margin: 4px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
+          <p style="margin: 2px 0;"><strong>1. Déclenchement du Service :</strong> Le service de déneigement débutera lorsque l'accumulation de neige atteindra un minimum de cinq (5) centimètres.</p>
+          <p style="margin: 2px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement. JM Pominville déneigement se dégage de toute responsabilité quant aux dommages causés aux arbustes, aménagements paysager ou autres éléments décoratifs qui n'auront pas été adéquatement protégés par le client.</p>
+          <p style="margin: 2px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile(incluant, mais sans s'y limiter, les pelles, rallonges électriques, poubelles ou autres équipements) avant chaque intervention de déneigement. JM Pominville déneigement ne pourra en aucun cas être tenu responsable des dommages causés auxdits objets laissés dans l'aire à déneiger, ni des retards ou limitations dans la prestation du service qui pourraient en découler.</p>
+          <p style="margin: 2px 0;"><strong>4. Déplacement des Véhicules :</strong> Les véhicules doivent être retirés des entrées de stationnement avant 9h00 du matin le lendemain de la tempête pour permettre le déneigement complet.<strong style="color: #d32f2f;">Des frais supplémentaires de 30$ seront facturés si nous devons ressortir en raison de véhicules non déplacés ou d'obstacles non prévus.</strong></p>
+          <p style="margin: 2px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
         </div>
         
         ${contract.notes ? `
@@ -2817,48 +2817,48 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
 
         <div style="margin-bottom: 5px;">
           <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Période de Validité :</h3>
-          <p style="margin: 4px 0;">Le présent contrat entre en vigueur le <strong>${contract.startDate}</strong> et demeure valide jusqu'au <strong>${contract.endDate || '31 mars ' + (new Date().getFullYear() + 1)}</strong>.</p>
-          <p style="margin: 4px 0;">Cette période couvre l'intégralité de la saison de déneigement ${new Date().getFullYear()}-${new Date().getFullYear() + 1}.</p>
+          <p style="margin: 2px 0;">Le présent contrat entre en vigueur le <strong>${contract.startDate}</strong> et demeure valide jusqu'au <strong>${contract.endDate || '31 mars ' + (new Date().getFullYear() + 1)}</strong>.</p>
+          <p style="margin: 2px 0;">Cette période couvre l'intégralité de la saison de déneigement ${new Date().getFullYear()}-${new Date().getFullYear() + 1}.</p>
         </div>
 
         <hr style="border: 1px solid #a8c5a8; margin: 2px 0;">
 
         <div style="margin-bottom: 5px;">
           <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Modalités de Tarification et de Paiement :</h3>
-          <p style="margin: 4px 0;">Le tarif pour la saison de déneigement est fixe et établi comme suit :</p>
+          <p style="margin: 2px 0;">Le tarif pour la saison de déneigement est fixe et établi comme suit :</p>
           <p style="margin: 4px 0; font-size: 12px;"><strong>• Montant Total du Contrat :</strong> ${contract.amount.toFixed(2)} $</p>
           
       
 
 
 ${paymentStructure === '1' ? `
-  <p style="margin: 4px 0;">Le paiement s'effectuera en un versement unique :</p>
-  <div style="margin: 4px 0;">
-    <p style="margin: 4px 0;"><strong>• Paiement Unique :</strong></p>
+  <p style="margin: 2px 0;">Le paiement s'effectuera en un versement unique :</p>
+  <div style="margin: 2px 0;">
+    <p style="margin: 2px 0;"><strong>• Paiement Unique :</strong></p>
     <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
     <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
   </div>
 ` : `
-  <p style="margin: 4px 0;">Le paiement s'effectuera en ${paymentStructure} versements :</p>
+  <p style="margin: 2px 0;">Le paiement s'effectuera en ${paymentStructure} versements :</p>
   
   <!-- 1er versement -->
-  <div style="margin: 4px 0;">
-    <p style="margin: 4px 0;"><strong>• 1er Versement :</strong></p>
+  <div style="margin: 2px 0;">
+    <p style="margin: 2px 0;"><strong>• 1er Versement :</strong></p>
     <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
     <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
   </div>
   
   <!-- 2e versement -->
-  <div style="margin: 4px 0;">
-    <p style="margin: 4px 0;"><strong>• 2e Versement :</strong></p>
+  <div style="margin: 2px 0;">
+    <p style="margin: 2px 0;"><strong>• 2e Versement :</strong></p>
     <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.secondPaymentDate || 'À déterminer'}</p>
     <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
   </div>
   
   ${(paymentStructure === '3' || paymentStructure === '4') ? `
     <!-- 3e versement -->
-    <div style="margin: 4px 0;">
-      <p style="margin: 4px 0;"><strong>• 3e Versement :</strong></p>
+    <div style="margin: 2px 0;">
+      <p style="margin: 2px 0;"><strong>• 3e Versement :</strong></p>
       <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.thirdPaymentDate || 'À déterminer'}</p>
       <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
     </div>
@@ -2866,8 +2866,8 @@ ${paymentStructure === '1' ? `
   
   ${paymentStructure === '4' ? `
     <!-- 4e versement -->
-    <div style="margin: 4px 0;">
-      <p style="margin: 4px 0;"><strong>• 4e Versement :</strong></p>
+    <div style="margin: 2px 0;">
+      <p style="margin: 2px 0;"><strong>• 4e Versement :</strong></p>
       <p style="margin: 3px 0; margin-left: 20px;">• Date : ${client.fourthPaymentDate || 'À déterminer'}</p>
       <p style="margin: 3px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
     </div>
@@ -2881,17 +2881,17 @@ ${paymentStructure === '1' ? `
         
         <div style="margin-bottom: 5px;">
           <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Acceptation du Contrat :</h3>
-          <p style="margin: 4px 0;">En signant ci-dessous, le client et le représentant de JM Pominville reconnaissent avoir lu, compris et accepté l'intégralité des clauses et conditions énoncées dans le présent contrat.</p>
+          <p style="margin: 2px 0;">En signant ci-dessous, le client et le représentant de JM Pominville reconnaissent avoir lu, compris et accepté l'intégralité des clauses et conditions énoncées dans le présent contrat.</p>
         </div>
         
-        <div style="margin-top: 8px; display: table; width: 100%; table-layout: fixed;">
+        <div style="margin-top: 4px; display: table; width: 100%; table-layout: fixed;">
           <div style="display: table-cell; width: 48%; vertical-align: top;">
             <p style="margin: 2px 0; font-weight: bold;">Signature du Client :</p>
-            <hr style="border: none; border-top: 1px solid #000; margin: 18px 0;">
+            <hr style="border: none; border-top: 1px solid #000; margin: 12px 0;">
             <p style="margin: 2px 0;">(Signature)</p>
             <hr style="border: none; border-top: 1px solid #000; margin: 5px 0;">
             <p style="margin: 2px 0;">(Nom en lettres moulées)</p>
-            <p style="margin: 4px 0;"><strong>Date :</strong> ______________________</p>
+            <p style="margin: 2px 0;"><strong>Date :</strong> ______________________</p>
           </div>
           <div style="display: table-cell; width: 48%; vertical-align: top;">
             <p style="margin: 2px 0; font-weight: bold;">Signature du Représentant de JM Pominville :</p>
@@ -2906,7 +2906,7 @@ ${paymentStructure === '1' ? `
             
             <p style="margin: 2px 0;">Maxim Pominville</p>
             <p style="margin: 2px 0; font-size: 11px;">JM Pominville</p>
-            <p style="margin: 4px 0;"><strong>Date :</strong> ${today}</p>
+            <p style="margin: 2px 0;"><strong>Date :</strong> ${today}</p>
           </div>
         </div>
       </div>
