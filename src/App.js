@@ -5138,19 +5138,9 @@ Merci de votre patience!
     // MODE TRI PAR RUE (nouveau)
     (() => {
       const filteredClients = getAdvancedFilteredClients();
-      const streetGroups = {};
+      const streetGroups = groupClientsByStreet(filteredClients);
       
-      filteredClients.forEach(client => {
-        const street = client.address.split(',')[0].trim() || 'Sans adresse';
-        if (!streetGroups[street]) {
-          streetGroups[street] = [];
-        }
-        streetGroups[street].push(client);
-      });
-      
-      const sortedStreets = Object.keys(streetGroups).sort((a, b) => 
-        a.toLowerCase().localeCompare(b.toLowerCase())
-      );
+      const sortedStreets = Object.keys(streetGroups);
       
       return (
         <div>
