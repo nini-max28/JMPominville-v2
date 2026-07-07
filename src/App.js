@@ -5186,7 +5186,6 @@ Merci de votre patience!
                   </thead>
                   <tbody>
                     {streetGroups[street]
-                      .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
                       .map(client => {
                         const contract = contracts.find(c => c.clientId === client.id && !c.archived);
                         const firstPaymentReceived = isPaymentReceived(client.id, 1, contract?.id);
