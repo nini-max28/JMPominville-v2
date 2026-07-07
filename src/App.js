@@ -5938,23 +5938,65 @@ Merci de votre patience!
                     </tr>
                   </thead>
                   <tbody>
-                    {getAdvancedFilteredContracts()
-                      .slice()
-                      .sort((a, b) => {
-                        const clientA = clients.find(c => c.id === a.clientId);
-                        const clientB = clients.find(c => c.id === b.clientId);
-                        if (contractSortMode === 'street') {
-                          const streetA = extractStreetName(clientA?.address || '');
-                          const streetB = extractStreetName(clientB?.address || '');
-                          const cmp = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
-                          if (cmp !== 0) return cmp;
-                          const numA = parseInt((clientA?.address || '').match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '0', 10);
-                          const numB = parseInt((clientB?.address || '').match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '0', 10);
-                          return numA - numB;
-                        }
-                        return (clientA?.name || '').toLowerCase().localeCompare((clientB?.name || '').toLowerCase());
-                      })
-                      .map(contract => {
+                    {(() => {
+                      const filteredContracts = getAdvancedFilteredContracts().slice();
+                      const getHouseNumber = (addr) => {
+                        const leading = (addr || '').match(/^\d+/);
+                        if (leading) return parseInt(leading[0], 10);
+                        const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
+                        return trailing ? parseInt(trailing[1], 10) : 0;
+                      };
+
+                      if (contractSortMode === 'name') {
+                        filteredContracts.sort((a, b) => {
+                          const clientA = clients.find(c => c.id === a.clientId);
+                          const clientB = clients.find(c => c.id === b.clientId);
+                          return (clientA?.name || '').toLowerCase().localeCompare((clientB?.name || '').toLowerCase());
+                        });
+                        return filteredContracts.map(c => ({ type: 'contract', contract: c }));
+                      }
+
+                      // Mode 'street' : regrouper par rue, avec une ligne d'en-tête par rue
+                      const groups = {};
+                      filteredContracts.forEach(contract => {
+                        const client = clients.find(c => c.id === contract.clientId);
+                        const street = extractStreetName(client?.address || '');
+                        if (!groups[street]) groups[street] = [];
+                        groups[street].push(contract);
+                      });
+                      Object.keys(groups).forEach(street => {
+                        groups[street].sort((a, b) => {
+                          const clientA = clients.find(c => c.id === a.clientId);
+                          const clientB = clients.find(c => c.id === b.clientId);
+                          return getHouseNumber(clientA?.address) - getHouseNumber(clientB?.address);
+                        });
+                      });
+                      const sortedStreets = Object.keys(groups).sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }));
+
+                      const items = [];
+                      sortedStreets.forEach(street => {
+                        items.push({ type: 'header', street, count: groups[street].length });
+                        groups[street].forEach(c => items.push({ type: 'contract', contract: c }));
+                      });
+                      return items;
+                    })()
+                      .map(item => {
+                      if (item.type === 'header') {
+                        return (
+                          <tr key={`street-${item.street}`}>
+                            <td colSpan={showArchived ? 6 : 7} style={{
+                              background: 'linear-gradient(135deg, #1a4d1a 0%, #2d5a27 100%)',
+                              color: 'white', padding: '10px 15px', fontWeight: 'bold', fontSize: '15px'
+                            }}>
+                              🏘️ {item.street} <span style={{
+                                background: 'rgba(255,255,255,0.2)', padding: '2px 10px',
+                                borderRadius: '10px', fontSize: '12px', marginLeft: '8px'
+                              }}>{item.count} contrat{item.count > 1 ? 's' : ''}</span>
+                            </td>
+                          </tr>
+                        );
+                      }
+                      const contract = item.contract;
                       const client = clients.find(c => c.id === contract.clientId);
                       return (
                         <tr key={contract.id} style={{ borderBottom: '1px solid #dee2e6' }}>
