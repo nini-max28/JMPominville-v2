@@ -2349,7 +2349,7 @@ ${paymentStructure === '1' ? `
       </div>
     `;
     
-    allContractsHTML += contractHTML;
+    allContractsHTML += contractHTML + contractHTML; // 2 copies de chaque contrat
   });
 
   // Ouvrir fenêtre d'impression
@@ -3031,6 +3031,10 @@ ${paymentStructure === '1' ? `
           <div class="contract-content">
             ${contractHTML}
           </div>
+          <div style="page-break-before: always;"></div>
+          <div class="contract-content">
+            ${contractHTML}
+          </div>
         </body>
       </html>
     `);
@@ -3457,11 +3461,15 @@ Merci de votre patience!
       .filter(streetName => streetName !== 'Adresses non définies')
       .sort((a, b) => a.localeCompare(b, 'fr', { sensitivity: 'base' }))
       .forEach(streetName => {
-        // Trier les clients dans chaque rue par numéro civique
+        // Trier les clients dans chaque rue par numéro civique (numéro au début OU à la fin de l'adresse)
         sortedGroups[streetName] = streetGroups[streetName].sort((a, b) => {
-          const numA = parseInt(a.address?.match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '9999');
-          const numB = parseInt(b.address?.match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '9999');
-          return numA - numB;
+          const getHouseNumber = (addr) => {
+            const leading = (addr || '').match(/^\d+/);
+            if (leading) return parseInt(leading[0], 10);
+            const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
+            return trailing ? parseInt(trailing[1], 10) : 9999;
+          };
+          return getHouseNumber(a.address) - getHouseNumber(b.address);
         });
       });
 
