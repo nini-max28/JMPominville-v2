@@ -51,6 +51,7 @@ const [notificationsHistory, setNotificationsHistory] = useState([]);
 const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
   const [printByStreet, setPrintByStreet] = useState('');
+  const [lastRenewalBackup, setLastRenewalBackup] = useState(null);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
   const [contractSortMode, setContractSortMode] = useState('street'); // 'street' ou 'name'
@@ -1418,8 +1419,31 @@ const getRenewableContracts = () => {
   return Object.values(latestPerClient);
 };
 
-const renewMultipleContracts = () => {
-  const activeContracts = getRenewableContracts();
+// Annule le dernier renouvellement en masse en restaurant l'état précédent
+const undoLastRenewal = () => {
+  if (!lastRenewalBackup) {
+    alert('Aucun renouvellement récent à annuler.');
+    return;
+  }
+  const when = new Date(lastRenewalBackup.timestamp).toLocaleString('fr-CA');
+  if (window.confirm(
+    `Annuler le dernier renouvellement en masse (${lastRenewalBackup.count} contrat(s), effectué le ${when})?\n\n` +
+    `Ça va restaurer tous les contrats et clients tels qu'ils étaient AVANT ce renouvellement.`
+  )) {
+    setContracts(lastRenewalBackup.contracts);
+    setClients(lastRenewalBackup.clients);
+    saveToStorage('contracts', lastRenewalBackup.contracts);
+    saveToStorage('clients', lastRenewalBackup.clients);
+    setLastRenewalBackup(null);
+    alert('✅ Renouvellement annulé, les données précédentes ont été restaurées.');
+  }
+};
+
+const renewMultipleContracts = (contractIdsFilter = null) => {
+  const allRenewable = getRenewableContracts();
+  const activeContracts = contractIdsFilter
+    ? allRenewable.filter(c => contractIdsFilter.includes(c.id))
+    : allRenewable;
 
   if (activeContracts.length === 0) {
     alert('Aucun contrat à renouveler');
@@ -1428,8 +1452,9 @@ const renewMultipleContracts = () => {
 
   const confirmBulk = window.confirm(
     `⚠️ ATTENTION - Renouvellement en masse\n\n` +
-    `${activeContracts.length} contrats seront renouvelés.\n\n` +
+    `${activeContracts.length} contrats seront renouvelés${contractIdsFilter ? ' (sélection/rue choisie)' : ''}.\n\n` +
     `Vous allez configurer les dates de paiement UNE FOIS pour tous les clients.\n\n` +
+    `💡 Tu pourras annuler ce renouvellement après coup si une erreur se glisse.\n\n` +
     `Voulez-vous continuer?`
   );
 
@@ -1768,6 +1793,14 @@ const renewMultipleContracts = () => {
     renewedCount++;
   });
 
+  // Sauvegarder l'état AVANT renouvellement pour pouvoir annuler en cas d'erreur
+  setLastRenewalBackup({
+    contracts: contracts,
+    clients: clients,
+    timestamp: new Date().toISOString(),
+    count: renewedCount
+  });
+
   // Sauvegarder
   setContracts(updatedContracts);
   setClients(updatedClients);
@@ -1789,7 +1822,8 @@ const renewMultipleContracts = () => {
     (paymentStructure === '2' ? `• 2e paiement: ${secondPaymentDate} ${secondPaymentMethod ? '(' + (secondPaymentMethod === 'cheque' ? 'Chèque' : 'Comptant') + ')' : ''}\n` : '') +
     `\n` +
     `📋 Les anciens contrats ont été archivés.\n` +
-    `⏳ Les paiements seront marqués automatiquement selon les dates des chèques reçus.`
+    `⏳ Les paiements seront marqués automatiquement selon les dates des chèques reçus.\n\n` +
+    `↩️ Une erreur? Un bouton "Annuler le dernier renouvellement" est disponible en haut de la section Contrats.`
   );
 };
   // FONCTIONS CONTRATS
@@ -5414,7 +5448,7 @@ Merci de votre patience!
         </div>
       </div>
       <button
-        onClick={renewMultipleContracts}
+        onClick={() => renewMultipleContracts()}
         style={{
           padding: '12px 20px', background: '#ffc107', color: '#000',
           border: 'none', borderRadius: '8px', cursor: 'pointer', 
@@ -5523,6 +5557,33 @@ Merci de votre patience!
     >
       🖨️ Imprimer sélection ({selectedContracts.length})
     </button>
+
+    <button
+      onClick={() => renewMultipleContracts(selectedContracts)}
+      disabled={selectedContracts.length === 0}
+      style={{
+        padding: '8px 16px', 
+        background: selectedContracts.length === 0 ? '#ccc' : '#ffc107', 
+        color: '#000',
+        border: 'none', borderRadius: '6px', 
+        cursor: selectedContracts.length === 0 ? 'not-allowed' : 'pointer', 
+        fontWeight: 'bold'
+      }}
+    >
+      🔄 Renouveler sélection ({selectedContracts.length})
+    </button>
+
+    {lastRenewalBackup && (
+      <button
+        onClick={() => undoLastRenewal()}
+        style={{
+          padding: '8px 16px', background: '#dc3545', color: 'white',
+          border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+        }}
+      >
+        ↩️ Annuler le dernier renouvellement
+      </button>
+    )}
 
     <button
       onClick={() => bulkFixDates()}
