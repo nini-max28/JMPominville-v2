@@ -3340,7 +3340,7 @@ Merci de votre patience!
       if (parts.length === 0) return 'Adresses non définies';
       
       let streetPart = parts[0].trim();
-      streetPart = streetPart.replace(/^(\d+\s*[-\/\s]?\s*[a-zA-Z]?\s*)/i, '').trim();
+      streetPart = streetPart.replace(/^\d+[A-Za-z]?(?:[-\/]\s*\d*[A-Za-z]?)?\s*/, '').trim();
       
       if (!streetPart) {
         streetPart = parts[0].trim();
