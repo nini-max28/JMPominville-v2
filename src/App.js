@@ -2398,6 +2398,7 @@ ${paymentStructure === '1' ? `
         <meta name="format-detection" content="email=no">
         <style>
           @page {
+            size: legal;
             margin: 1cm;
           }
           body { 
@@ -3024,6 +3025,7 @@ ${paymentStructure === '1' ? `
           <style>
             body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
             @page {
+              size: legal;
               margin: 1cm;
             }
             .header-bar {
