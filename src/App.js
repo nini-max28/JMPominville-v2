@@ -2826,6 +2826,14 @@ const handlePaymentMethodSelect = (method) => {
     );
   }
 
+  // Si une rue est choisie dans le menu "Choisir une rue" (impression/renouvellement), filtrer le tableau affiché
+  if (printByStreet) {
+    filtered = filtered.filter(contract => {
+      const client = clients.find(c => c.id === contract.clientId);
+      return client && extractStreetName(client.address) === printByStreet;
+    });
+  }
+
   return filtered;
 };
 
@@ -5564,6 +5572,18 @@ Merci de votre patience!
     >
       📍 Sélectionner cette rue
     </button>
+
+    {printByStreet && (
+      <button
+        onClick={() => { setPrintByStreet(''); setSelectedContracts([]); }}
+        style={{
+          padding: '8px 16px', background: '#e9ecef', color: '#495057',
+          border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+        }}
+      >
+        ✕ Voir tous les contrats
+      </button>
+    )}
     
     <button
       onClick={() => printMultipleContracts()}
