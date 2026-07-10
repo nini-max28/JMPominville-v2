@@ -2226,10 +2226,30 @@ const printMultipleContracts = () => {
     const streetB = extractStreetName(clientB?.address || '');
     const streetCompare = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
     if (streetCompare !== 0) return streetCompare;
-    const numA = parseInt((clientA?.address || '').match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '0', 10);
-    const numB = parseInt((clientB?.address || '').match(/(\d+)\s*(-\d+)?\s*$/)?.[1] || '0', 10);
-    return numA - numB;
+    const getHouseNumber = (addr) => {
+      const leading = (addr || '').match(/^\d+/);
+      if (leading) return parseInt(leading[0], 10);
+      const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
+      return trailing ? parseInt(trailing[1], 10) : 0;
+    };
+    return getHouseNumber(clientA?.address) - getHouseNumber(clientB?.address);
   });
+
+  // Aperçu de l'ordre avant impression, pour repérer facilement une adresse mal regroupée
+  const previewItems = sortedContractIds.map(id => {
+    const c = contracts.find(x => x.id === id);
+    const cl = clients.find(x => x.id === c?.clientId);
+    return `${cl?.address || 'Adresse inconnue'} — ${cl?.name || 'Client inconnu'}`;
+  });
+  const previewList = previewItems.length > 50
+    ? previewItems.slice(0, 50).join('\n') + `\n... et ${previewItems.length - 50} autre(s)`
+    : previewItems.join('\n');
+
+  const confirmOrder = window.confirm(
+    `Voici l'ordre d'impression prévu (${sortedContractIds.length} contrat(s)):\n\n${previewList}\n\n` +
+    `Cet ordre te semble correct? OK pour continuer, Annuler pour arrêter.`
+  );
+  if (!confirmOrder) return;
 
   sortedContractIds.forEach((contractId, index) => {
     const contract = contracts.find(c => c.id === contractId);
