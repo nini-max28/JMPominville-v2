@@ -52,6 +52,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
   const [printByStreet, setPrintByStreet] = useState('');
   const [lastRenewalBackup, setLastRenewalBackup] = useState(null);
+  const [accountingYearFilter, setAccountingYearFilter] = useState('');
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
   const [contractSortMode, setContractSortMode] = useState('street'); // 'street' ou 'name'
@@ -2681,6 +2682,34 @@ const handlePaymentMethodSelect = (method) => {
     return results.sort((a, b) => b.daysLate - a.daysLate);
   };
 
+  // Vérifie si une date correspond au filtre d'année choisi dans la section Comptabilité
+  const matchesAccountingYear = (dateStr) => {
+    if (!accountingYearFilter) return true;
+    if (!dateStr) return false;
+    return new Date(dateStr).getFullYear() === parseInt(accountingYearFilter, 10);
+  };
+
+  // Revenus du registre manuel (transactions ajoutées à la main)
+  const getManualRevenue = () =>
+    invoices.filter(inv => inv.type === 'revenu' && matchesAccountingYear(inv.date))
+      .reduce((sum, inv) => sum + inv.amount, 0);
+
+  // Dépenses du registre manuel
+  const getManualExpenses = () =>
+    invoices.filter(inv => inv.type === 'depense' && matchesAccountingYear(inv.date))
+      .reduce((sum, inv) => sum + inv.amount, 0);
+
+  // Paiements réels reçus des clients (comptés seulement au moment où ils sont marqués reçus)
+  const getClientPaymentsTotal = () =>
+    payments.filter(p => matchesAccountingYear(p.date))
+      .reduce((sum, p) => sum + p.amount, 0);
+
+  // Revenus totaux = registre manuel + paiements clients réels
+  const getTotalRevenue = () => getManualRevenue() + getClientPaymentsTotal();
+
+  // Bénéfice net = revenus totaux - dépenses
+  const getNetProfit = () => getTotalRevenue() - getManualExpenses();
+
   const getPaymentAlerts = () => {
     const today = new Date();
     const alerts = [];
@@ -3860,6 +3889,12 @@ Merci de votre patience!
                         ADRESSE (Ordre Alphabétique)
                       </th>
                       <th style={{ 
+                        padding: '12px', border: '1px solid #333', textAlign: 'left',
+                        fontWeight: 'bold', fontSize: '14px'
+                      }}>
+                        INSTRUCTIONS / NOTES
+                      </th>
+                      <th style={{ 
                         padding: '12px', border: '1px solid #333', textAlign: 'center',
                         fontWeight: 'bold', fontSize: '14px', width: '150px'
                       }}>
@@ -3926,6 +3961,41 @@ Merci de votre patience!
                               <div style={{ fontSize: '10px', color: '#888', marginTop: '2px' }}>
                                 {client.phone}
                               </div>
+                            </td>
+                            <td style={{ 
+                              padding: '10px', border: '1px solid #333',
+                              fontSize: '11px', lineHeight: '1.4'
+                            }}>
+                              {contract?.entreesCompletes > 0 && (
+                                <div style={{ marginBottom: '4px' }}>
+                                  <strong>🚪 {contract.entreesCompletes} entrée{contract.entreesCompletes > 1 ? 's' : ''} complète{contract.entreesCompletes > 1 ? 's' : ''}</strong>
+                                  {contract.instructionsEntrees && (
+                                    <div style={{ color: '#555', fontStyle: 'italic' }}>↳ {contract.instructionsEntrees}</div>
+                                  )}
+                                </div>
+                              )}
+                              {contract?.devantsTempo > 0 && (
+                                <div style={{ marginBottom: '4px' }}>
+                                  <strong>❄️ {contract.devantsTempo} devant{contract.devantsTempo > 1 ? 's' : ''} tempo</strong>
+                                  {contract.instructionsTempo && (
+                                    <div style={{ color: '#555', fontStyle: 'italic' }}>↳ {contract.instructionsTempo}</div>
+                                  )}
+                                </div>
+                              )}
+                              {contract?.stationnementsCommerciaux > 0 && (
+                                <div style={{ marginBottom: '4px' }}>
+                                  <strong>🅿️ {contract.stationnementsCommerciaux} commercial/multi-logements</strong>
+                                  {contract.instructionsCommercial && (
+                                    <div style={{ color: '#555', fontStyle: 'italic' }}>↳ {contract.instructionsCommercial}</div>
+                                  )}
+                                </div>
+                              )}
+                              {contract?.notes && (
+                                <div style={{ color: '#555' }}>📝 {contract.notes}</div>
+                              )}
+                              {!contract?.entreesCompletes && !contract?.devantsTempo && !contract?.stationnementsCommerciaux && !contract?.notes && (
+                                <span style={{ color: '#aaa' }}>—</span>
+                              )}
                             </td>
                             <td style={{ 
                               padding: '10px', border: '1px solid #333', textAlign: 'center'
@@ -6013,6 +6083,30 @@ Merci de votre patience!
           <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
             <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>💰 Comptabilité</h2>
 
+            {(() => {
+              // Toutes les années présentes dans les transactions manuelles ET les paiements réels des clients
+              const yearsSet = new Set();
+              invoices.forEach(inv => { if (inv.date) yearsSet.add(new Date(inv.date).getFullYear()); });
+              payments.forEach(p => { if (p.date) yearsSet.add(new Date(p.date).getFullYear()); });
+              const availableYears = Array.from(yearsSet).sort((a, b) => b - a);
+
+              return (
+                <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <label style={{ fontWeight: 'bold' }}>📅 Saison/Année :</label>
+                  <select
+                    value={accountingYearFilter}
+                    onChange={(e) => setAccountingYearFilter(e.target.value)}
+                    style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontWeight: 'bold' }}
+                  >
+                    <option value="">Toutes les années (cumulatif)</option>
+                    {availableYears.map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                </div>
+              );
+            })()}
+
             {/* Formulaire d'ajout de transaction */}
             <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '25px' }}>
               <h4 style={{ marginBottom: '15px' }}>Ajouter une transaction</h4>
@@ -6140,27 +6234,32 @@ Merci de votre patience!
 
             {/* Résumé financier */}
             <div style={{ marginTop: '30px', padding: '20px', background: '#f8f9fa', borderRadius: '12px' }}>
-              <h3 style={{ marginBottom: '15px', color: '#1a4d1a' }}>Résumé Financier</h3>
+              <h3 style={{ marginBottom: '15px', color: '#1a4d1a' }}>
+                Résumé Financier {accountingYearFilter ? `— ${accountingYearFilter}` : '— Toutes les années'}
+              </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                 <div style={{ background: '#d4edda', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#155724', marginBottom: '5px' }}>Total Revenus</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#155724' }}>
-                    {invoices.filter(inv => inv.type === 'revenu').reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
+                    {getTotalRevenue().toFixed(2)} $
+                  </div>
+                  <div style={{ fontSize: '10px', color: '#155724', marginTop: '5px' }}>
+                    (registre manuel: {getManualRevenue().toFixed(2)}$ + paiements clients reçus: {getClientPaymentsTotal().toFixed(2)}$)
                   </div>
                 </div>
                 <div style={{ background: '#f8d7da', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#721c24', marginBottom: '5px' }}>Total Dépenses</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#721c24' }}>
-                    {invoices.filter(inv => inv.type === 'depense').reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
+                    {getManualExpenses().toFixed(2)} $
                   </div>
                 </div>
                 <div style={{
-                  background: (invoices.filter(inv => inv.type === 'revenu').reduce((sum, inv) => sum + inv.amount, 0) - invoices.filter(inv => inv.type === 'depense').reduce((sum, inv) => sum + inv.amount, 0)) >= 0 ? '#d1ecf1' : '#f8d7da',
+                  background: getNetProfit() >= 0 ? '#d1ecf1' : '#f8d7da',
                   padding: '15px', borderRadius: '8px', textAlign: 'center'
                 }}>
-                  <div style={{ fontSize: '14px', marginBottom: '5px', color: (invoices.filter(inv => inv.type === 'revenu').reduce((sum, inv) => sum + inv.amount, 0) - invoices.filter(inv => inv.type === 'depense').reduce((sum, inv) => sum + inv.amount, 0)) >= 0 ? '#0c5460' : '#721c24' }}>Bénéfice Net</div>
-                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: (invoices.filter(inv => inv.type === 'revenu').reduce((sum, inv) => sum + inv.amount, 0) - invoices.filter(inv => inv.type === 'depense').reduce((sum, inv) => sum + inv.amount, 0)) >= 0 ? '#0c5460' : '#721c24' }}>
-                    {(invoices.filter(inv => inv.type === 'revenu').reduce((sum, inv) => sum + inv.amount, 0) - invoices.filter(inv => inv.type === 'depense').reduce((sum, inv) => sum + inv.amount, 0)).toFixed(2)} $
+                  <div style={{ fontSize: '14px', marginBottom: '5px', color: getNetProfit() >= 0 ? '#0c5460' : '#721c24' }}>Bénéfice Net</div>
+                  <div style={{ fontSize: '24px', fontWeight: 'bold', color: getNetProfit() >= 0 ? '#0c5460' : '#721c24' }}>
+                    {getNetProfit().toFixed(2)} $
                   </div>
                 </div>
               </div>
