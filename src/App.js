@@ -2305,6 +2305,7 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
           <p style="margin: 5px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile avant chaque intervention de déneigement.</p>
           <p style="margin: 5px 0;"><strong>4. Déplacement des Véhicules :</strong> Les véhicules doivent être retirés des entrées de stationnement avant 9h00 du matin le lendemain de la tempête pour permettre le déneigement complet. <strong style="color: #d32f2f;">Des frais supplémentaires de 30$ seront facturés si nous devons ressortir en raison de véhicules non déplacés ou d'obstacles non prévus.</strong></p>
           <p style="margin: 5px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
+          <p style="margin: 5px 0;"><strong>6. Chèque sans provision :</strong> <strong style="color: #d32f2f;">Des frais de 30$ seront facturés au client pour tout chèque retourné pour cause de fonds insuffisants (chèque sans provision).</strong></p>
         </div>
         
         ${contract.notes ? `
@@ -2959,6 +2960,7 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
           <p style="margin: 2px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile(incluant, mais sans s'y limiter, les pelles, rallonges électriques, poubelles ou autres équipements) avant chaque intervention de déneigement. JM Pominville déneigement ne pourra en aucun cas être tenu responsable des dommages causés auxdits objets laissés dans l'aire à déneiger, ni des retards ou limitations dans la prestation du service qui pourraient en découler.</p>
           <p style="margin: 2px 0;"><strong>4. Déplacement des Véhicules :</strong> Les véhicules doivent être retirés des entrées de stationnement avant 9h00 du matin le lendemain de la tempête pour permettre le déneigement complet.<strong style="color: #d32f2f;">Des frais supplémentaires de 30$ seront facturés si nous devons ressortir en raison de véhicules non déplacés ou d'obstacles non prévus.</strong></p>
           <p style="margin: 2px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
+          <p style="margin: 2px 0;"><strong>6. Chèque sans provision :</strong> <strong style="color: #d32f2f;">Des frais de 30$ seront facturés au client pour tout chèque retourné pour cause de fonds insuffisants (chèque sans provision).</strong></p>
         </div>
         
         ${contract.notes ? `
