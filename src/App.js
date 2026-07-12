@@ -3403,7 +3403,10 @@ Merci de votre patience!
     if (!address || typeof address !== 'string') return 'Adresses non définies';
     
     try {
-      const cleanAddress = address.trim();
+      // Normaliser tous les types d'apostrophes/guillemets simples (droite, courbe, accent grave...)
+      // vers une apostrophe standard, pour que "L'" et "L'" soient traités comme identiques.
+      const normalizedAddress = address.replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g, "'");
+      const cleanAddress = normalizedAddress.trim();
       const parts = cleanAddress.split(',');
       if (parts.length === 0) return 'Adresses non définies';
       
