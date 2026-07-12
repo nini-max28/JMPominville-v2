@@ -2,9 +2,22 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const twilio = require('twilio');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
+
+// Dossier de sauvegarde des données. Si tu ajoutes un "Persistent Disk" sur Render,
+// pointe DATA_DIR vers son chemin de montage (ex: /data) pour que les données
+// survivent aux redéploiements. Sans ça, ce dossier est effacé à chaque déploiement.
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
+const DATA_FILE = path.join(DATA_DIR, 'sync-data.json');
+const BACKUP_FILE = path.join(DATA_DIR, 'sync-data-backup.json');
+
+if (!fs.existsSync(DATA_DIR)) {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
 
 // Configuration Twilio
 const twilioClient = twilio(
@@ -23,7 +36,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true
 }));
-app.use(express.json());
+app.use(express.json({ limit: '25mb' }));
 
 if (!BREVO_SENDER_EMAIL) {
   console.warn('⚠️ ATTENTION: aucune adresse expéditeur trouvée (EMAIL_FROM_ADDRESS / EMAIL_FROM / EMAIL_USER). Les courriels vont échouer tant que ce n\'est pas corrigé.');
@@ -177,6 +190,60 @@ app.post('/api/notifications/send', async (req, res) => {
   });
 });
 
+// Route de synchronisation : sauvegarde les données de l'app côté serveur
+app.post('/api/sync', (req, res) => {
+  try {
+    const incoming = req.body || {};
+    const payload = {
+      clients: incoming.clients || [],
+      contracts: incoming.contracts || [],
+      invoices: incoming.invoices || [],
+      payments: incoming.payments || [],
+      notificationsHistory: incoming.notificationsHistory || [],
+      lastModified: incoming.lastModified || new Date().toISOString(),
+      savedAt: new Date().toISOString()
+    };
+
+    // Garder une copie de l'ancienne version comme filet de sécurité avant d'écraser
+    if (fs.existsSync(DATA_FILE)) {
+      fs.copyFileSync(DATA_FILE, BACKUP_FILE);
+    }
+
+    fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf8');
+
+    console.log(`✅ Synchronisation reçue et sauvegardée (${payload.clients.length} clients, ${payload.contracts.length} contrats)`);
+
+    res.json({
+      success: true,
+      message: 'Données synchronisées avec succès',
+      counts: {
+        clients: payload.clients.length,
+        contracts: payload.contracts.length,
+        invoices: payload.invoices.length,
+        payments: payload.payments.length
+      },
+      savedAt: payload.savedAt
+    });
+  } catch (error) {
+    console.error('❌ Erreur /api/sync (POST):', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Route pour récupérer la dernière sauvegarde du serveur (utile pour restaurer sur un autre appareil)
+app.get('/api/sync', (req, res) => {
+  try {
+    if (!fs.existsSync(DATA_FILE)) {
+      return res.status(404).json({ success: false, error: 'Aucune donnée sauvegardée trouvée sur le serveur.' });
+    }
+    const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('❌ Erreur /api/sync (GET):', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Démarrage serveur
 app.listen(PORT, '0.0.0.0', () => {
   console.log(`
@@ -187,10 +254,12 @@ app.listen(PORT, '0.0.0.0', () => {
 ✅ Serveur: http://localhost:${PORT}
 ✅ Route test: /api/test
 ✅ Notifications: /api/notifications/send
+✅ Synchronisation: /api/sync (POST pour sauvegarder, GET pour récupérer)
 
 📋 Configuration:
    - Twilio: ${process.env.TWILIO_ACCOUNT_SID ? '✅' : '❌'}
    - Brevo (Email): ${BREVO_API_KEY ? '✅' : '❌ (ajouter BREVO_API_KEY dans les variables environnement)'}
+   - Dossier de données: ${DATA_DIR}${process.env.DATA_DIR ? '' : ' ⚠️ (pas de Persistent Disk configuré — les données seront perdues au prochain déploiement)'}
 
 En attente de requêtes...
   `);
