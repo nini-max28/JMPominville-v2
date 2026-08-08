@@ -131,6 +131,9 @@ useEffect(() => {
     
     // Vérification initiale du backend
     await checkBackendConnection();
+
+    // Récupère automatiquement les données les plus récentes du serveur (sync multi-appareils)
+    await pullFromBackend();
     
     setTimeout(() => { 
       archiveOldContracts();
@@ -143,12 +146,14 @@ useEffect(() => {
   const handleOnline = () => { 
     setIsOnline(true); 
     syncData(); 
+    pullFromBackend();
   };
   
   const handleOffline = () => setIsOnline(false);
   
   // Configuration des intervals et event listeners
   const backendInterval = setInterval(checkBackendConnection, 60000);
+  const pullInterval = setInterval(pullFromBackend, 120000); // vérifie les MAJ d'un autre appareil toutes les 2 min
   
   window.addEventListener('online', handleOnline);
   window.addEventListener('offline', handleOffline);
@@ -156,6 +161,7 @@ useEffect(() => {
   // Fonction de nettoyage retournée par useEffect
   return () => {
     clearInterval(backendInterval);
+    clearInterval(pullInterval);
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);
   };
@@ -349,6 +355,57 @@ const checkBackendConnection = async () => {
     } catch (error) {
       console.error('Erreur sync backend:', error);
       throw error;
+    }
+  };
+
+  // RÉCUPÉRATION DEPUIS LE BACKEND : permet à un autre appareil (iPad, iPhone) de
+  // recevoir automatiquement les dernières données sauvegardées, sans AirDrop manuel.
+  const pullFromBackend = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/sync`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+
+      if (!response.ok) {
+        console.log('ℹ️ Aucune donnée disponible sur le serveur pour le moment.');
+        return;
+      }
+
+      const result = await response.json();
+      if (!result.success || !result.data) return;
+
+      const serverData = result.data;
+      const serverModified = serverData.lastModified ? new Date(serverData.lastModified).getTime() : 0;
+      const localModifiedStr = localStorage.getItem('lastModified');
+      const localModified = localModifiedStr ? new Date(localModifiedStr).getTime() : 0;
+
+      // On adopte les données du serveur seulement si elles sont PLUS RÉCENTES que celles de cet appareil
+      if (serverModified > localModified) {
+        console.log('🔄 Données plus récentes trouvées sur le serveur, mise à jour de cet appareil...');
+
+        const newClients = serverData.clients || [];
+        const newContracts = serverData.contracts || [];
+        const newInvoices = serverData.invoices || [];
+        const newPayments = serverData.payments || [];
+
+        setClients(newClients);
+        setContracts(newContracts);
+        setInvoices(newInvoices);
+        setPayments(newPayments);
+
+        localStorage.setItem('clients', JSON.stringify(newClients));
+        localStorage.setItem('contracts', JSON.stringify(newContracts));
+        localStorage.setItem('invoices', JSON.stringify(newInvoices));
+        localStorage.setItem('payments', JSON.stringify(newPayments));
+        localStorage.setItem('lastModified', serverData.lastModified);
+
+        console.log('✅ Appareil mis à jour avec les données du serveur.');
+      } else {
+        console.log('ℹ️ Les données de cet appareil sont déjà à jour (ou plus récentes).');
+      }
+    } catch (error) {
+      console.log('ℹ️ Récupération depuis le serveur impossible pour le moment (hors ligne?):', error.message);
     }
   };
 // FONCTION SIMPLIFIÉE - COMME AVANT
@@ -2684,32 +2741,32 @@ const handlePaymentMethodSelect = (method) => {
   };
 
   // Vérifie si une date correspond au filtre d'année choisi dans la section Comptabilité
-  const matchesAccountingYear = (dateStr) => {
-    if (!accountingYearFilter) return true;
+  const matchesAccountingYear = (dateStr, ignoreFilter = false) => {
+    if (ignoreFilter || !accountingYearFilter) return true;
     if (!dateStr) return false;
     return new Date(dateStr).getFullYear() === parseInt(accountingYearFilter, 10);
   };
 
   // Revenus du registre manuel (transactions ajoutées à la main)
-  const getManualRevenue = () =>
-    invoices.filter(inv => inv.type === 'revenu' && matchesAccountingYear(inv.date))
+  const getManualRevenue = (ignoreFilter = false) =>
+    invoices.filter(inv => inv.type === 'revenu' && matchesAccountingYear(inv.date, ignoreFilter))
       .reduce((sum, inv) => sum + inv.amount, 0);
 
   // Dépenses du registre manuel
-  const getManualExpenses = () =>
-    invoices.filter(inv => inv.type === 'depense' && matchesAccountingYear(inv.date))
+  const getManualExpenses = (ignoreFilter = false) =>
+    invoices.filter(inv => inv.type === 'depense' && matchesAccountingYear(inv.date, ignoreFilter))
       .reduce((sum, inv) => sum + inv.amount, 0);
 
   // Paiements réels reçus des clients (comptés seulement au moment où ils sont marqués reçus)
-  const getClientPaymentsTotal = () =>
-    payments.filter(p => matchesAccountingYear(p.date))
+  const getClientPaymentsTotal = (ignoreFilter = false) =>
+    payments.filter(p => matchesAccountingYear(p.date, ignoreFilter))
       .reduce((sum, p) => sum + p.amount, 0);
 
   // Revenus totaux = registre manuel + paiements clients réels
-  const getTotalRevenue = () => getManualRevenue() + getClientPaymentsTotal();
+  const getTotalRevenue = (ignoreFilter = false) => getManualRevenue(ignoreFilter) + getClientPaymentsTotal(ignoreFilter);
 
   // Bénéfice net = revenus totaux - dépenses
-  const getNetProfit = () => getTotalRevenue() - getManualExpenses();
+  const getNetProfit = (ignoreFilter = false) => getTotalRevenue(ignoreFilter) - getManualExpenses(ignoreFilter);
 
   const getPaymentAlerts = () => {
     const today = new Date();
@@ -3749,7 +3806,7 @@ Merci de votre patience!
               </div>
               <div style={{ background: 'linear-gradient(135deg, #20c997, #17a2b8)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
                 <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>
-                  {invoices.filter(inv => inv.type === 'revenu').reduce((sum, inv) => sum + inv.amount, 0).toFixed(0)}$
+                  {getTotalRevenue(true).toFixed(0)}$
                 </div>
                 <div style={{ fontSize: '1.1em' }}>Revenus Total</div>
               </div>
