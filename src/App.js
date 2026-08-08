@@ -360,7 +360,36 @@ const checkBackendConnection = async () => {
 
   // RÉCUPÉRATION DEPUIS LE BACKEND : permet à un autre appareil (iPad, iPhone) de
   // recevoir automatiquement les dernières données sauvegardées, sans AirDrop manuel.
+  // Envoie directement des données précises au serveur, sans dépendre des états React
+  // (utilisé au démarrage, où les états React peuvent ne pas être encore à jour).
+  const pushDirectToBackend = async (dataToPush) => {
+    const response = await fetch(`${API_BASE_URL}/api/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        clients: dataToPush.clients || [],
+        contracts: dataToPush.contracts || [],
+        invoices: dataToPush.invoices || [],
+        payments: dataToPush.payments || [],
+        notificationsHistory: dataToPush.notificationsHistory || [],
+        lastModified: new Date().toISOString()
+      })
+    });
+    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Échec de la synchronisation');
+    localStorage.setItem('lastModified', new Date().toISOString());
+    return result;
+  };
+
   const pullFromBackend = async () => {
+    // Toujours lire depuis localStorage directement (données les plus fraîches, peu importe l'état React)
+    const freshClients = loadFromStorage('clients');
+    const freshContracts = loadFromStorage('contracts');
+    const freshInvoices = loadFromStorage('invoices');
+    const freshPayments = loadFromStorage('payments');
+    const hasLocalData = freshClients.length > 0 || freshContracts.length > 0;
+
     try {
       const response = await fetch(`${API_BASE_URL}/api/sync`, {
         method: 'GET',
@@ -369,11 +398,32 @@ const checkBackendConnection = async () => {
 
       if (!response.ok) {
         console.log('ℹ️ Aucune donnée disponible sur le serveur pour le moment.');
+        // Si cet appareil a des données locales mais que le serveur est vide,
+        // on pousse une première sauvegarde tout de suite (sans attendre une modification).
+        if (hasLocalData) {
+          console.log('📤 Envoi de la première sauvegarde vers le serveur...');
+          try {
+            await pushDirectToBackend({ clients: freshClients, contracts: freshContracts, invoices: freshInvoices, payments: freshPayments });
+            console.log('✅ Première sauvegarde envoyée au serveur.');
+          } catch (pushError) {
+            console.log('❌ Échec de la première sauvegarde:', pushError.message);
+          }
+        }
         return;
       }
 
       const result = await response.json();
-      if (!result.success || !result.data) return;
+      if (!result.success || !result.data) {
+        if (hasLocalData) {
+          try {
+            await pushDirectToBackend({ clients: freshClients, contracts: freshContracts, invoices: freshInvoices, payments: freshPayments });
+            console.log('✅ Première sauvegarde envoyée au serveur.');
+          } catch (pushError) {
+            console.log('❌ Échec de la première sauvegarde:', pushError.message);
+          }
+        }
+        return;
+      }
 
       const serverData = result.data;
       const serverModified = serverData.lastModified ? new Date(serverData.lastModified).getTime() : 0;
@@ -401,8 +451,16 @@ const checkBackendConnection = async () => {
         localStorage.setItem('lastModified', serverData.lastModified);
 
         console.log('✅ Appareil mis à jour avec les données du serveur.');
+      } else if (localModified > serverModified && hasLocalData) {
+        // Cet appareil a des changements plus récents que le serveur : on les pousse.
+        console.log('📤 Cet appareil a des données plus récentes, envoi au serveur...');
+        try {
+          await pushDirectToBackend({ clients: freshClients, contracts: freshContracts, invoices: freshInvoices, payments: freshPayments });
+        } catch (pushError) {
+          console.log('❌ Échec de l\'envoi:', pushError.message);
+        }
       } else {
-        console.log('ℹ️ Les données de cet appareil sont déjà à jour (ou plus récentes).');
+        console.log('ℹ️ Les données de cet appareil sont déjà à jour.');
       }
     } catch (error) {
       console.log('ℹ️ Récupération depuis le serveur impossible pour le moment (hors ligne?):', error.message);
