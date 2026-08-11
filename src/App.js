@@ -53,6 +53,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [printByStreet, setPrintByStreet] = useState('');
   const [lastRenewalBackup, setLastRenewalBackup] = useState(null);
   const [accountingYearFilter, setAccountingYearFilter] = useState('');
+  const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
   const [contractSortMode, setContractSortMode] = useState('street'); // 'street' ou 'name'
@@ -464,6 +465,37 @@ const checkBackendConnection = async () => {
       }
     } catch (error) {
       console.log('ℹ️ Récupération depuis le serveur impossible pour le moment (hors ligne?):', error.message);
+    }
+  };
+
+  // Synchronisation manuelle déclenchée par l'utilisateur (bouton "🔄 Synchroniser maintenant")
+  const manualSync = async () => {
+    if (!isOnline) {
+      alert('❌ Pas de connexion internet. Reconnecte-toi et réessaie.');
+      return;
+    }
+    setIsManualSyncing(true);
+    try {
+      // D'abord, on va chercher ce que le serveur a de plus récent (au cas où un autre appareil aurait changé des choses)
+      await pullFromBackend();
+
+      // Puis on pousse cet appareil vers le serveur, pour être sûr qu'il a bien la version la plus à jour
+      const freshClients = loadFromStorage('clients');
+      const freshContracts = loadFromStorage('contracts');
+      const freshInvoices = loadFromStorage('invoices');
+      const freshPayments = loadFromStorage('payments');
+
+      await pushDirectToBackend({
+        clients: freshClients, contracts: freshContracts,
+        invoices: freshInvoices, payments: freshPayments
+      });
+
+      syncData();
+      alert('✅ Synchronisation terminée! Cet appareil et le serveur sont maintenant à jour.');
+    } catch (error) {
+      alert(`❌ Échec de la synchronisation: ${error.message}\n\nVérifie ta connexion internet et réessaie.`);
+    } finally {
+      setIsManualSyncing(false);
     }
   };
 // FONCTION SIMPLIFIÉE - COMME AVANT
@@ -2343,10 +2375,8 @@ const printMultipleContracts = () => {
     const streetCompare = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
     if (streetCompare !== 0) return streetCompare;
     const getHouseNumber = (addr) => {
-      const leading = (addr || '').match(/^\d+/);
-      if (leading) return parseInt(leading[0], 10);
-      const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
-      return trailing ? parseInt(trailing[1], 10) : 0;
+      const match = (addr || '').match(/\d+/);
+      return match ? parseInt(match[0], 10) : 0;
     };
     return getHouseNumber(clientA?.address) - getHouseNumber(clientB?.address);
   });
@@ -3677,10 +3707,8 @@ Merci de votre patience!
         // Trier les clients dans chaque rue par numéro civique (numéro au début OU à la fin de l'adresse)
         sortedGroups[streetName] = streetGroups[streetName].sort((a, b) => {
           const getHouseNumber = (addr) => {
-            const leading = (addr || '').match(/^\d+/);
-            if (leading) return parseInt(leading[0], 10);
-            const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
-            return trailing ? parseInt(trailing[1], 10) : 9999;
+            const match = (addr || '').match(/\d+/);
+            return match ? parseInt(match[0], 10) : 9999;
           };
           return getHouseNumber(a.address) - getHouseNumber(b.address);
         });
@@ -3721,6 +3749,20 @@ Merci de votre patience!
                 <span style={{ fontSize: '14px', opacity: 0.8 }}>
                   Dernière sync: {lastSync}
                 </span>
+                <button
+                  onClick={() => manualSync()}
+                  disabled={isManualSyncing}
+                  style={{
+                    padding: '6px 14px', 
+                    background: isManualSyncing ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)', 
+                    color: 'white',
+                    border: '1px solid rgba(255,255,255,0.5)', borderRadius: '6px', 
+                    cursor: isManualSyncing ? 'not-allowed' : 'pointer', 
+                    fontSize: '13px', fontWeight: 'bold'
+                  }}
+                >
+                  {isManualSyncing ? '⏳ Synchronisation...' : '🔄 Synchroniser maintenant'}
+                </button>
               </div>
             </div>
             
@@ -4038,10 +4080,8 @@ Merci de votre patience!
                         const streetCompare = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
                         if (streetCompare !== 0) return streetCompare;
                         const getHouseNumber = (addr) => {
-                          const leading = (addr || '').match(/^\d+/);
-                          if (leading) return parseInt(leading[0], 10);
-                          const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
-                          return trailing ? parseInt(trailing[1], 10) : 0;
+                          const match = (addr || '').match(/\d+/);
+                          return match ? parseInt(match[0], 10) : 0;
                         };
                         return getHouseNumber(a.address) - getHouseNumber(b.address);
                       })
@@ -6000,10 +6040,8 @@ Merci de votre patience!
                     {(() => {
                       const filteredContracts = getAdvancedFilteredContracts().slice();
                       const getHouseNumber = (addr) => {
-                        const leading = (addr || '').match(/^\d+/);
-                        if (leading) return parseInt(leading[0], 10);
-                        const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
-                        return trailing ? parseInt(trailing[1], 10) : 0;
+                        const match = (addr || '').match(/\d+/);
+                        return match ? parseInt(match[0], 10) : 0;
                       };
 
                       if (contractSortMode === 'name') {
@@ -6762,10 +6800,8 @@ Merci de votre patience!
                         const streetCompare = streetA.localeCompare(streetB, 'fr', { sensitivity: 'base' });
                         if (streetCompare !== 0) return streetCompare;
                         const getHouseNumber = (addr) => {
-                          const leading = (addr || '').match(/^\d+/);
-                          if (leading) return parseInt(leading[0], 10);
-                          const trailing = (addr || '').match(/(\d+)\s*(-\d+)?\s*$/);
-                          return trailing ? parseInt(trailing[1], 10) : 0;
+                          const match = (addr || '').match(/\d+/);
+                          return match ? parseInt(match[0], 10) : 0;
                         };
                         return getHouseNumber(a.address) - getHouseNumber(b.address);
                       })
