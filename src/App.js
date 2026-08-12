@@ -2755,20 +2755,33 @@ const handlePaymentMethodSelect = (method) => {
     );
   };
 
-  // Compte les paiements réellement reçus pour la SAISON EN COURS uniquement
+  // Retourne le détail des paiements réellement reçus pour la SAISON EN COURS uniquement
   // (contrats actifs, non archivés) — exclut les paiements des saisons précédentes.
-  const getCurrentSeasonPaymentsReceivedCount = () => {
-    let count = 0;
+  const getCurrentSeasonPaymentsReceivedDetails = () => {
+    const details = [];
     contracts.filter(c => !c.archived).forEach(contract => {
       const client = clients.find(cl => cl.id === contract.clientId);
       if (!client) return;
       const structure = parseInt(client.paymentStructure || '2', 10);
       for (let i = 1; i <= structure; i++) {
-        if (isPaymentReceived(client.id, i, contract.id)) count++;
+        if (isPaymentReceived(client.id, i, contract.id)) {
+          const record = getPaymentRecord(client.id, i, contract);
+          details.push({
+            clientId: client.id,
+            clientName: client.name,
+            contractId: contract.id,
+            paymentNumber: i,
+            amount: record ? record.amount : (contract.amount / structure),
+            date: record ? record.date : null,
+            hasContractId: !!(record && record.contractId)
+          });
+        }
       }
     });
-    return count;
+    return details;
   };
+
+  const getCurrentSeasonPaymentsReceivedCount = () => getCurrentSeasonPaymentsReceivedDetails().length;
 
   // Retourne l'enregistrement de paiement pertinent pour LA SAISON du contrat donné
   // (même logique que isPaymentReceived, mais retourne l'objet complet pour affichage des détails)
@@ -3908,6 +3921,29 @@ Merci de votre patience!
               <div style={{ background: 'linear-gradient(135deg, #fd7e14, #e83e8c)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
                 <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{getCurrentSeasonPaymentsReceivedCount()}</div>
                 <div style={{ fontSize: '1.1em' }}>Paiements Reçus (saison en cours)</div>
+                <button
+                  onClick={() => {
+                    const details = getCurrentSeasonPaymentsReceivedDetails();
+                    if (details.length === 0) {
+                      alert('Aucun paiement reçu pour la saison en cours.');
+                      return;
+                    }
+                    const list = details.map(d =>
+                      `• ${d.clientName} — ${d.paymentNumber}${d.paymentNumber === 1 ? 'er' : 'e'} versement — ${d.amount.toFixed(2)}$` +
+                      `${d.date ? ' — ' + new Date(d.date).toLocaleDateString('fr-CA') : ''}` +
+                      `${!d.hasContractId ? ' ⚠️ (ancien paiement sans lien direct au contrat)' : ''}`
+                    ).join('\n');
+                    alert(`Détail des paiements comptés pour la saison en cours:\n\n${list}`);
+                  }}
+                  style={{
+                    marginTop: '8px', padding: '4px 12px', fontSize: '11px',
+                    background: 'rgba(255,255,255,0.25)', color: 'white', 
+                    border: '1px solid rgba(255,255,255,0.5)',
+                    borderRadius: '4px', cursor: 'pointer'
+                  }}
+                >
+                  🔍 Voir le détail
+                </button>
               </div>
               <div style={{ background: 'linear-gradient(135deg, #20c997, #17a2b8)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
                 <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>
@@ -4924,7 +4960,7 @@ Merci de votre patience!
 
           {/* Méthode 1er paiement */}
           <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 1er paiement *</label>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 1er paiement (optionnel)</label>
             <select
               value={clientForm.firstPaymentMethod}
               onChange={(e) => setClientForm({...clientForm, firstPaymentMethod: e.target.value})}
@@ -6452,13 +6488,35 @@ Merci de votre patience!
                   </div>
                 </div>
                 <div style={{ background: '#e3f2fd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '14px', color: '#1976d2', marginBottom: '5px' }}>Paiements Reçus</div>
+                  <div style={{ fontSize: '14px', color: '#1976d2', marginBottom: '5px' }}>Paiements Reçus (saison en cours)</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1976d2' }}>
-                    {payments.reduce((sum, payment) => sum + payment.amount, 0).toFixed(2)} $
+                    {getCurrentSeasonPaymentsReceivedDetails().reduce((sum, p) => sum + p.amount, 0).toFixed(2)} $
                   </div>
                   <div style={{ fontSize: '10px', color: '#666', marginTop: '5px' }}>
-                    {payments.length} versement{payments.length !== 1 ? 's' : ''}
+                    {getCurrentSeasonPaymentsReceivedDetails().length} versement{getCurrentSeasonPaymentsReceivedDetails().length !== 1 ? 's' : ''}
                   </div>
+                  <button
+                    onClick={() => {
+                      const details = getCurrentSeasonPaymentsReceivedDetails();
+                      if (details.length === 0) {
+                        alert('Aucun paiement reçu pour la saison en cours.');
+                        return;
+                      }
+                      const list = details.map(d =>
+                        `• ${d.clientName} — ${d.paymentNumber}${d.paymentNumber === 1 ? 'er' : 'e'} versement — ${d.amount.toFixed(2)}$` +
+                        `${d.date ? ' — ' + new Date(d.date).toLocaleDateString('fr-CA') : ''}` +
+                        `${!d.hasContractId ? ' ⚠️ (ancien paiement sans lien direct au contrat)' : ''}`
+                      ).join('\n');
+                      alert(`Détail des paiements comptés pour la saison en cours:\n\n${list}`);
+                    }}
+                    style={{
+                      marginTop: '8px', padding: '4px 10px', fontSize: '11px',
+                      background: '#1976d2', color: 'white', border: 'none',
+                      borderRadius: '4px', cursor: 'pointer'
+                    }}
+                  >
+                    🔍 Voir le détail
+                  </button>
                 </div>
               </div>
             </div>
