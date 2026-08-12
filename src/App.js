@@ -1143,16 +1143,6 @@ const addClient = () => {
     alert('Veuillez spécifier la date du 1er versement.');
     return;
   }
-  
-  if (!clientForm.firstPaymentMethod) {
-    alert('Veuillez sélectionner la méthode du 1er paiement.');
-    return;
-  }
-
-  if (clientForm.paymentStructure === '2' && !clientForm.secondPaymentMethod) {
-    alert('Veuillez sélectionner la méthode du 2e paiement.');
-    return;
-  }
 
   const clientId = Date.now();
 
@@ -2765,6 +2755,21 @@ const handlePaymentMethodSelect = (method) => {
     );
   };
 
+  // Compte les paiements réellement reçus pour la SAISON EN COURS uniquement
+  // (contrats actifs, non archivés) — exclut les paiements des saisons précédentes.
+  const getCurrentSeasonPaymentsReceivedCount = () => {
+    let count = 0;
+    contracts.filter(c => !c.archived).forEach(contract => {
+      const client = clients.find(cl => cl.id === contract.clientId);
+      if (!client) return;
+      const structure = parseInt(client.paymentStructure || '2', 10);
+      for (let i = 1; i <= structure; i++) {
+        if (isPaymentReceived(client.id, i, contract.id)) count++;
+      }
+    });
+    return count;
+  };
+
   // Retourne l'enregistrement de paiement pertinent pour LA SAISON du contrat donné
   // (même logique que isPaymentReceived, mais retourne l'objet complet pour affichage des détails)
   const getPaymentRecord = (clientId, paymentNumber, contract) => {
@@ -3901,8 +3906,8 @@ Merci de votre patience!
                 <div style={{ fontSize: '1.1em' }}>Contrats Actifs</div>
               </div>
               <div style={{ background: 'linear-gradient(135deg, #fd7e14, #e83e8c)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
-                <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{payments.length}</div>
-                <div style={{ fontSize: '1.1em' }}>Paiements Reçus</div>
+                <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{getCurrentSeasonPaymentsReceivedCount()}</div>
+                <div style={{ fontSize: '1.1em' }}>Paiements Reçus (saison en cours)</div>
               </div>
               <div style={{ background: 'linear-gradient(135deg, #20c997, #17a2b8)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
                 <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>
@@ -6758,9 +6763,9 @@ Merci de votre patience!
               
               <div style={{ background: '#d4edda', padding: '20px', borderRadius: '12px', textAlign: 'center' }}>
                 <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#155724', marginBottom: '5px' }}>
-                  {payments.length}
+                  {getCurrentSeasonPaymentsReceivedCount()}
                 </div>
-                <div style={{ color: '#155724', fontWeight: 'bold' }}>Paiements Reçus</div>
+                <div style={{ color: '#155724', fontWeight: 'bold' }}>Paiements Reçus (saison en cours)</div>
               </div>
             </div>
 
