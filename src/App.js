@@ -2785,7 +2785,62 @@ const handlePaymentMethodSelect = (method) => {
 
   // Retourne l'enregistrement de paiement pertinent pour LA SAISON du contrat donné
   // (même logique que isPaymentReceived, mais retourne l'objet complet pour affichage des détails)
-  const getPaymentRecord = (clientId, paymentNumber, contract) => {
+  // Annule un paiement marqué reçu par erreur (le remet en "En attente")
+  const undoPayment = (clientId, paymentNumber) => {
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    const contract = contracts.find(c => c.clientId === clientId && !c.archived);
+    const record = getPaymentRecord(clientId, paymentNumber, contract);
+
+    if (!record) {
+      alert('Aucun paiement trouvé à annuler pour ce client.');
+      return;
+    }
+
+    const confirmMsg = `Annuler ce paiement?\n\n` +
+      `Client: ${client.name}\n` +
+      `Versement: ${paymentNumber}${paymentNumber === 1 ? 'er' : 'e'}\n` +
+      `Montant: ${record.amount.toFixed(2)}$\n` +
+      `Date enregistrée: ${record.date ? new Date(record.date).toLocaleDateString('fr-CA') : 'inconnue'}\n\n` +
+      `Le paiement repassera à "En attente" et la revenu correspondant sera retiré.`;
+
+    if (!window.confirm(confirmMsg)) return;
+
+    // Retirer l'enregistrement de paiement
+    const newPayments = payments.filter(p => p.id !== record.id);
+    setPayments(newPayments);
+    saveToStorage('payments', newPayments);
+
+    // Retirer la facture/revenu correspondante (recherche par meilleure correspondance)
+    const matchingInvoiceIndex = invoices.findIndex(inv =>
+      inv.clientId === clientId &&
+      inv.type === 'revenu' &&
+      Math.abs(inv.amount - record.amount) < 0.01 &&
+      inv.date === record.date &&
+      inv.description && inv.description.includes(`Paiement ${paymentNumber}`)
+    );
+    if (matchingInvoiceIndex !== -1) {
+      const newInvoices = invoices.filter((_, idx) => idx !== matchingInvoiceIndex);
+      setInvoices(newInvoices);
+      saveToStorage('invoices', newInvoices);
+    }
+
+    // Remettre le drapeau du client à false
+    const paymentField = `${
+      paymentNumber === 1 ? 'first' :
+      paymentNumber === 2 ? 'second' :
+      paymentNumber === 3 ? 'third' : 'fourth'
+    }PaymentReceived`;
+    const updatedClients = clients.map(c =>
+      c.id === clientId ? { ...c, [paymentField]: false } : c
+    );
+    setClients(updatedClients);
+    saveToStorage('clients', updatedClients);
+
+    alert(`✅ Paiement annulé. ${client.name} — versement ${paymentNumber} repassé à "En attente".`);
+  };
+
+
     if (contract) {
       const forThisContract = payments.find(p =>
         p.clientId === clientId && p.paymentNumber === paymentNumber && p.contractId === contract.id
@@ -3068,6 +3123,50 @@ const handlePaymentMethodSelect = (method) => {
   };
 
    // GÉNÉRATION CONTRAT PDF COMPLET
+  // Ouvre l'app courriel avec un message pré-rédigé pour l'envoi du contrat au client.
+  // Note: le PDF/contrat imprimé doit être joint manuellement (limitation technique des liens mailto).
+  const emailContractToClient = (contractId) => {
+    const contract = contracts.find(c => c.id === contractId);
+    const client = clients.find(c => c.id === contract?.clientId);
+
+    if (!contract || !client) {
+      alert('Erreur: Contrat ou client introuvable');
+      return;
+    }
+
+    if (!client.email || !client.email.trim()) {
+      alert(`❌ ${client.name} n'a pas d'adresse courriel enregistrée.\n\nAjoute une adresse courriel dans sa fiche client d'abord.`);
+      return;
+    }
+
+    const subject = `Votre contrat de service de déneigement - JM Pominville`;
+    const body =
+`Bonjour ${client.name},
+
+Merci de faire affaire avec JM Pominville pour vos services de déneigement cette saison!
+
+Vous trouverez ci-joint votre contrat de service. Merci d'en prendre connaissance, de le signer, puis de nous le retourner par courriel ou de nous contacter pour toute question.
+
+Adresse du service: ${client.address || ''}
+Montant total du contrat: ${contract.amount}$
+
+N'hésitez pas à nous contacter au 514-444-6324 pour toute question.
+
+Merci et au plaisir de vous servir cette saison!
+
+Maxim Pominville
+JM Pominville - Service de déneigement
+514-444-6324`;
+
+    const mailtoLink = `mailto:${encodeURIComponent(client.email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
+    alert(
+      `📎 N'oublie pas de joindre le contrat en pièce jointe une fois dans ton application de courriel!\n\n` +
+      `(Génère d'abord le PDF avec "📄 Contrat PDF", enregistre-le, puis joins-le au courriel qui va s'ouvrir.)`
+    );
+    window.location.href = mailtoLink;
+  };
+
   const generateContract = (contractId) => {
     const contract = contracts.find(c => c.id === contractId);
     const client = clients.find(c => c.id === contract.clientId);
@@ -4958,21 +5057,6 @@ Merci de votre patience!
             />
           </div>
 
-          {/* Méthode 1er paiement */}
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 1er paiement (optionnel)</label>
-            <select
-              value={clientForm.firstPaymentMethod}
-              onChange={(e) => setClientForm({...clientForm, firstPaymentMethod: e.target.value})}
-              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-              required
-            >
-              <option value="">Sélectionner...</option>
-              <option value="cheque">Chèque</option>
-              <option value="comptant">Comptant</option>
-            </select>
-          </div>
-
           {/* 2e paiement */}
           {(clientForm.paymentStructure === '2' || clientForm.paymentStructure === '3' || clientForm.paymentStructure === '4') && (
             <>
@@ -5004,19 +5088,6 @@ Merci de votre patience!
                     ⏳ Date à déterminer
                   </div>
                 )}
-              </div>
-
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 2e paiement</label>
-                <select
-                  value={clientForm.secondPaymentMethod || ''}
-                  onChange={(e) => setClientForm({...clientForm, secondPaymentMethod: e.target.value})}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                >
-                  <option value="">Sélectionner...</option>
-                  <option value="cheque">Chèque</option>
-                  <option value="comptant">Comptant</option>
-                </select>
               </div>
             </>
           )}
@@ -5067,19 +5138,6 @@ Merci de votre patience!
                   onChange={(e) => setClientForm({...clientForm, fourthPaymentDate: e.target.value})}
                   style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
                 />
-              </div>
-              
-              <div>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Méthode 4e paiement</label>
-                <select
-                  value={clientForm.fourthPaymentMethod || ''}
-                  onChange={(e) => setClientForm({...clientForm, fourthPaymentMethod: e.target.value})}
-                  style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-                >
-                  <option value="">Sélectionner...</option>
-                  <option value="cheque">Chèque</option>
-                  <option value="comptant">Comptant</option>
-                </select>
               </div>
             </>
           )}
@@ -5361,22 +5419,28 @@ Merci de votre patience!
                           background: firstPaymentReceived ? '#d4edda' : '#f8d7da',
                           fontSize: '11px', 
                           textAlign: 'center', 
-                          cursor: !firstPaymentReceived && contract ? 'pointer' : 'default',
+                          cursor: contract ? 'pointer' : 'default',
                           transition: 'transform 0.2s'
                         }}
                         onClick={() => {
-                          if (!firstPaymentReceived && contract) {
+                          if (!contract) return;
+                          if (firstPaymentReceived) {
+                            undoPayment(client.id, 1);
+                          } else {
                             showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));
                           }
                         }}
                         onTouchEnd={(e) => {
-                          if (!firstPaymentReceived && contract) {
-                            e.preventDefault();
+                          if (!contract) return;
+                          e.preventDefault();
+                          if (firstPaymentReceived) {
+                            undoPayment(client.id, 1);
+                          } else {
                             showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));
                           }
                         }}
                         onMouseEnter={(e) => {
-                          if (!firstPaymentReceived && contract) {
+                          if (contract) {
                             e.currentTarget.style.transform = 'scale(1.05)';
                           }
                         }}
@@ -5388,6 +5452,11 @@ Merci de votre patience!
                         {!firstPaymentReceived && contract && (
                           <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
                             👆 Cliquez pour marquer
+                          </div>
+                        )}
+                        {firstPaymentReceived && contract && (
+                          <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#dc3545' }}>
+                            👆 Cliquez pour annuler
                           </div>
                         )}
                         {firstPayment && (
@@ -5405,23 +5474,29 @@ Merci de votre patience!
                             background: secondPaymentReceived ? '#d4edda' : '#f8d7da',
                             fontSize: '11px', 
                             textAlign: 'center',
-                            cursor: !secondPaymentReceived && firstPaymentReceived && contract ? 'pointer' : 'default',
+                            cursor: (secondPaymentReceived || firstPaymentReceived) && contract ? 'pointer' : 'default',
                             transition: 'transform 0.2s',
                             opacity: !firstPaymentReceived ? 0.5 : 1
                           }}
                           onClick={() => {
-                            if (!secondPaymentReceived && firstPaymentReceived && contract) {
+                            if (!contract) return;
+                            if (secondPaymentReceived) {
+                              undoPayment(client.id, 2);
+                            } else if (firstPaymentReceived) {
                               showPaymentModalFunc(client.id, 2, contract.amount / 2);
                             }
                           }}
                           onTouchEnd={(e) => {
-                            if (!secondPaymentReceived && firstPaymentReceived && contract) {
-                              e.preventDefault();
+                            if (!contract) return;
+                            e.preventDefault();
+                            if (secondPaymentReceived) {
+                              undoPayment(client.id, 2);
+                            } else if (firstPaymentReceived) {
                               showPaymentModalFunc(client.id, 2, contract.amount / 2);
                             }
                           }}
                           onMouseEnter={(e) => {
-                            if (!secondPaymentReceived && firstPaymentReceived && contract) {
+                            if ((secondPaymentReceived || firstPaymentReceived) && contract) {
                               e.currentTarget.style.transform = 'scale(1.05)';
                             }
                           }}
@@ -5433,6 +5508,11 @@ Merci de votre patience!
                           {!secondPaymentReceived && firstPaymentReceived && contract && (
                             <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
                               👆 Cliquez pour marquer
+                            </div>
+                          )}
+                          {secondPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#dc3545' }}>
+                              👆 Cliquez pour annuler
                             </div>
                           )}
                           {secondPayment && (
@@ -5564,22 +5644,28 @@ Merci de votre patience!
                                     background: firstPaymentReceived ? '#d4edda' : '#f8d7da',
                                     fontSize: '11px', 
                                     textAlign: 'center', 
-                                    cursor: !firstPaymentReceived && contract ? 'pointer' : 'default',
+                                    cursor: contract ? 'pointer' : 'default',
                                     transition: 'transform 0.2s'
                                   }}
                                   onClick={() => {
-                                    if (!firstPaymentReceived && contract) {
+                                    if (!contract) return;
+                                    if (firstPaymentReceived) {
+                                      undoPayment(client.id, 1);
+                                    } else {
                                       showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));
                                     }
                                   }}
                                   onTouchEnd={(e) => {
-                                    if (!firstPaymentReceived && contract) {
-                                      e.preventDefault();
+                                    if (!contract) return;
+                                    e.preventDefault();
+                                    if (firstPaymentReceived) {
+                                      undoPayment(client.id, 1);
+                                    } else {
                                       showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));
                                     }
                                   }}
                                   onMouseEnter={(e) => {
-                                    if (!firstPaymentReceived && contract) {
+                                    if (contract) {
                                       e.currentTarget.style.transform = 'scale(1.05)';
                                     }
                                   }}
@@ -5591,6 +5677,11 @@ Merci de votre patience!
                                   {!firstPaymentReceived && contract && (
                                     <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
                                       👆 Cliquez pour marquer
+                                    </div>
+                                  )}
+                                  {firstPaymentReceived && contract && (
+                                    <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#dc3545' }}>
+                                      👆 Cliquez pour annuler
                                     </div>
                                   )}
                                   {firstPayment && (
@@ -5608,23 +5699,29 @@ Merci de votre patience!
                                       background: secondPaymentReceived ? '#d4edda' : '#f8d7da',
                                       fontSize: '11px', 
                                       textAlign: 'center',
-                                      cursor: !secondPaymentReceived && firstPaymentReceived && contract ? 'pointer' : 'default',
+                                      cursor: (secondPaymentReceived || firstPaymentReceived) && contract ? 'pointer' : 'default',
                                       transition: 'transform 0.2s',
                                       opacity: !firstPaymentReceived ? 0.5 : 1
                                     }}
                                     onClick={() => {
-                                      if (!secondPaymentReceived && firstPaymentReceived && contract) {
+                                      if (!contract) return;
+                                      if (secondPaymentReceived) {
+                                        undoPayment(client.id, 2);
+                                      } else if (firstPaymentReceived) {
                                         showPaymentModalFunc(client.id, 2, contract.amount / 2);
                                       }
                                     }}
                                     onTouchEnd={(e) => {
-                                      if (!secondPaymentReceived && firstPaymentReceived && contract) {
-                                        e.preventDefault();
+                                      if (!contract) return;
+                                      e.preventDefault();
+                                      if (secondPaymentReceived) {
+                                        undoPayment(client.id, 2);
+                                      } else if (firstPaymentReceived) {
                                         showPaymentModalFunc(client.id, 2, contract.amount / 2);
                                       }
                                     }}
                                     onMouseEnter={(e) => {
-                                      if (!secondPaymentReceived && firstPaymentReceived && contract) {
+                                      if ((secondPaymentReceived || firstPaymentReceived) && contract) {
                                         e.currentTarget.style.transform = 'scale(1.05)';
                                       }
                                     }}
@@ -5636,6 +5733,11 @@ Merci de votre patience!
                                     {!secondPaymentReceived && firstPaymentReceived && contract && (
                                       <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
                                         👆 Cliquez pour marquer
+                                      </div>
+                                    )}
+                                    {secondPaymentReceived && contract && (
+                                      <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#dc3545' }}>
+                                        👆 Cliquez pour annuler
                                       </div>
                                     )}
                                     {secondPayment && (
@@ -6212,6 +6314,16 @@ Merci de votre patience!
       }}
     >
       📄 Contrat PDF
+    </button>
+
+    <button
+      onClick={() => emailContractToClient(contract.id)}
+      style={{
+        padding: '5px 10px', fontSize: '12px', background: '#6f42c1', color: 'white',
+        border: 'none', borderRadius: '4px', cursor: 'pointer'
+      }}
+    >
+      ✉️ Envoyer par courriel
     </button>
     
     <button
