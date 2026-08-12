@@ -2840,6 +2840,7 @@ const handlePaymentMethodSelect = (method) => {
     alert(`✅ Paiement annulé. ${client.name} — versement ${paymentNumber} repassé à "En attente".`);
   };
 
+const getPaymentRecord = (clientId, paymentNumber, contract) => {
 
     if (contract) {
       const forThisContract = payments.find(p =>
