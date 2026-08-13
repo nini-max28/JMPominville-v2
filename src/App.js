@@ -4075,23 +4075,30 @@ Merci de votre patience!
                 <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{getCurrentSeasonPaymentsReceivedCount()}</div>
                 <div style={{ fontSize: '1.1em' }}>Paiements Reçus (saison en cours)</div>
 
-                     <button
-  onClick={() => {
-    const details = getCurrentSeasonPaymentsReceivedDetails();
-    if (details.length === 0) {
-      alert('Aucun paiement reçu pour la saison en cours.');
-      return;
-    }
-    const list = details.map(d => ...).join('\n');
-    alert(`Détail...`);
-  }}
-  style={{...}}
->
-  🔍 Voir le détail
-</button>
-
+                  <button
+                  onClick={() => {
+                    const details = getCurrentSeasonPaymentsReceivedDetails();
+                    if (details.length === 0) {
+                      alert('Aucun paiement reçu pour la saison en cours.');
+                      return;
+                    }
+                    const list = details.map(d =>
+                      `• ${d.clientName} — ${d.paymentNumber}${d.paymentNumber === 1 ? 'er' : 'e'} versement — ${d.amount.toFixed(2)}$` +
+                      `${d.date ? ' — ' + new Date(d.date).toLocaleDateString('fr-CA') : ''}` +
+                      `${!d.hasContractId ? ' ⚠️ (ancien paiement sans lien direct au contrat)' : ''}`
+                    ).join('\n');
+                    alert(`Détail des paiements comptés pour la saison en cours:\n\n${list}`);
+                  }}
+                  style={{
+                    marginTop: '8px', padding: '4px 12px', fontSize: '11px',
+                    background: 'rgba(255,255,255,0.25)', color: 'white', 
+                    border: '1px solid rgba(255,255,255,0.5)',
+                    borderRadius: '4px', cursor: 'pointer'
+                  }}
+                >
                   🔍 Voir le détail
                 </button>
+
               </div>
               <div style={{ background: 'linear-gradient(135deg, #20c997, #17a2b8)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
                 <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>
