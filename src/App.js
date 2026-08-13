@@ -4085,9 +4085,7 @@ Merci de votre patience!
                     ) : null;
                   })()}
                   <button
-                    onClick={() => {
-                      const details = getCurrentSeasonPaymentsReceivedDetails();
-
+                    onClick={() => 
                     const details = getCurrentSeasonPaymentsReceivedDetails();
                     if (details.length === 0) {
                       alert('Aucun paiement reçu pour la saison en cours.');
