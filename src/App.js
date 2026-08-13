@@ -4084,13 +4084,13 @@ Merci de votre patience!
                       </div>
                     ) : null;
                   })()}
-                  <button
-                    onClick={() => 
-                    const details = getCurrentSeasonPaymentsReceivedDetails();
-                    if (details.length === 0) {
-                      alert('Aucun paiement reçu pour la saison en cours.');
-                      return;
-                    }
+                 <button
+      onClick={() => {
+        const details = getCurrentSeasonPaymentsReceivedDetails();
+        if (details.length === 0) {
+          alert('Aucun paiement reçu pour la saison en cours.');
+          return;
+        }
                     const list = details.map(d =>
                       `• ${d.clientName} — ${d.paymentNumber}${d.paymentNumber === 1 ? 'er' : 'e'} versement — ${d.amount.toFixed(2)}$` +
                       `${d.date ? ' — ' + new Date(d.date).toLocaleDateString('fr-CA') : ''}` +
