@@ -4076,7 +4076,7 @@ Merci de votre patience!
                 <div style={{ fontSize: '1.1em' }}>Paiements Reçus (saison en cours)</div>
                 <button
                   onClick={() => {
-                                      {(() => {
+                                  {(() => {
                     const undeposited = payments.filter(p => p.paymentMethod === 'cheque' && !p.deposited).length;
                     return undeposited > 0 ? (
                       <div style={{ fontSize: '10px', color: '#856404', marginTop: '3px', fontWeight: 'bold' }}>
@@ -4084,9 +4084,10 @@ Merci de votre patience!
                       </div>
                     ) : null;
                   })()}
-                 <button
-      onClick={() => {
-        const details = getCurrentSeasonPaymentsReceivedDetails();
+                  <button
+                    onClick={() => {
+                      const details = getCurrentSeasonPaymentsReceivedDetails();
+
         if (details.length === 0) {
           alert('Aucun paiement reçu pour la saison en cours.');
           return;
