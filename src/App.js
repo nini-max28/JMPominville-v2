@@ -4076,15 +4076,7 @@ Merci de votre patience!
                 <div style={{ fontSize: '1.1em' }}>Paiements Reçus (saison en cours)</div>
                 <button
                   onClick={() => {
-                                  {(() => {
-                    const undeposited = payments.filter(p => p.paymentMethod === 'cheque' && !p.deposited).length;
-                    return undeposited > 0 ? (
-                      <div style={{ fontSize: '10px', color: '#856404', marginTop: '3px', fontWeight: 'bold' }}>
-                        🏦 {undeposited} chèque{undeposited > 1 ? 's' : ''} à déposer
-                      </div>
-                    ) : null;
-                  })()}
-           <button
+   <button
                   onClick={() => {
                     const details = getCurrentSeasonPaymentsReceivedDetails();
                     if (details.length === 0) {
