@@ -4075,8 +4075,7 @@ Merci de votre patience!
                 <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>{getCurrentSeasonPaymentsReceivedCount()}</div>
                 <div style={{ fontSize: '1.1em' }}>Paiements Reçus (saison en cours)</div>
 
-       
-                    const list = details.map(d =>
+                     const list = details.map(d =>
                       `• ${d.clientName} — ${d.paymentNumber}${d.paymentNumber === 1 ? 'er' : 'e'} versement — ${d.amount.toFixed(2)}$` +
                       `${d.date ? ' — ' + new Date(d.date).toLocaleDateString('fr-CA') : ''}` +
                       `${!d.hasContractId ? ' ⚠️ (ancien paiement sans lien direct au contrat)' : ''}`
@@ -4100,6 +4099,7 @@ Merci de votre patience!
                 <div style={{ fontSize: '1.1em' }}>Revenus Total</div>
               </div>
             </div>
+                  
 
             {/* SUIVI DES RETARDS DE PAIEMENT */}
             {getLatePaymentClients().length > 0 && (
