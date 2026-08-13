@@ -4108,7 +4108,7 @@ Merci de votre patience!
                 >
                   🔍 Voir le détail
                 </button>
-              </div>
+              <div>
               <div style={{ background: 'linear-gradient(135deg, #20c997, #17a2b8)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
                 <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>
                   {getTotalRevenue(true).toFixed(0)}$
