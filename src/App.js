@@ -21,7 +21,8 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz
     clientId: null,
     paymentNumber: null,
     amount: 0,
-    customAmount: undefined
+    customAmount: undefined,
+    paymentDate: new Date().toISOString().split('T')[0]
   });
   const [clientSearch, setClientSearch] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
@@ -830,6 +831,33 @@ if (client.paymentStructure === '4' &&
 
   alert('✅ Paiement supprimé avec succès!');
 };
+  // Marque un paiement comme réellement déposé à la banque (avec sa propre date, différente de la réception)
+  const markAsDeposited = (paymentId) => {
+    const payment = payments.find(p => p.id === paymentId);
+    if (!payment) return;
+
+    const depositDateInput = window.prompt(
+      `Date de dépôt à la banque?\n\nFormat: AAAA-MM-JJ`,
+      new Date().toISOString().split('T')[0]
+    );
+    if (!depositDateInput) return;
+
+    const newPayments = payments.map(p =>
+      p.id === paymentId ? { ...p, deposited: true, depositDate: depositDateInput.trim() } : p
+    );
+    setPayments(newPayments);
+    saveToStorage('payments', newPayments);
+    alert(`✅ Paiement marqué comme déposé le ${depositDateInput.trim()}.`);
+  };
+
+  const undoDeposit = (paymentId) => {
+    if (!window.confirm('Annuler le statut "déposé" pour ce paiement?')) return;
+    const newPayments = payments.map(p =>
+      p.id === paymentId ? { ...p, deposited: false, depositDate: null } : p
+    );
+    setPayments(newPayments);
+    saveToStorage('payments', newPayments);
+  };
 
   // METTRE CETTE FONCTION ICI, AVANT sendNotificationViaBackend
 const formatPhoneForTwilio = (phone) => {
@@ -2016,6 +2044,27 @@ const cancelContractNotRenewed = (id) => {
     alert(`✅ ${clientName} marqué comme non renouvelé pour cette saison.`);
   }
 };
+// Réactive un contrat marqué "ne renouvelle pas" — le remet dans le circuit normal (renouvellement en masse, suivi, etc.)
+const reactivateContract = (id) => {
+  const contract = contracts.find(c => c.id === id);
+  if (!contract) return;
+  const client = clients.find(c => c.id === contract.clientId);
+  const clientName = client ? client.name : 'ce client';
+
+  if (window.confirm(
+    `Réactiver le contrat de ${clientName} pour cette saison?\n\n` +
+    `Il redeviendra actif et réapparaîtra dans les listes normales (renouvellement en masse, suivi des paiements, feuille de suivi, etc.).`
+  )) {
+    const updatedContracts = contracts.map(c =>
+      c.id === id
+        ? { ...c, archived: false, notRenewed: false }
+        : c
+    );
+    setContracts(updatedContracts);
+    saveToStorage('contracts', updatedContracts);
+    alert(`✅ ${clientName} réactivé pour cette saison.`);
+  }
+};
 
 const deleteContract = (id) => {
   if (window.confirm('Supprimer ce contrat ?')) {
@@ -2625,9 +2674,11 @@ const showPaymentModalFunc = (clientId, paymentNumber, amount) => {
     clientId: clientId,
     paymentNumber: paymentNumber,
     amount: amount,
-    customAmount: undefined  // ✅ Initialement undefined
+    customAmount: undefined,  // ✅ Initialement undefined
+    paymentDate: new Date().toISOString().split('T')[0]
   });
 };
+
 const handlePaymentMethodSelect = (method) => {
   if (!paymentModal.clientId || !paymentModal.paymentNumber) {
     alert('Erreur: Informations de paiement manquantes');
@@ -2659,10 +2710,12 @@ const handlePaymentMethodSelect = (method) => {
     clientId: paymentModal.clientId,
     contractId: activeContractForPayment ? activeContractForPayment.id : null,
     paymentNumber: paymentModal.paymentNumber,
-    amount: finalAmount,  // ✅ Utilise le montant final (modifié ou non)
-    date: new Date().toISOString().split('T')[0],
+    amount: finalAmount,
+    date: paymentModal.paymentDate || new Date().toISOString().split('T')[0],
     paymentMethod: method,
     received: true,
+    deposited: false,
+    depositDate: null,
     recordedAt: new Date().toISOString()
   };
 
@@ -3705,7 +3758,7 @@ Merci de votre patience!
       if (parts.length === 0) return 'Adresses non définies';
       
       let streetPart = parts[0].trim();
-      streetPart = streetPart.replace(/^\d+[A-Za-z]?(?:[-\/]\s*\d*[A-Za-z]?)?\s*/, '').trim();
+      streetPart = streetPart.replace(/^\d+[A-Za-z]?(?:[-\/]\s*\d*[A-Za-z]?)*\s*/, '').trim();
       
       if (!streetPart) {
         streetPart = parts[0].trim();
@@ -4023,6 +4076,18 @@ Merci de votre patience!
                 <div style={{ fontSize: '1.1em' }}>Paiements Reçus (saison en cours)</div>
                 <button
                   onClick={() => {
+                                      {(() => {
+                    const undeposited = payments.filter(p => p.paymentMethod === 'cheque' && !p.deposited).length;
+                    return undeposited > 0 ? (
+                      <div style={{ fontSize: '10px', color: '#856404', marginTop: '3px', fontWeight: 'bold' }}>
+                        🏦 {undeposited} chèque{undeposited > 1 ? 's' : ''} à déposer
+                      </div>
+                    ) : null;
+                  })()}
+                  <button
+                    onClick={() => {
+                      const details = getCurrentSeasonPaymentsReceivedDetails();
+
                     const details = getCurrentSeasonPaymentsReceivedDetails();
                     if (details.length === 0) {
                       alert('Aucun paiement reçu pour la saison en cours.');
@@ -5358,13 +5423,15 @@ Merci de votre patience!
         boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
       }}>
         <thead>
-          <tr style={{ background: '#f8f9fa' }}>
-            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Client</th>
-            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Contact</th>
-            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Type</th>
-            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Statut Paiements</th>
-            <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Actions</th>
-          </tr>
+                              <tr style={{ background: '#f8f9fa' }}>
+                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Client</th>
+                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Versement</th>
+                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Montant</th>
+                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Date Reçue</th>
+                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Méthode</th>
+                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Dépôt</th>
+                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Actions</th>
+                    </tr>
         </thead>
         <tbody>
           {getAdvancedFilteredClients()
@@ -6349,13 +6416,24 @@ Merci de votre patience!
       </button>
     )}
     
-    {contract.archived && client && contract.notRenewed && (
-      <span style={{
-        padding: '5px 10px', fontSize: '11px', background: '#495057', 
-        color: 'white', borderRadius: '4px', textAlign: 'center'
-      }}>
-        🚫 Non renouvelé {contract.yearArchived || ''}
-      </span>
+     {contract.archived && client && contract.notRenewed && (
+      <>
+        <span style={{
+          padding: '5px 10px', fontSize: '11px', background: '#495057', 
+          color: 'white', borderRadius: '4px', textAlign: 'center'
+        }}>
+          🚫 Non renouvelé {contract.yearArchived || ''}
+        </span>
+        <button
+          onClick={() => reactivateContract(contract.id)}
+          style={{
+            padding: '5px 10px', fontSize: '12px', background: '#28a745', color: 'white',
+            border: 'none', borderRadius: '4px', cursor: 'pointer'
+          }}
+        >
+          ↩️ Réactiver
+        </button>
+      </>
     )}
 
     {contract.archived && client && !contract.notRenewed && (
@@ -6631,10 +6709,61 @@ Merci de votre patience!
                     🔍 Voir le détail
                   </button>
                 </div>
-              </div>
+                            </div>
             </div>
 
+            {/* Chèques non déposés */}
+            {(() => {
+              const undepositedCheques = payments.filter(p => p.paymentMethod === 'cheque' && !p.deposited);
+              if (undepositedCheques.length === 0) return null;
+
+              return (
+                <div style={{
+                  background: '#fff3cd', border: '2px solid #ffc107', borderRadius: '12px',
+                  padding: '20px', marginBottom: '25px'
+                }}>
+                  <h3 style={{ color: '#856404', marginBottom: '15px' }}>
+                    🏦 Chèques pas encore déposés ({undepositedCheques.length})
+                  </h3>
+                  <div style={{ display: 'grid', gap: '10px' }}>
+                    {undepositedCheques
+                      .sort((a, b) => new Date(a.date) - new Date(b.date))
+                      .map(payment => {
+                        const client = clients.find(c => c.id === payment.clientId);
+                        return (
+                          <div key={payment.id} style={{
+                            background: 'white', padding: '12px 16px', borderRadius: '8px',
+                            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                            flexWrap: 'wrap', gap: '8px'
+                          }}>
+                            <div>
+                              <strong>{client ? client.name : 'Client supprimé'}</strong>
+                              <div style={{ fontSize: '12px', color: '#666' }}>
+                                {payment.paymentNumber}{payment.paymentNumber === 1 ? 'er' : 'e'} versement — Reçu le {new Date(payment.date).toLocaleDateString('fr-CA')}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                              <strong style={{ color: '#28a745' }}>{payment.amount.toFixed(2)}$</strong>
+                              <button
+                                onClick={() => markAsDeposited(payment.id)}
+                                style={{
+                                  padding: '6px 12px', fontSize: '12px', background: '#17a2b8', color: 'white',
+                                  border: 'none', borderRadius: '4px', cursor: 'pointer'
+                                }}
+                              >
+                                🏦 Marquer déposé
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Liste des paiements */}
+
             {payments.length > 0 ? (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{
@@ -6677,7 +6806,7 @@ Merci de votre patience!
                               {payment.amount.toFixed(2)} $
                             </td>
                             <td style={{ padding: '15px' }}>{payment.date}</td>
-                            <td style={{ padding: '15px' }}>
+                                                        <td style={{ padding: '15px' }}>
                               <span style={{
                                 padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold',
                                 background: payment.paymentMethod === 'cheque' ? '#fff3cd' : '#d4edda',
@@ -6685,6 +6814,40 @@ Merci de votre patience!
                               }}>
                                 {payment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
                               </span>
+                            </td>
+                            <td style={{ padding: '15px' }}>
+                              {payment.deposited ? (
+                                <div>
+                                  <span style={{
+                                    padding: '4px 8px', borderRadius: '12px', fontSize: '11px', fontWeight: 'bold',
+                                    background: '#d4edda', color: '#155724'
+                                  }}>
+                                    ✅ Déposé le {new Date(payment.depositDate).toLocaleDateString('fr-CA')}
+                                  </span>
+                                  <div>
+                                    <button
+                                      onClick={() => undoDeposit(payment.id)}
+                                      style={{
+                                        marginTop: '4px', padding: '3px 8px', fontSize: '10px',
+                                        background: '#e9ecef', color: '#495057', border: 'none',
+                                        borderRadius: '4px', cursor: 'pointer'
+                                      }}
+                                    >
+                                      Annuler
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => markAsDeposited(payment.id)}
+                                  style={{
+                                    padding: '5px 10px', fontSize: '12px', background: '#17a2b8', color: 'white',
+                                    border: 'none', borderRadius: '4px', cursor: 'pointer'
+                                  }}
+                                >
+                                  🏦 Marquer déposé
+                                </button>
+                              )}
                             </td>
                             <td style={{ padding: '15px' }}>
                               <button
@@ -7710,6 +7873,33 @@ Merci de votre patience!
           </p>
         </div>
       )}
+      {/* Date de réception du paiement */}
+      <div style={{ marginBottom: '20px' }}>
+        <label style={{ 
+          display: 'block', 
+          marginBottom: '8px', 
+          fontWeight: 'bold',
+          color: '#495057',
+          fontSize: '14px'
+        }}>
+          Date de réception du paiement
+        </label>
+        <input
+          type="date"
+          value={paymentModal.paymentDate || new Date().toISOString().split('T')[0]}
+          onChange={(e) => setPaymentModal({
+            ...paymentModal,
+            paymentDate: e.target.value
+          })}
+          style={{
+            width: '100%',
+            padding: '10px 12px',
+            fontSize: '14px',
+            border: '2px solid #ced4da',
+            borderRadius: '8px'
+          }}
+        />
+      </div>
 
       {/* Question méthode de paiement */}
       <p style={{ 
