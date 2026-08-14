@@ -54,6 +54,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [printByStreet, setPrintByStreet] = useState('');
   const [lastRenewalBackup, setLastRenewalBackup] = useState(null);
  const [accountingYearFilter, setAccountingYearFilter] = useState('');
+    const [chequeSearchTerm, setChequeSearchTerm] = useState('');
     const [recurringTransactions, setRecurringTransactions] = useState([]);
   const [accountingSortColumn, setAccountingSortColumn] = useState('date');
   const [accountingSortDirection, setAccountingSortDirection] = useState('desc');
@@ -6957,22 +6958,40 @@ Merci de votre patience!
             </div>
 
             {/* Chèques non déposés */}
-                 {(() => {
-              const undepositedCheques = payments.filter(p => 
+                        {(() => {
+              const allUndepositedCheques = payments.filter(p => 
                 p.paymentMethod === 'cheque' && !p.deposited &&
-                (!accountingYearFilter || getSeasonLabel(p.date) === accountingYearFilter)
+                (!paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
               );
 
-              if (undepositedCheques.length === 0) return null;
+              const undepositedCheques = allUndepositedCheques.filter(p => {
+                if (!chequeSearchTerm.trim()) return true;
+                const client = clients.find(c => c.id === p.clientId);
+                const name = client ? client.name.toLowerCase() : 'client supprimé';
+                return name.includes(chequeSearchTerm.toLowerCase());
+              });
+
+              if (allUndepositedCheques.length === 0) return null;
 
               return (
                 <div style={{
                   background: '#fff3cd', border: '2px solid #ffc107', borderRadius: '12px',
                   padding: '20px', marginBottom: '25px'
                 }}>
-                  <h3 style={{ color: '#856404', marginBottom: '15px' }}>
-                    🏦 Chèques pas encore déposés ({undepositedCheques.length})
-                  </h3>
+                              {(() => {
+              const allUndepositedCheques = payments.filter(p => 
+                p.paymentMethod === 'cheque' && !p.deposited &&
+                (!paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
+              );
+
+              const undepositedCheques = allUndepositedCheques.filter(p => {
+                if (!chequeSearchTerm.trim()) return true;
+                const client = clients.find(c => c.id === p.clientId);
+                const name = client ? client.name.toLowerCase() : 'client supprimé';
+                return name.includes(chequeSearchTerm.toLowerCase());
+              });
+
+              if (allUndepositedCheques.length === 0) return null;
                   <div style={{ display: 'grid', gap: '10px' }}>
                     {undepositedCheques
                       .sort((a, b) => new Date(a.date) - new Date(b.date))
