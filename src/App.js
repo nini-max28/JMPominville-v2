@@ -2960,8 +2960,9 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
   // Vérifie si une date correspond au filtre d'année choisi dans la section Comptabilité
   const matchesAccountingYear = (dateStr, ignoreFilter = false) => {
     if (ignoreFilter || !accountingYearFilter) return true;
-    if (!dateStr) return false;
-    return new Date(dateStr).getFullYear() === parseInt(accountingYearFilter, 10);
+
+    return getSeasonLabel(dateStr) === accountingYearFilter;
+
   };
 
   // Revenus du registre manuel (transactions ajoutées à la main)
@@ -6474,29 +6475,28 @@ Merci de votre patience!
           <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
             <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>💰 Comptabilité</h2>
 
-            
-              // Toutes les années présentes dans les transactions manuelles ET les paiements réels des clients
-                          {(() => {
+                                        {(() => {
               const seasonsSet = new Set();
+              invoices.forEach(inv => { const s = getSeasonLabel(inv.date); if (s) seasonsSet.add(s); });
               payments.forEach(p => { const s = getSeasonLabel(p.date); if (s) seasonsSet.add(s); });
               const availableYears = Array.from(seasonsSet).sort((a, b) => b.localeCompare(a));
+
               return (
                 <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <label style={{ fontWeight: 'bold' }}>📅 Afficher les paiements de la saison :</label>
+                  <label style={{ fontWeight: 'bold' }}>📅 Saison :</label>
                   <select
-                    value={paymentsYearFilter}
-                    onChange={(e) => setPaymentsYearFilter(e.target.value)}
+                    value={accountingYearFilter}
+                    onChange={(e) => setAccountingYearFilter(e.target.value)}
                     style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontWeight: 'bold' }}
                   >
-                    <option value="">Toutes les saisons</option>
+                    <option value="">Toutes les saisons (cumulatif)</option>
                     {availableYears.map(y => (
                       <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
-
                 </div>
               );
-            })()}
+            })()}            
 
             {/* Formulaire d'ajout de transaction */}
             <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '25px' }}>
