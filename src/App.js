@@ -6961,7 +6961,7 @@ Merci de votre patience!
                  {(() => {
               const allUndepositedCheques = payments.filter(p => 
                 p.paymentMethod === 'cheque' && !p.deposited &&
-                (!paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
+                (!accountingYearFilter || getSeasonLabel(p.date) === accountingYearFilter)
               );
 
               const undepositedCheques = allUndepositedCheques.filter(p => {
