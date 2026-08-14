@@ -2799,10 +2799,12 @@ const handlePaymentMethodSelect = (method) => {
         !payment.contractId &&
         (!contractForCheck.startDate || !payment.date || new Date(payment.date) >= new Date(contractForCheck.startDate))
       );
-      return legacyMatch;
+         return legacyMatch;
     }
+  }
 
     return payments.some(payment =>
+
       payment.clientId === clientId &&
       payment.paymentNumber === paymentNumber &&
       payment.received
