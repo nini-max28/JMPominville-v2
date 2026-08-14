@@ -3235,8 +3235,8 @@ Maxim Pominville
 JM Pominville - Service de déneigement
 514-444-6324`;
 
-    const mailtoLink = `mailto:${encodeURIComponent(client.email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
-      
+        const mailtoLink = `mailto:${encodeURIComponent(client.email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+
     generateContract(contract.id, 1);
 
     alert(
@@ -3245,6 +3245,7 @@ JM Pominville - Service de déneigement
     );
     window.location.href = mailtoLink;
   };
+
 
     const generateContract = (contractId, copies = 2) => {
     const contract = contracts.find(c => c.id === contractId);
