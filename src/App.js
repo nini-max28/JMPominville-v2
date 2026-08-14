@@ -2789,7 +2789,7 @@ const handlePaymentMethodSelect = (method) => {
       );
       if (matchForContract) return true;
 
-      // 2) Repli pour les paiements enregistrés AVANT ce correctif (pas de contractId) :
+           // 2) Repli pour les paiements enregistrés AVANT ce correctif (pas de contractId) :
       // on ne les compte pour CE contrat que si leur date tombe après le début de celui-ci,
       // pour éviter qu'un paiement de la saison précédente soit compté pour la nouvelle saison.
       const legacyMatch = payments.some(payment =>
@@ -2799,17 +2799,16 @@ const handlePaymentMethodSelect = (method) => {
         !payment.contractId &&
         (!contractForCheck.startDate || !payment.date || new Date(payment.date) >= new Date(contractForCheck.startDate))
       );
-         return legacyMatch;
+      return legacyMatch;
     }
-  }
 
     return payments.some(payment =>
-
       payment.clientId === clientId &&
       payment.paymentNumber === paymentNumber &&
       payment.received
     );
   };
+
 
   // Retourne le détail des paiements réellement reçus pour la SAISON EN COURS uniquement
   // (contrats actifs, non archivés) — exclut les paiements des saisons précédentes.
