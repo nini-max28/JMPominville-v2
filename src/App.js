@@ -3747,6 +3747,17 @@ Merci de votre patience!
     setShareToken(null);
     alert('Suivi automatique arrêté');
     };
+    // Retourne l'étiquette de saison (ex: "2025-2026") pour une date donnée.
+  // Le point de bascule est mai : un paiement de janvier-avril appartient à la saison qui a commencé l'année précédente.
+  const getSeasonLabel = (dateStr) => {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    const month = d.getMonth() + 1;
+    const year = d.getFullYear();
+    return month >= 5 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+  };
+
 // FONCTION POUR EXTRAIRE LE NOM DE RUE
   const extractStreetName = (address) => {
     if (!address || typeof address !== 'string') return 'Adresses non définies';
@@ -6463,26 +6474,26 @@ Merci de votre patience!
           <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
             <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>💰 Comptabilité</h2>
 
-            {(() => {
+            
               // Toutes les années présentes dans les transactions manuelles ET les paiements réels des clients
-              const yearsSet = new Set();
-              invoices.forEach(inv => { if (inv.date) yearsSet.add(new Date(inv.date).getFullYear()); });
-              payments.forEach(p => { if (p.date) yearsSet.add(new Date(p.date).getFullYear()); });
-              const availableYears = Array.from(yearsSet).sort((a, b) => b - a);
-
+                          {(() => {
+              const seasonsSet = new Set();
+              payments.forEach(p => { const s = getSeasonLabel(p.date); if (s) seasonsSet.add(s); });
+              const availableYears = Array.from(seasonsSet).sort((a, b) => b.localeCompare(a));
               return (
                 <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <label style={{ fontWeight: 'bold' }}>📅 Saison/Année :</label>
+                  <label style={{ fontWeight: 'bold' }}>📅 Afficher les paiements de la saison :</label>
                   <select
-                    value={accountingYearFilter}
-                    onChange={(e) => setAccountingYearFilter(e.target.value)}
+                    value={paymentsYearFilter}
+                    onChange={(e) => setPaymentsYearFilter(e.target.value)}
                     style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontWeight: 'bold' }}
                   >
-                    <option value="">Toutes les années (cumulatif)</option>
+                    <option value="">Toutes les saisons</option>
                     {availableYears.map(y => (
                       <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
+
                 </div>
               );
             })()}
@@ -6745,7 +6756,7 @@ Merci de votre patience!
                  {(() => {
               const undepositedCheques = payments.filter(p => 
                 p.paymentMethod === 'cheque' && !p.deposited &&
-                (!paymentsYearFilter || (p.date && new Date(p.date).getFullYear() === parseInt(paymentsYearFilter, 10)))
+                (!paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
               );
 
               if (undepositedCheques.length === 0) return null;
