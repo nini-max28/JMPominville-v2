@@ -6958,7 +6958,7 @@ Merci de votre patience!
             </div>
 
             {/* Chèques non déposés */}
-                        {(() => {
+                 {(() => {
               const allUndepositedCheques = payments.filter(p => 
                 p.paymentMethod === 'cheque' && !p.deposited &&
                 (!paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
@@ -6978,20 +6978,24 @@ Merci de votre patience!
                   background: '#fff3cd', border: '2px solid #ffc107', borderRadius: '12px',
                   padding: '20px', marginBottom: '25px'
                 }}>
-                              {(() => {
-              const allUndepositedCheques = payments.filter(p => 
-                p.paymentMethod === 'cheque' && !p.deposited &&
-                (!paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
-              );
-
-              const undepositedCheques = allUndepositedCheques.filter(p => {
-                if (!chequeSearchTerm.trim()) return true;
-                const client = clients.find(c => c.id === p.clientId);
-                const name = client ? client.name.toLowerCase() : 'client supprimé';
-                return name.includes(chequeSearchTerm.toLowerCase());
-              });
-
-              if (allUndepositedCheques.length === 0) return null;
+                  <h3 style={{ color: '#856404', marginBottom: '15px' }}>
+                    🏦 Chèques pas encore déposés ({allUndepositedCheques.length})
+                  </h3>
+                  <input
+                    type="text"
+                    placeholder="🔍 Rechercher par nom de client..."
+                    value={chequeSearchTerm}
+                    onChange={(e) => setChequeSearchTerm(e.target.value)}
+                    style={{
+                      width: '100%', padding: '10px 12px', marginBottom: '15px',
+                      borderRadius: '8px', border: '1px solid #ffc107', fontSize: '14px'
+                    }}
+                  />
+                  {chequeSearchTerm.trim() && undepositedCheques.length === 0 && (
+                    <div style={{ color: '#856404', fontSize: '13px', marginBottom: '10px' }}>
+                      Aucun chèque trouvé pour "{chequeSearchTerm}".
+                    </div>
+                  )}
                   <div style={{ display: 'grid', gap: '10px' }}>
                     {undepositedCheques
                       .sort((a, b) => new Date(a.date) - new Date(b.date))
@@ -7028,6 +7032,7 @@ Merci de votre patience!
                 </div>
               );
             })()}
+
 
             {/* Liste des paiements */}
 
