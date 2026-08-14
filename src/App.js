@@ -6664,8 +6664,9 @@ Merci de votre patience!
             <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>💳 Suivi des Paiements</h2>
 
             {(() => {
-              const yearsSet = new Set();
-              payments.forEach(p => { if (p.date) yearsSet.add(new Date(p.date).getFullYear()); });
+                            const seasonsSet = new Set();
+              payments.forEach(p => { const s = getSeasonLabel(p.date); if (s) seasonsSet.add(s); });
+              const availableYears = Array.from(seasonsSet).sort((a, b) => b.localeCompare(a));
               const availableYears = Array.from(yearsSet).sort((a, b) => b - a);
               return (
                 <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -6718,7 +6719,10 @@ Merci de votre patience!
                     {getCurrentSeasonPaymentsReceivedDetails().length} versement{getCurrentSeasonPaymentsReceivedDetails().length !== 1 ? 's' : ''}
                   </div>
                                       {(() => {
-                    const undeposited = payments.filter(p => p.paymentMethod === 'cheque' && !p.deposited).length;
+                                        const undeposited = payments.filter(p => 
+                      p.paymentMethod === 'cheque' && !p.deposited &&
+                      (!paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
+                    ).length;
                     return undeposited > 0 ? (
                       <div style={{ fontSize: '10px', color: '#856404', marginTop: '3px', fontWeight: 'bold' }}>
                         🏦 {undeposited} chèque{undeposited > 1 ? 's' : ''} à déposer
@@ -6827,8 +6831,8 @@ Merci de votre patience!
                     </tr>
                   </thead>
                               <tbody>
-                    {payments
-                      .filter(p => !paymentsYearFilter || (p.date && new Date(p.date).getFullYear() === parseInt(paymentsYearFilter, 10)))
+                                  {payments
+                      .filter(p => !paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
                       .sort((a, b) => new Date(b.date) - new Date(a.date))
                       .map(payment => {
 
