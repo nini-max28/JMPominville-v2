@@ -6790,9 +6790,11 @@ Merci de votre patience!
                       );
                                         })}
                     <tr style={{ background: '#e9ecef', fontWeight: 'bold' }}>
-                      <td colSpan={4} style={{ padding: '6px 10px', border: '1px solid #adb5bd', textAlign: 'right', fontSize: '13px' }}>
+                                            <td colSpan={4} style={{ padding: '6px 10px', border: '1px solid #adb5bd', textAlign: 'right', fontSize: '13px' }}>
                         Totaux ({getSortedInvoices(invoices.filter(invoice => matchesAccountingYear(invoice.date))).length} transactions) :
-                                       <td style={{ padding: '6px 10px', border: '1px solid #adb5bd', fontSize: '12px', lineHeight: '1.6' }}>
+                      </td>
+                      <td style={{ padding: '6px 10px', border: '1px solid #adb5bd', fontSize: '12px', lineHeight: '1.6' }}>
+
                         {(() => {
                           const filtered = invoices.filter(invoice => matchesAccountingYear(invoice.date));
                           const rev = filtered.filter(i => i.type === 'revenu').reduce((s, i) => s + i.amount, 0);
