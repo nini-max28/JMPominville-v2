@@ -53,7 +53,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
   const [printByStreet, setPrintByStreet] = useState('');
   const [lastRenewalBackup, setLastRenewalBackup] = useState(null);
-    const [accountingYearFilter, setAccountingYearFilter] = useState('');
+ const [accountingYearFilter, setAccountingYearFilter] = useState('');
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
@@ -6672,7 +6672,7 @@ Merci de votre patience!
                   <label style={{ fontWeight: 'bold' }}>📅 Afficher les paiements de :</label>
                   <select
                     value={accountingYearFilter}
-                    onChange={(e) => setaccountingYearFilter(e.target.value)}
+                    onChange={(e) => setAccountingYearFilter(e.target.value)}
                     style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontWeight: 'bold' }}
                   >
                     <option value="">Toutes les années</option>
