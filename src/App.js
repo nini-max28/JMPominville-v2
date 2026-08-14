@@ -3243,9 +3243,10 @@ JM Pominville - Service de déneigement
       `📎 Le contrat (1 copie) vient de s'ouvrir dans un nouvel onglet.\n\n` +
       `Utilise le bouton "Imprimer / PDF" dans cet onglet pour l'enregistrer en PDF, puis joins-le au courriel qui va s'ouvrir.`
     );
-    window.location.href = mailtoLink;
+      const link = document.createElement('a');
+    link.href = mailtoLink;
+    link.click();
   };
-
 
     const generateContract = (contractId, copies = 2) => {
     const contract = contracts.find(c => c.id === contractId);
