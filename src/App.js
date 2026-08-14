@@ -6667,7 +6667,7 @@ Merci de votre patience!
                             const seasonsSet = new Set();
               payments.forEach(p => { const s = getSeasonLabel(p.date); if (s) seasonsSet.add(s); });
               const availableYears = Array.from(seasonsSet).sort((a, b) => b.localeCompare(a));
-              const availableYears = Array.from(yearsSet).sort((a, b) => b - a);
+              
               return (
                 <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <label style={{ fontWeight: 'bold' }}>📅 Afficher les paiements de :</label>
