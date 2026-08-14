@@ -53,8 +53,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
   const [printByStreet, setPrintByStreet] = useState('');
   const [lastRenewalBackup, setLastRenewalBackup] = useState(null);
-    const [accountingYearFilter, setAccountingYearFilter] = useState('');
-    const [paymentsYearFilter, setPaymentsYearFilter] = useState('');
+    const [accountingYearFilter, setaccountingYearFilter] = useState('');
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
@@ -6672,8 +6671,8 @@ Merci de votre patience!
                 <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
                   <label style={{ fontWeight: 'bold' }}>📅 Afficher les paiements de :</label>
                   <select
-                    value={paymentsYearFilter}
-                    onChange={(e) => setPaymentsYearFilter(e.target.value)}
+                    value={accountingYearFilter}
+                    onChange={(e) => setaccountingYearFilter(e.target.value)}
                     style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontWeight: 'bold' }}
                   >
                     <option value="">Toutes les années</option>
@@ -6681,7 +6680,7 @@ Merci de votre patience!
                       <option key={y} value={y}>{y}</option>
                     ))}
                   </select>
-                  {paymentsYearFilter && (
+                  {accountingYearFilter && (
                     <span style={{ fontSize: '12px', color: '#666' }}>
                       (les paiements des autres années sont masqués, mais toujours conservés)
                     </span>
@@ -6700,13 +6699,13 @@ Merci de votre patience!
                                 <div style={{ background: '#d4edda', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#155724', marginBottom: '5px' }}>Total Revenus</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#155724' }}>
-                    {invoices.filter(inv => inv.type === 'revenu' && (!paymentsYearFilter || getSeasonLabel(inv.date) === paymentsYearFilter)).reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
+                    {invoices.filter(inv => inv.type === 'revenu' && (!accountingYearFilter || getSeasonLabel(inv.date) === accountingYearFilter)).reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
                   </div>
                 </div>
                 <div style={{ background: '#f8d7da', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#721c24', marginBottom: '5px' }}>Total Dépenses</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#721c24' }}>
-                    {invoices.filter(inv => inv.type === 'depense' && (!paymentsYearFilter || getSeasonLabel(inv.date) === paymentsYearFilter)).reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
+                    {invoices.filter(inv => inv.type === 'depense' && (!accountingYearFilter || getSeasonLabel(inv.date) === accountingYearFilter)).reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
                   </div>
                 </div>
 
@@ -6721,7 +6720,7 @@ Merci de votre patience!
                                       {(() => {
                                         const undeposited = payments.filter(p => 
                       p.paymentMethod === 'cheque' && !p.deposited &&
-                      (!paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
+                      (!accountingYearFilter || getSeasonLabel(p.date) === accountingYearFilter)
                     ).length;
                     return undeposited > 0 ? (
                       <div style={{ fontSize: '10px', color: '#856404', marginTop: '3px', fontWeight: 'bold' }}>
@@ -6761,7 +6760,7 @@ Merci de votre patience!
                  {(() => {
               const undepositedCheques = payments.filter(p => 
                 p.paymentMethod === 'cheque' && !p.deposited &&
-                (!paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
+                (!accountingYearFilter || getSeasonLabel(p.date) === accountingYearFilter)
               );
 
               if (undepositedCheques.length === 0) return null;
@@ -6832,7 +6831,7 @@ Merci de votre patience!
                   </thead>
                               <tbody>
                                   {payments
-                      .filter(p => !paymentsYearFilter || getSeasonLabel(p.date) === paymentsYearFilter)
+                      .filter(p => !accountingYearFilter || getSeasonLabel(p.date) === accountingYearFilter)
                       .sort((a, b) => new Date(b.date) - new Date(a.date))
                       .map(payment => {
 
