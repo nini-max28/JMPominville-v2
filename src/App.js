@@ -6780,7 +6780,7 @@ Merci de votre patience!
                 <td style={{ padding: '15px', fontWeight: 'bold', color: '#dc3545' }}>
                   {invoice.type === 'depense' ? `-${invoice.amount.toFixed(2)} $` : ''}
                 </td>
-                          </td>
+                    
                           <td style={{ padding: '15px' }}>
                             <button
                               onClick={() => deleteInvoice(invoice.id)}
