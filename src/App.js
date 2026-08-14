@@ -6742,8 +6742,7 @@ Merci de votre patience!
             </div>
 
             {/* Chèques non déposés */}
-            {(() => {
-                          {(() => {
+                 {(() => {
               const undepositedCheques = payments.filter(p => 
                 p.paymentMethod === 'cheque' && !p.deposited &&
                 (!paymentsYearFilter || (p.date && new Date(p.date).getFullYear() === parseInt(paymentsYearFilter, 10)))
