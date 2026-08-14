@@ -53,7 +53,8 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
   const [printByStreet, setPrintByStreet] = useState('');
   const [lastRenewalBackup, setLastRenewalBackup] = useState(null);
-  const [accountingYearFilter, setAccountingYearFilter] = useState('');
+    const [accountingYearFilter, setAccountingYearFilter] = useState('');
+    const [paymentsYearFilter, setPaymentsYearFilter] = useState('');
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
@@ -6649,13 +6650,39 @@ Merci de votre patience!
         {activeTab === 'payments' && (
           <div style={{ background: 'white', padding: '30px', borderRadius: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
             <h2 style={{ color: '#1a4d1a', marginBottom: '25px', fontSize: '1.8em' }}>💳 Suivi des Paiements</h2>
+
+            {(() => {
+              const yearsSet = new Set();
+              payments.forEach(p => { if (p.date) yearsSet.add(new Date(p.date).getFullYear()); });
+              const availableYears = Array.from(yearsSet).sort((a, b) => b - a);
+              return (
+                <div style={{ background: '#f8f9fa', padding: '15px', borderRadius: '8px', marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center' }}>
+                  <label style={{ fontWeight: 'bold' }}>📅 Afficher les paiements de :</label>
+                  <select
+                    value={paymentsYearFilter}
+                    onChange={(e) => setPaymentsYearFilter(e.target.value)}
+                    style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontWeight: 'bold' }}
+                  >
+                    <option value="">Toutes les années</option>
+                    {availableYears.map(y => (
+                      <option key={y} value={y}>{y}</option>
+                    ))}
+                  </select>
+                  {paymentsYearFilter && (
+                    <span style={{ fontSize: '12px', color: '#666' }}>
+                      (les paiements des autres années sont masqués, mais toujours conservés)
+                    </span>
+                  )}
+                </div>
+              );
+            })()}
             
-            {/* Résumé financier */}
             <div style={{
               marginBottom: '30px', padding: '20px',
               background: '#f8f9fa', borderRadius: '12px'
             }}>
               <h3 style={{ marginBottom: '15px', color: '#1a4d1a' }}>Résumé Financier Global</h3>
+
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                 <div style={{ background: '#d4edda', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#155724', marginBottom: '5px' }}>Total Revenus</div>
@@ -6715,7 +6742,12 @@ Merci de votre patience!
 
             {/* Chèques non déposés */}
             {(() => {
-              const undepositedCheques = payments.filter(p => p.paymentMethod === 'cheque' && !p.deposited);
+                          {(() => {
+              const undepositedCheques = payments.filter(p => 
+                p.paymentMethod === 'cheque' && !p.deposited &&
+                (!paymentsYearFilter || (p.date && new Date(p.date).getFullYear() === parseInt(paymentsYearFilter, 10)))
+              );
+
               if (undepositedCheques.length === 0) return null;
 
               return (
@@ -6782,10 +6814,12 @@ Merci de votre patience!
                       <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Actions</th>
                     </tr>
                   </thead>
-                  <tbody>
+                              <tbody>
                     {payments
+                      .filter(p => !paymentsYearFilter || (p.date && new Date(p.date).getFullYear() === parseInt(paymentsYearFilter, 10)))
                       .sort((a, b) => new Date(b.date) - new Date(a.date))
                       .map(payment => {
+
                         const client = clients.find(c => c.id === payment.clientId);
                         return (
                           <tr key={payment.id} style={{ borderBottom: '1px solid #dee2e6' }}>
