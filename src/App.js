@@ -4312,9 +4312,10 @@ Merci de votre patience!
                         </body>
                       </html>
                     `);
-                    printWindow.document.close();
-                    ();
+                                        printWindow.document.close();
+                    printWindow.print();
                   }}
+
                   style={{
                     padding: '10px 20px', background: '#1a4d1a', color: 'white',
                     border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
