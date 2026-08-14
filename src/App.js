@@ -6788,9 +6788,32 @@ Merci de votre patience!
                           </td>
                         </tr>
                       );
-                    })}
-                  </tbody>
+                                        })}
+                    <tr style={{ background: '#e9ecef', fontWeight: 'bold' }}>
+                      <td colSpan={4} style={{ padding: '6px 10px', border: '1px solid #adb5bd', textAlign: 'right', fontSize: '13px' }}>
+                        Totaux ({getSortedInvoices(invoices.filter(invoice => matchesAccountingYear(invoice.date))).length} transactions) :
+                                       <td style={{ padding: '6px 10px', border: '1px solid #adb5bd', fontSize: '12px', lineHeight: '1.6' }}>
+                        {(() => {
+                          const filtered = invoices.filter(invoice => matchesAccountingYear(invoice.date));
+                          const rev = filtered.filter(i => i.type === 'revenu').reduce((s, i) => s + i.amount, 0);
+                          const dep = filtered.filter(i => i.type === 'depense').reduce((s, i) => s + i.amount, 0);
+                          const net = rev - dep;
+                          return (
+                            <div>
+                              <div style={{ color: '#28a745' }}>Revenus: +{rev.toFixed(2)} $</div>
+                              <div style={{ color: '#dc3545' }}>Dépenses: -{dep.toFixed(2)} $</div>
+                              <div style={{ color: net >= 0 ? '#28a745' : '#dc3545', borderTop: '1px solid #adb5bd', marginTop: '2px', paddingTop: '2px' }}>
+                                Net: {net >= 0 ? '+' : ''}{net.toFixed(2)} $
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </td>
 
+                      <td style={{ padding: '6px 10px', border: '1px solid #adb5bd' }}></td>
+                    </tr>
+                  </tbody>
+            
                 </table>
               </div>
             )}
