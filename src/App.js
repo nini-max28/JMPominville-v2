@@ -54,6 +54,16 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [printByStreet, setPrintByStreet] = useState('');
   const [lastRenewalBackup, setLastRenewalBackup] = useState(null);
  const [accountingYearFilter, setAccountingYearFilter] = useState('');
+    const [recurringTransactions, setRecurringTransactions] = useState([]);
+  const [accountingSortColumn, setAccountingSortColumn] = useState('date');
+  const [accountingSortDirection, setAccountingSortDirection] = useState('desc');
+    useEffect(() => {
+    const saved = localStorage.getItem('recurringTransactions');
+    if (saved) {
+      try { setRecurringTransactions(JSON.parse(saved)); } catch (e) { /* ignore */ }
+    }
+  }, []);
+
   const [isManualSyncing, setIsManualSyncing] = useState(false);
   const [showAddClientModal, setShowAddClientModal] = useState(false);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
@@ -3766,6 +3776,52 @@ Merci de votre patience!
     const year = d.getFullYear();
     return month >= 5 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
   };
+  const toggleAccountingSort = (col) => {
+    if (accountingSortColumn === col) {
+      setAccountingSortDirection(d => d === 'asc' ? 'desc' : 'asc');
+    } else {
+      setAccountingSortColumn(col);
+      setAccountingSortDirection('asc');
+    }
+  };
+
+  const getSortedInvoices = (list) => {
+    const sorted = [...list];
+    sorted.sort((a, b) => {
+      let valA, valB;
+      switch (accountingSortColumn) {
+        case 'date':
+          valA = new Date(a.date || 0).getTime();
+          valB = new Date(b.date || 0).getTime();
+          break;
+        case 'type':
+          valA = a.type || '';
+          valB = b.type || '';
+          break;
+        case 'client': {
+          const ca = a.clientId ? clients.find(c => c.id === a.clientId) : null;
+          const cb = b.clientId ? clients.find(c => c.id === b.clientId) : null;
+          valA = (ca ? ca.name : '').toLowerCase();
+          valB = (cb ? cb.name : '').toLowerCase();
+          break;
+        }
+        case 'description':
+          valA = (a.description || '').toLowerCase();
+          valB = (b.description || '').toLowerCase();
+          break;
+        case 'amount':
+          valA = a.amount || 0;
+          valB = b.amount || 0;
+          break;
+        default:
+          valA = 0; valB = 0;
+      }
+      if (valA < valB) return accountingSortDirection === 'asc' ? -1 : 1;
+      if (valA > valB) return accountingSortDirection === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  };
 
 // FONCTION POUR EXTRAIRE LE NOM DE RUE
   const extractStreetName = (address) => {
@@ -6504,9 +6560,71 @@ Merci de votre patience!
                   </select>
                 </div>
               );
-            })()}            
+            })()}
+
+            {(() => {
+              const now = new Date();
+              const currentMonth = now.getMonth();
+              const currentYear = now.getFullYear();
+              const pending = recurringTransactions.filter(rt => {
+                return !invoices.some(inv =>
+                  inv.description === rt.description &&
+                  inv.type === rt.type &&
+                  Math.abs(inv.amount - rt.amount) < 0.01 &&
+                  inv.date &&
+                  new Date(inv.date).getMonth() === currentMonth &&
+                  new Date(inv.date).getFullYear() === currentYear
+                );
+              });
+              if (pending.length === 0) return null;
+              return (
+                <div style={{ background: '#e7f3ff', border: '2px solid #007bff', borderRadius: '12px', padding: '15px', marginBottom: '20px' }}>
+                  <h4 style={{ color: '#004085', marginBottom: '10px' }}>🔁 Paiements récurrents à confirmer ce mois-ci</h4>
+                  {pending.map(rt => (
+                    <div key={rt.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white', padding: '10px 15px', borderRadius: '8px', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                      <div>
+                        <strong>{rt.description}</strong> — {rt.amount.toFixed(2)}$ ({rt.type === 'revenu' ? 'Revenu' : 'Dépense'})
+                      </div>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => {
+                            const newInvoice = {
+                              id: Date.now(),
+                              type: rt.type,
+                              amount: rt.amount,
+                              description: rt.description,
+                              clientId: rt.clientId || null,
+                              date: new Date().toISOString().split('T')[0]
+                            };
+                            const updatedInvoices = [...invoices, newInvoice];
+                            setInvoices(updatedInvoices);
+                            saveToStorage('invoices', updatedInvoices);
+                          }}
+                          style={{ padding: '6px 14px', background: '#28a745', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold' }}
+                        >
+                          ✅ Ajouter
+                        </button>
+                        <button
+                          onClick={() => {
+                            if (window.confirm(`Retirer «${rt.description}» des transactions récurrentes?`)) {
+                              const updated = recurringTransactions.filter(r => r.id !== rt.id);
+                              setRecurringTransactions(updated);
+                              saveToStorage('recurringTransactions', updated);
+                            }
+                          }}
+                          style={{ padding: '6px 14px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer' }}
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
 
             {/* Formulaire d'ajout de transaction */}
+
             <div style={{ background: '#f8f9fa', padding: '20px', borderRadius: '12px', marginBottom: '25px' }}>
               <h4 style={{ marginBottom: '15px' }}>Ajouter une transaction</h4>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '15px' }}>
@@ -6556,7 +6674,7 @@ Merci de votre patience!
                 )}
               </div>
 
-              <div style={{ marginBottom: '15px' }}>
+                          <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Description</label>
                 <textarea
                   rows="3" value={invoiceForm.description}
@@ -6566,7 +6684,33 @@ Merci de votre patience!
                 />
               </div>
 
-              <button onClick={addInvoice} style={{
+              <div style={{ marginBottom: '15px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold' }}>
+                  <input
+                    type="checkbox"
+                    checked={invoiceForm.isRecurring || false}
+                    onChange={(e) => setInvoiceForm({ ...invoiceForm, isRecurring: e.target.checked })}
+                  />
+                  🔁 Transaction récurrente (chaque mois, ex: paiement de tracteur)
+                </label>
+              </div>
+
+              <button onClick={() => {
+                addInvoice();
+                if (invoiceForm.isRecurring) {
+                  const newRecurring = {
+                    id: Date.now(),
+                    type: invoiceForm.type,
+                    amount: parseFloat(invoiceForm.amount) || 0,
+                    description: invoiceForm.description,
+                    clientId: invoiceForm.clientId || null
+                  };
+                  const updated = [...recurringTransactions, newRecurring];
+                  setRecurringTransactions(updated);
+                  saveToStorage('recurringTransactions', updated);
+                }
+              }} style={{
+
                 padding: '12px 24px', background: '#28a745', color: 'white',
                 border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold'
               }}>
@@ -6582,20 +6726,30 @@ Merci de votre patience!
                   background: 'white', borderRadius: '12px', overflow: 'hidden',
                   boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                 }}>
-                  <thead>
+                               <thead>
                     <tr style={{ background: '#f8f9fa' }}>
-                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Date</th>
-                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Type</th>
-                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Client</th>
-                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Description</th>
-                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Montant</th>
+                      {[
+                        { key: 'date', label: 'Date' },
+                        { key: 'type', label: 'Type' },
+                        { key: 'client', label: 'Client' },
+                        { key: 'description', label: 'Description' },
+                        { key: 'amount', label: 'Montant' }
+                      ].map(col => (
+                        <th
+                          key={col.key}
+                          onClick={() => toggleAccountingSort(col.key)}
+                          style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold', cursor: 'pointer', userSelect: 'none' }}
+                        >
+                          {col.label} {accountingSortColumn === col.key ? (accountingSortDirection === 'asc' ? '▲' : '▼') : ''}
+                        </th>
+                      ))}
                       <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                               {invoices
-                      .filter(invoice => matchesAccountingYear(invoice.date))
+                    {getSortedInvoices(invoices.filter(invoice => matchesAccountingYear(invoice.date)))
                       .map(invoice => {
+
 
                       const client = invoice.clientId ? clients.find(c => c.id === invoice.clientId) : null;
                       return (
