@@ -57,6 +57,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
     const [recurringTransactions, setRecurringTransactions] = useState([]);
   const [accountingSortColumn, setAccountingSortColumn] = useState('date');
   const [accountingSortDirection, setAccountingSortDirection] = useState('desc');
+    const [editingCell, setEditingCell] = useState(null); // { id, field }
     useEffect(() => {
     const saved = localStorage.getItem('recurringTransactions');
     if (saved) {
@@ -3822,6 +3823,13 @@ Merci de votre patience!
     });
     return sorted;
   };
+  const updateInvoiceField = (id, field, value) => {
+    const updated = invoices.map(inv =>
+      inv.id === id ? { ...inv, [field]: field === 'amount' ? (parseFloat(value) || 0) : value } : inv
+    );
+    setInvoices(updated);
+    saveToStorage('invoices', updated);
+  };
 
 // FONCTION POUR EXTRAIRE LE NOM DE RUE
   const extractStreetName = (address) => {
@@ -6749,8 +6757,6 @@ Merci de votre patience!
                   <tbody>
                     {getSortedInvoices(invoices.filter(invoice => matchesAccountingYear(invoice.date)))
                       .map(invoice => {
-
-
                       const client = invoice.clientId ? clients.find(c => c.id === invoice.clientId) : null;
                       return (
                         <tr key={invoice.id} style={{ borderBottom: '1px solid #dee2e6' }}>
@@ -6784,6 +6790,7 @@ Merci de votre patience!
                       );
                     })}
                   </tbody>
+
                 </table>
               </div>
             )}
