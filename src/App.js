@@ -3235,16 +3235,18 @@ Maxim Pominville
 JM Pominville - Service de déneigement
 514-444-6324`;
 
-    const mailtoLink = `mailto:${encodeURIComponent(client.email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+    const mailtoLink = `mailto:${encodeURIComponent(client.email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(
+      
+    generateContract(contract.id, 1);
 
     alert(
-      `📎 N'oublie pas de joindre le contrat en pièce jointe une fois dans ton application de courriel!\n\n` +
-      `(Génère d'abord le PDF avec "📄 Contrat PDF", enregistre-le, puis joins-le au courriel qui va s'ouvrir.)`
+      `📎 Le contrat (1 copie) vient de s'ouvrir dans un nouvel onglet.\n\n` +
+      `Utilise le bouton "Imprimer / PDF" dans cet onglet pour l'enregistrer en PDF, puis joins-le au courriel qui va s'ouvrir.`
     );
     window.location.href = mailtoLink;
   };
 
-  const generateContract = (contractId) => {
+    const generateContract = (contractId, copies = 2) => {
     const contract = contracts.find(c => c.id === contractId);
     const client = clients.find(c => c.id === contract.clientId);
 
@@ -3462,16 +3464,19 @@ ${paymentStructure === '1' ? `
               <button class="btn btn-close" onclick="window.close()">Fermer</button>
             </div>
           </div>
-          <div class="contract-content">
+                    <div class="contract-content">
             ${contractHTML}
           </div>
+          ${copies >= 2 ? `
           <div style="page-break-before: always;"></div>
           <div class="contract-content">
             ${contractHTML}
           </div>
+          ` : ''}
         </body>
       </html>
     `);
+
     newWindow.document.close();
   };
   // FONCTIONS GPS ET GÉOLOCALISATION
@@ -4307,7 +4312,7 @@ Merci de votre patience!
                       </html>
                     `);
                     printWindow.document.close();
-                    printWindow.print();
+                    ();
                   }}
                   style={{
                     padding: '10px 20px', background: '#1a4d1a', color: 'white',
