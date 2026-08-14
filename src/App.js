@@ -1293,13 +1293,22 @@ const addClient = () => {
     return Object.values(groups).filter(g => g.clients.length > 1);
   };
 
-  const deleteClient = (id) => {
-  if (window.confirm('Supprimer ce client ?')) {
-    const newClients = clients.filter(client => client.id !== id);
-    setClients(newClients);
-    saveToStorage('clients', newClients);
+const deleteClient = (id) => {
+  if (window.confirm('Êtes-vous sûr de vouloir supprimer ce client?\n\nTous ses contrats et paiements associés seront aussi supprimés définitivement.')) {
+    const updatedClients = clients.filter(c => c.id !== id);
+    setClients(updatedClients);
+    saveToStorage('clients', updatedClients);
+
+    const updatedContracts = contracts.filter(c => c.clientId !== id);
+    setContracts(updatedContracts);
+    saveToStorage('contracts', updatedContracts);
+
+    const updatedPayments = payments.filter(p => p.clientId !== id);
+    setPayments(updatedPayments);
+    saveToStorage('payments', updatedPayments);
   }
 };
+
  const startEditClient = (client) => {
     setEditingClient(client.id);
     setEditClientForm({
