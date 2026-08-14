@@ -3752,7 +3752,7 @@ Merci de votre patience!
     try {
       // Normaliser tous les types d'apostrophes/guillemets simples (droite, courbe, accent grave...)
       // vers une apostrophe standard, pour que "L'" et "L'" soient traités comme identiques.
-      const normalizedAddress = address.replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g, "'");
+      const normalizedAddress = address.replace(/[\u2018\u2019\u02BC\u0060\u00B4]/g, "'").replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g, '-');
       const cleanAddress = normalizedAddress.trim();
       const parts = cleanAddress.split(',');
       if (parts.length === 0) return 'Adresses non définies';
