@@ -6696,18 +6696,19 @@ Merci de votre patience!
               <h3 style={{ marginBottom: '15px', color: '#1a4d1a' }}>Résumé Financier Global</h3>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                <div style={{ background: '#d4edda', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+                                <div style={{ background: '#d4edda', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#155724', marginBottom: '5px' }}>Total Revenus</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#155724' }}>
-                    {invoices.filter(inv => inv.type === 'revenu').reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
+                    {invoices.filter(inv => inv.type === 'revenu' && (!paymentsYearFilter || getSeasonLabel(inv.date) === paymentsYearFilter)).reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
                   </div>
                 </div>
                 <div style={{ background: '#f8d7da', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#721c24', marginBottom: '5px' }}>Total Dépenses</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#721c24' }}>
-                    {invoices.filter(inv => inv.type === 'depense').reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
+                    {invoices.filter(inv => inv.type === 'depense' && (!paymentsYearFilter || getSeasonLabel(inv.date) === paymentsYearFilter)).reduce((sum, inv) => sum + inv.amount, 0).toFixed(2)} $
                   </div>
                 </div>
+
                 <div style={{ background: '#e3f2fd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '14px', color: '#1976d2', marginBottom: '5px' }}>Paiements Reçus (saison en cours)</div>
                   <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#1976d2' }}>
