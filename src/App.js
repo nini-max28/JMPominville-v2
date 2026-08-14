@@ -6584,7 +6584,10 @@ Merci de votre patience!
                     </tr>
                   </thead>
                   <tbody>
-                    {invoices.map(invoice => {
+                               {invoices
+                      .filter(invoice => matchesAccountingYear(invoice.date))
+                      .map(invoice => {
+
                       const client = invoice.clientId ? clients.find(c => c.id === invoice.clientId) : null;
                       return (
                         <tr key={invoice.id} style={{ borderBottom: '1px solid #dee2e6' }}>
