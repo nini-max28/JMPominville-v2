@@ -6319,7 +6319,8 @@ Merci de votre patience!
                       <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Client</th>
                       <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Type</th>
                       <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Période</th>
-                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Montant</th>
+                                 <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold', color: '#28a745' }}>Revenus ($)</th>
+                      <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold', color: '#dc3545' }}>Dépenses ($)</th>
                       <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Statut</th>
                       <th style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold' }}>Actions</th>
                     </tr>
@@ -6736,17 +6737,18 @@ Merci de votre patience!
                 }}>
                                <thead>
                     <tr style={{ background: '#f8f9fa' }}>
-                      {[
+                                            {[
                         { key: 'date', label: 'Date' },
                         { key: 'type', label: 'Type' },
                         { key: 'client', label: 'Client' },
                         { key: 'description', label: 'Description' },
-                        { key: 'amount', label: 'Montant' }
-                      ].map(col => (
-                        <th
-                          key={col.key}
+                        { key: 'amount', label: 'Revenus ($)' },
+                        { key: 'amount', label: 'Dépenses ($)' }
+                      ].map((col, idx) => (
+                                                <th
+                          key={idx}
                           onClick={() => toggleAccountingSort(col.key)}
-                          style={{ padding: '15px', textAlign: 'left', borderBottom: '2px solid #dee2e6', fontWeight: 'bold', cursor: 'pointer', userSelect: 'none' }}
+                          style={{ padding: '6px 10px', textAlign: 'left', border: '1px solid #adb5bd', fontWeight: 'bold', fontSize: '13px', cursor: 'pointer', userSelect: 'none' }}
                         >
                           {col.label} {accountingSortColumn === col.key ? (accountingSortDirection === 'asc' ? '▲' : '▼') : ''}
                         </th>
@@ -6772,8 +6774,12 @@ Merci de votre patience!
                           </td>
                           <td style={{ padding: '15px' }}>{client ? client.name : 'N/A'}</td>
                           <td style={{ padding: '15px' }}>{invoice.description}</td>
-                          <td style={{ padding: '15px', fontWeight: 'bold', color: invoice.type === 'revenu' ? '#28a745' : '#dc3545' }}>
-                            {invoice.type === 'revenu' ? '+' : '-'}{invoice.amount.toFixed(2)} $
+                                          <td style={{ padding: '15px', fontWeight: 'bold', color: '#28a745' }}>
+                  {invoice.type === 'revenu' ? `+${invoice.amount.toFixed(2)} $` : ''}
+                </td>
+                <td style={{ padding: '15px', fontWeight: 'bold', color: '#dc3545' }}>
+                  {invoice.type === 'depense' ? `-${invoice.amount.toFixed(2)} $` : ''}
+                </td>
                           </td>
                           <td style={{ padding: '15px' }}>
                             <button
@@ -6789,31 +6795,27 @@ Merci de votre patience!
                         </tr>
                       );
                                         })}
-                    <tr style={{ background: '#e9ecef', fontWeight: 'bold' }}>
-                                            <td colSpan={4} style={{ padding: '6px 10px', border: '1px solid #adb5bd', textAlign: 'right', fontSize: '13px' }}>
+                                  <tr style={{ background: '#e9ecef', fontWeight: 'bold' }}>
+                      <td colSpan={4} style={{ padding: '6px 10px', border: '1px solid #adb5bd', textAlign: 'right', fontSize: '13px' }}>
                         Totaux ({getSortedInvoices(invoices.filter(invoice => matchesAccountingYear(invoice.date))).length} transactions) :
                       </td>
-                      <td style={{ padding: '6px 10px', border: '1px solid #adb5bd', fontSize: '12px', lineHeight: '1.6' }}>
-
+                      <td style={{ padding: '6px 10px', border: '1px solid #adb5bd', fontSize: '13px', color: '#28a745' }}>
                         {(() => {
                           const filtered = invoices.filter(invoice => matchesAccountingYear(invoice.date));
                           const rev = filtered.filter(i => i.type === 'revenu').reduce((s, i) => s + i.amount, 0);
-                          const dep = filtered.filter(i => i.type === 'depense').reduce((s, i) => s + i.amount, 0);
-                          const net = rev - dep;
-                          return (
-                            <div>
-                              <div style={{ color: '#28a745' }}>Revenus: +{rev.toFixed(2)} $</div>
-                              <div style={{ color: '#dc3545' }}>Dépenses: -{dep.toFixed(2)} $</div>
-                              <div style={{ color: net >= 0 ? '#28a745' : '#dc3545', borderTop: '1px solid #adb5bd', marginTop: '2px', paddingTop: '2px' }}>
-                                Net: {net >= 0 ? '+' : ''}{net.toFixed(2)} $
-                              </div>
-                            </div>
-                          );
+                          return `+${rev.toFixed(2)} $`;
                         })()}
                       </td>
-
+                      <td style={{ padding: '6px 10px', border: '1px solid #adb5bd', fontSize: '13px', color: '#dc3545' }}>
+                        {(() => {
+                          const filtered = invoices.filter(invoice => matchesAccountingYear(invoice.date));
+                          const dep = filtered.filter(i => i.type === 'depense').reduce((s, i) => s + i.amount, 0);
+                          return `-${dep.toFixed(2)} $`;
+                        })()}
+                      </td>
                       <td style={{ padding: '6px 10px', border: '1px solid #adb5bd' }}></td>
                     </tr>
+
                   </tbody>
             
                 </table>
