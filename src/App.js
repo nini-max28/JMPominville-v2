@@ -6686,30 +6686,29 @@ Merci de votre patience!
                     ) : null;
                   })()}
 
-                  <button
+                                  <button
                     onClick={() => {
                       const details = getCurrentSeasonPaymentsReceivedDetails();
                       if (details.length === 0) {
                         alert('Aucun paiement reçu pour la saison en cours.');
                         return;
                       }
-                      <button
-                  onClick={() => {
-                    const details = getCurrentSeasonPaymentsReceivedDetails();
-                    if (details.length === 0) {
-                      alert('Aucun paiement reçu pour la saison en cours.');
-                      return;
-                    }
-                    const list = details.map(d =>
-                      `• ${d.clientName} — ${d.paymentNumber}${d.paymentNumber === 1 ? 'er' : 'e'} versement — ${d.amount.toFixed(2)}$` +
-                      `${d.date ? ' — ' + new Date(d.date).toLocaleDateString('fr-CA') : ''}` +
-                      `${!d.hasContractId ? ' ⚠️ (ancien paiement sans lien direct au contrat)' : ''}`
-                    ).join('\n');
-                    alert(`Détail des paiements comptés pour la saison en cours:\n\n${list}`);
-                  }}
+                      const list = details.map(d =>
+                        `• ${d.clientName} — ${d.paymentNumber}${d.paymentNumber === 1 ? 'er' : 'e'} versement — ${d.amount.toFixed(2)}$` +
+                        `${d.date ? ' — ' + new Date(d.date).toLocaleDateString('fr-CA') : ''}` +
+                        `${!d.hasContractId ? ' ⚠️ (ancien paiement sans lien direct au contrat)' : ''}`
+                      ).join('\n');
+                      alert(`Détail des paiements comptés pour la saison en cours:\n\n${list}`);
+                    }}
+                    style={{
+                      marginTop: '8px', padding: '4px 10px', fontSize: '11px',
+                      background: '#1976d2', color: 'white', border: 'none',
+                      borderRadius: '4px', cursor: 'pointer'
+                    }}
                   >
                     🔍 Voir le détail
                   </button>
+ 
                 </div>
                             </div>
             </div>
