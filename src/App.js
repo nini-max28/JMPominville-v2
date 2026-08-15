@@ -3002,6 +3002,13 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
 
   // Revenus totaux = registre manuel + paiements clients réels
   const getTotalRevenue = (ignoreFilter = false) => getManualRevenue(ignoreFilter) + getClientPaymentsTotal(ignoreFilter);
+  const getCurrentSeasonRevenue = () => {
+    const currentSeason = getSeasonLabel(new Date().toISOString());
+    const manualRevenueCurrentSeason = invoices
+      .filter(inv => inv.type === 'revenu' && getSeasonLabel(inv.date) === currentSeason)
+      .reduce((sum, inv) => sum + inv.amount, 0);
+    return manualRevenueCurrentSeason + getClientPaymentsTotal(true);
+  };
 
   // Bénéfice net = revenus totaux - dépenses
   const getNetProfit = (ignoreFilter = false) => getTotalRevenue(ignoreFilter) - getManualExpenses(ignoreFilter);
@@ -4196,12 +4203,13 @@ Merci de votre patience!
                 </button>
 
               </div>
-              <div style={{ background: 'linear-gradient(135deg, #20c997, #17a2b8)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
+                            <div style={{ background: 'linear-gradient(135deg, #20c997, #17a2b8)', padding: '20px', borderRadius: '12px', color: 'white', textAlign: 'center' }}>
                 <div style={{ fontSize: '2em', fontWeight: 'bold', marginBottom: '5px' }}>
-                  {getTotalRevenue(true).toFixed(0)}$
+                  {getCurrentSeasonRevenue().toFixed(0)}$
                 </div>
-                <div style={{ fontSize: '1.1em' }}>Revenus Total</div>
+                <div style={{ fontSize: '1.1em' }}>Revenus (saison en cours)</div>
               </div>
+      
             </div>
                   
 
