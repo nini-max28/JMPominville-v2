@@ -3244,15 +3244,26 @@ JM Pominville - Service de déneigement
 
         const mailtoLink = `mailto:${encodeURIComponent(client.email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
-    generateContract(contract.id, 1);
+        try {
+      generateContract(contract.id, 1);
+    } catch (err) {
+      alert('Erreur lors de la génération du contrat: ' + err.message);
+      return;
+    }
 
     alert(
+
       `📎 Le contrat (1 copie) vient de s'ouvrir dans un nouvel onglet.\n\n` +
       `Utilise le bouton "Imprimer / PDF" dans cet onglet pour l'enregistrer en PDF, puis joins-le au courriel qui va s'ouvrir.`
     );
+
+    try {
       const link = document.createElement('a');
-    link.href = mailtoLink;
-    link.click();
+      link.href = mailtoLink;
+      link.click();
+    } catch (err) {
+      alert('Erreur lors de l\'ouverture du courriel: ' + err.message);
+    }
   };
 
     const generateContract = (contractId, copies = 2) => {
@@ -3422,8 +3433,13 @@ ${paymentStructure === '1' ? `
       </div>
     `;
 
-    const newWindow = window.open('', '_blank');
+     const newWindow = window.open('', '_blank');
+    if (!newWindow) {
+      alert('⚠️ Le navigateur a bloqué l\'ouverture de la fenêtre du contrat.\n\nVa dans les réglages Safari > cette page > autoriser les pop-ups, puis réessaie.');
+      return;
+    }
     newWindow.document.write(`
+
       <html>
         <head>
           <title>Contrat JM Pominville - ${client.name}</title>
