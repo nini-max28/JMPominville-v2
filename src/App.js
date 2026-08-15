@@ -3999,12 +3999,14 @@ Merci de votre patience!
         color: 'white', padding: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
       }}>
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '15px' }}>
+
             <div>
               <h1 style={{ margin: '0 0 8px 0', fontSize: '2em', fontWeight: 'bold' }}>JM Pominville</h1>
               <p style={{ margin: '0', fontSize: '1.1em', opacity: 0.9 }}>Gestion de Déneigement - Version Render</p>
               <div style={{ marginTop: '10px', display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+
                   <span style={{
                     width: '8px', height: '8px', borderRadius: '50%',
                     background: isOnline ? '#28a745' : '#dc3545'
