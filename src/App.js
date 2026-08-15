@@ -3209,6 +3209,7 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
    // GÉNÉRATION CONTRAT PDF COMPLET
   // Ouvre l'app courriel avec un message pré-rédigé pour l'envoi du contrat au client.
   // Note: le PDF/contrat imprimé doit être joint manuellement (limitation technique des liens mailto).
+
   const emailContractToClient = (contractId) => {
     const contract = contracts.find(c => c.id === contractId);
     const client = clients.find(c => c.id === contract?.clientId);
@@ -3224,8 +3225,7 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
     }
 
     const subject = `Votre contrat de service de déneigement - JM Pominville`;
-    const body =
-`Bonjour ${client.name},
+    const body = `Bonjour ${client.name},
 
 Merci de faire affaire avec JM Pominville pour vos services de déneigement cette saison!
 
@@ -3241,21 +3241,8 @@ Merci et au plaisir de vous servir cette saison!
 Maxim Pominville
 JM Pominville - Service de déneigement
 514-444-6324`;
-
-        const mailtoLink = `mailto:${encodeURIComponent(client.email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
-
-        try {
-      generateContract(contract.id, 1);
-    } catch (err) {
-      alert('Erreur lors de la génération du contrat: ' + err.message);
-      return;
-    }
-
-    alert(
-
-      `📎 Le contrat (1 copie) vient de s'ouvrir dans un nouvel onglet.\n\n` +
-      `Utilise le bouton "Imprimer / PDF" dans cet onglet pour l'enregistrer en PDF, puis joins-le au courriel qui va s'ouvrir.`
-    );
+    
+    const mailtoLink = `mailto:${encodeURIComponent(client.email.trim())}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 
     try {
       const link = document.createElement('a');
@@ -6487,7 +6474,7 @@ Merci de votre patience!
       </button>
     )}
     
-    <button
+       <button
       onClick={() => generateContract(contract.id)}
       style={{
         padding: '5px 10px', fontSize: '12px', background: '#17a2b8', color: 'white',
@@ -6495,6 +6482,16 @@ Merci de votre patience!
       }}
     >
       📄 Contrat PDF
+    </button>
+
+    <button
+      onClick={() => generateContract(contract.id, 1)}
+      style={{
+        padding: '5px 10px', fontSize: '12px', background: '#20c997', color: 'white',
+        border: 'none', borderRadius: '4px', cursor: 'pointer'
+      }}
+    >
+      📄 1 copie (courriel)
     </button>
 
     <button
@@ -6506,7 +6503,7 @@ Merci de votre patience!
     >
       ✉️ Envoyer par courriel
     </button>
-    
+
     <button
       onClick={() => startEditContract(contract)}
       style={{
