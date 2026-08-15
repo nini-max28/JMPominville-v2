@@ -53,7 +53,13 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [selectedContracts, setSelectedContracts] = useState([]); // États pour la recherche avancée
   const [printByStreet, setPrintByStreet] = useState('');
   const [lastRenewalBackup, setLastRenewalBackup] = useState(null);
- const [accountingYearFilter, setAccountingYearFilter] = useState('');
+ const [accountingYearFilter, setAccountingYearFilter] = useState(() => {
+  const d = new Date();
+  const month = d.getMonth() + 1;
+  const year = d.getFullYear();
+  return month >= 5 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+});
+
     const [chequeSearchTerm, setChequeSearchTerm] = useState('');
     const [recurringTransactions, setRecurringTransactions] = useState([]);
   const [accountingSortColumn, setAccountingSortColumn] = useState('date');
