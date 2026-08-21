@@ -4901,6 +4901,220 @@ Merci de votre patience!
 >
   ➕ Ajouter un nouveau client
 </button>
+<div style={{ 
+  background: '#f8f9fa', padding: '15px', borderRadius: '12px', 
+  marginBottom: '20px', border: '1px solid #dee2e6'
+}}>
+  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+    <div style={{ background: '#d4edda', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+      <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#155724' }}>
+        {contracts.filter(c => !c.archived).length}
+      </div>
+      <div style={{ fontSize: '13px', color: '#155724' }}>Contrats Actifs</div>
+    </div>
+
+    <div style={{ background: '#e3f2fd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+      <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#1976d2' }}>
+        {(() => {
+          const currentSeason = getSeasonLabel(new Date().toISOString());
+          return contracts.filter(c => 
+            !c.archived && 
+            getSeasonLabel(c.startDate) === currentSeason && 
+            isPaymentReceived(c.clientId, 1, c.id)
+          ).length;
+        })()}
+      </div>
+      <div style={{ fontSize: '13px', color: '#1976d2' }}>Confirmés par paiement ({getSeasonLabel(new Date().toISOString())})</div>
+    </div>
+      
+    <div style={{ background: '#fff3cd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+      <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#856404' }}>
+        {contracts.filter(c => !c.archived).reduce((sum, c) => sum + c.amount, 0).toFixed(0)}$
+      </div>
+      <div style={{ fontSize: '13px', color: '#856404' }}>Revenus Prévus</div>
+    </div>
+      
+    <div style={{ background: '#f8d7da', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+      <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#721c24' }}>
+        {contracts.filter(c => c.archived).length}
+      </div>
+      <div style={{ fontSize: '13px', color: '#721c24' }}>Contrats Archivés</div>
+    </div>
+  </div>
+
+  <div style={{ 
+    background: '#fff3cd', padding: '15px', borderRadius: '12px', 
+    marginBottom: '20px', display: 'flex', gap: '10px', alignItems: 'center',
+    border: '2px solid #ffc107'
+  }}>
+    <div style={{ flex: 1 }}>
+      <strong style={{ color: '#856404', fontSize: '15px' }}>🔄 Renouvellement de saison</strong>
+      <div style={{ fontSize: '13px', color: '#666', marginTop: '5px' }}>
+        Créez automatiquement tous les nouveaux contrats pour la prochaine saison d'un seul clic
+      </div>
+    </div>
+    <button
+      onClick={() => renewMultipleContracts()}
+      style={{
+        padding: '12px 20px', background: '#ffc107', color: '#000',
+        border: 'none', borderRadius: '8px', cursor: 'pointer', 
+        fontWeight: 'bold', fontSize: '15px', boxShadow: '0 2px 8px rgba(0,0,0,0.15)'
+      }}
+    >
+      🔄 Renouveler TOUS
+    </button>
+  </div>
+
+  <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+    <button
+      onClick={() => setShowArchived(false)}
+      style={{
+        padding: '10px 15px',
+        background: !showArchived ? '#1a4d1a' : '#6c757d',
+        color: 'white', border: 'none', borderRadius: '8px',
+        cursor: 'pointer', fontWeight: 'bold'
+      }}
+    >
+      📋 Contrats Actifs ({contracts.filter(c => !c.archived).length})
+    </button>
+    <button
+      onClick={() => setShowArchived(true)}
+      style={{
+        padding: '10px 15px',
+        background: showArchived ? '#1a4d1a' : '#6c757d',
+        color: 'white', border: 'none', borderRadius: '8px',
+        cursor: 'pointer', fontWeight: 'bold'
+      }}
+    >
+      📦 Archives ({contracts.filter(c => c.archived).length})
+    </button>
+  </div>
+
+  {!showArchived && (
+    <div style={{ 
+      background: 'white', padding: '15px', borderRadius: '12px', 
+      marginBottom: '10px', border: '1px solid #dee2e6',
+      display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap'
+    }}>
+      <div style={{ flex: 1 }}>
+        <strong>🖨️ Impression de contrats</strong>
+        <div style={{ fontSize: '13px', color: '#666', marginTop: '3px' }}>
+          {selectedContracts.length > 0 
+            ? `${selectedContracts.length} contrat(s) sélectionné(s)` 
+            : 'Sélectionnez des contrats à imprimer (cases à cocher dans la liste ci-dessous)'}
+        </div>
+      </div>
+      
+      <select
+        value={printByStreet}
+        onChange={(e) => setPrintByStreet(e.target.value)}
+        style={{
+          padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd', fontWeight: 'bold'
+        }}
+      >
+        <option value="">📍 Choisir une rue...</option>
+        {getDistinctStreetsForContracts().map(street => (
+          <option key={street} value={street}>{street}</option>
+        ))}
+      </select>
+
+      <button
+        onClick={() => selectContractsByStreet(printByStreet)}
+        disabled={!printByStreet}
+        style={{
+          padding: '8px 16px', background: !printByStreet ? '#ccc' : '#17a2b8', color: 'white',
+          border: 'none', borderRadius: '6px', cursor: !printByStreet ? 'not-allowed' : 'pointer', fontWeight: 'bold'
+        }}
+      >
+        📍 Sélectionner cette rue
+      </button>
+
+      {printByStreet && (
+        <button
+          onClick={() => { setPrintByStreet(''); setSelectedContracts([]); }}
+          style={{
+            padding: '8px 16px', background: '#e9ecef', color: '#495057',
+            border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+          }}
+        >
+          ✕ Voir tous les contrats
+        </button>
+      )}
+      
+      <button
+        onClick={() => printMultipleContracts()}
+        disabled={selectedContracts.length === 0}
+        style={{
+          padding: '8px 16px', 
+          background: selectedContracts.length === 0 ? '#ccc' : '#28a745', 
+          color: 'white',
+          border: 'none', borderRadius: '6px', 
+          cursor: selectedContracts.length === 0 ? 'not-allowed' : 'pointer', 
+          fontWeight: 'bold'
+        }}
+      >
+        🖨️ Imprimer sélection ({selectedContracts.length})
+      </button>
+
+      <button
+        onClick={() => renewMultipleContracts(selectedContracts)}
+        disabled={selectedContracts.length === 0}
+        style={{
+          padding: '8px 16px', 
+          background: selectedContracts.length === 0 ? '#ccc' : '#ffc107', 
+          color: '#000',
+          border: 'none', borderRadius: '6px', 
+          cursor: selectedContracts.length === 0 ? 'not-allowed' : 'pointer', 
+          fontWeight: 'bold'
+        }}
+      >
+        🔄 Renouveler sélection ({selectedContracts.length})
+      </button>
+
+      {lastRenewalBackup && (
+        <button
+          onClick={() => undoLastRenewal()}
+          style={{
+            padding: '8px 16px', background: '#dc3545', color: 'white',
+            border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold'
+          }}
+        >
+          ↩️ Annuler le dernier renouvellement
+        </button>
+      )}
+
+      <button
+        onClick={() => bulkFixDates()}
+        disabled={selectedContracts.length === 0}
+        style={{
+          padding: '8px 16px', 
+          background: selectedContracts.length === 0 ? '#ccc' : '#fd7e14', 
+          color: 'white',
+          border: 'none', borderRadius: '6px', 
+          cursor: selectedContracts.length === 0 ? 'not-allowed' : 'pointer', 
+          fontWeight: 'bold'
+        }}
+      >
+        📅 Corriger dates sélection ({selectedContracts.length})
+      </button>
+
+      <button
+        onClick={() => bulkSetStartDate()}
+        disabled={selectedContracts.length === 0}
+        style={{
+          padding: '8px 16px', 
+          background: selectedContracts.length === 0 ? '#ccc' : '#6f42c1', 
+          color: 'white',
+          border: 'none', borderRadius: '6px', 
+          cursor: selectedContracts.length === 0 ? 'not-allowed' : 'pointer', 
+          fontWeight: 'bold'
+        }}
+      >
+        📅 Date début (même pour tous) ({selectedContracts.length})
+      </button>
+    </div>
+  )}
+</div>
 
 {/* Modal d'ajout de client */}
 {showAddClientModal && (
