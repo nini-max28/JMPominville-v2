@@ -7916,7 +7916,7 @@ Merci de votre patience!
                           });
 
                                                  return (
-                          <>
+                         
                           <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
 
                               <td style={{ padding: '10px', fontSize: '13px' }}>
