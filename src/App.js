@@ -5988,12 +5988,22 @@ Merci de votre patience!
     </div>
 
     {/* Statistiques rapides */}
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
+       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '20px' }}>
       <div style={{ background: '#d4edda', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
         <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#155724' }}>
           {contracts.filter(c => !c.archived).length}
         </div>
         <div style={{ fontSize: '13px', color: '#155724' }}>Contrats Actifs</div>
+      </div>
+
+      <div style={{ background: '#e3f2fd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+        <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#1976d2' }}>
+          {(() => {
+            const currentSeason = getSeasonLabel(new Date().toISOString());
+            return contracts.filter(c => c.renewedFrom && !c.archived && getSeasonLabel(c.startDate) === currentSeason).length;
+          })()}
+        </div>
+        <div style={{ fontSize: '13px', color: '#1976d2' }}>Renouvelés ({getSeasonLabel(new Date().toISOString())})</div>
       </div>
       
       <div style={{ background: '#fff3cd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
@@ -6010,6 +6020,7 @@ Merci de votre patience!
         <div style={{ fontSize: '13px', color: '#721c24' }}>Contrats Archivés</div>
       </div>
     </div>
+
 
     {/* Bouton de renouvellement en masse */}
     <div style={{ 
