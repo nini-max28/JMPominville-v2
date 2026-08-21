@@ -6237,8 +6237,14 @@ Merci de votre patience!
                               </div>
                             </td>
 
-                            <td style={{ padding: '15px' }}>
+                                                       <td style={{ padding: '15px' }}>
                               <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+                                <button
+                                  onClick={() => setExpandedClientContract(expandedClientContract === client.id ? null : client.id)}
+                                  style={{ padding: '5px 10px', fontSize: '12px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                >
+                                  {expandedClientContract === client.id ? '▲ Fermer' : '📋 Contrat'}
+                                </button>
                                 <button
                                   onClick={() => startEditClient(client)}
                                   style={{ padding: '5px 10px', fontSize: '12px', background: '#ffc107', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
@@ -6255,6 +6261,94 @@ Merci de votre patience!
                               </div>
                             </td>
                           </tr>
+                          {expandedClientContract === client.id && (
+                            <tr key={`contract-${client.id}`}>
+                              <td colSpan={5} style={{ padding: '15px', background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                                {!contract ? (
+                                  <div style={{ color: '#666' }}>Aucun contrat actif pour ce client.</div>
+                                ) : (
+                                  <div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '12px' }}>
+                                      <div><strong>Type:</strong> {contract.type}</div>
+                                      <div><strong>Début:</strong> {contract.startDate}</div>
+                                      <div><strong>Fin:</strong> {contract.endDate || 'Non définie'}</div>
+                                      <div><strong>Montant:</strong> {contract.amount.toFixed(2)} $</div>
+                                      <div>
+                                        <strong>Statut:</strong>{' '}
+                                        <span style={{
+                                          padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold',
+                                          background: contract.status === 'actif' ? '#d4edda' : 
+                                                     contract.status === 'suspendu' ? '#fff3cd' : '#f8d7da',
+                                          color: contract.status === 'actif' ? '#155724' :
+                                                contract.status === 'suspendu' ? '#856404' : '#721c24'
+                                        }}>
+                                          {contract.status}
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                      {!contract.archived && (
+                                        <button
+                                          onClick={() => renewContract(contract.id)}
+                                          style={{ padding: '5px 10px', fontSize: '12px', background: '#ffc107', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                        >
+                                          🔄 Renouveler
+                                        </button>
+                                      )}
+                                      {!contract.archived && (
+                                        <button
+                                          onClick={() => cancelContractNotRenewed(contract.id)}
+                                          style={{ padding: '5px 10px', fontSize: '12px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                        >
+                                          🚫 Ne renouvelle pas
+                                        </button>
+                                      )}
+                                      <button
+                                        onClick={() => generateContract(contract.id)}
+                                        style={{ padding: '5px 10px', fontSize: '12px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                      >
+                                        📄 Contrat PDF
+                                      </button>
+                                      <button
+                                        onClick={() => generateContract(contract.id, 1)}
+                                        style={{ padding: '5px 10px', fontSize: '12px', background: '#20c997', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                      >
+                                        📄 1 copie (courriel)
+                                      </button>
+                                      <button
+                                        onClick={() => emailContractToClient(contract.id)}
+                                        style={{ padding: '5px 10px', fontSize: '12px', background: '#6f42c1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                      >
+                                        ✉️ Envoyer par courriel
+                                      </button>
+                                      <button
+                                        onClick={() => startEditContract(contract)}
+                                        style={{ padding: '5px 10px', fontSize: '12px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                      >
+                                        ✏️ Modifier contrat
+                                      </button>
+                                      {(!contract.archived || !client) && (
+                                        <button
+                                          onClick={() => deleteContract(contract.id)}
+                                          style={{ padding: '5px 10px', fontSize: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                        >
+                                          🗑️ Supprimer contrat
+                                        </button>
+                                      )}
+                                      {contract.archived && contract.notRenewed && (
+                                        <button
+                                          onClick={() => reactivateContract(contract.id)}
+                                          style={{ padding: '5px 10px', fontSize: '12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                        >
+                                          ↩️ Réactiver
+                                        </button>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          )}
                         );
                       })}
                   </tbody>
@@ -6265,6 +6359,7 @@ Merci de votre patience!
         </div>
       );
     })()
+
   )
 ) : (
   <div style={{
@@ -7817,8 +7912,10 @@ Merci de votre patience!
                             return daysLate >= 1 && daysLate <= 7;
                           });
 
-                          return (
-                            <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+                                                 return (
+                          <>
+                          <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+
                               <td style={{ padding: '10px', fontSize: '13px' }}>
                                 <div style={{ fontWeight: 'bold' }}>{client.name}</div>
                                 <div style={{ fontSize: '11px', color: '#666' }}>{client.phone}</div>
