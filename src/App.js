@@ -6096,6 +6096,7 @@ Merci de votre patience!
                         const secondPayment = getPaymentRecord(client.id, 2, contract);
 
                         return (
+                          <>
                           <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
                             <td style={{ padding: '15px' }}>
                               <div>
