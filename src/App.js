@@ -5763,8 +5763,10 @@ Merci de votre patience!
               const firstPayment = getPaymentRecord(client.id, 1, contract);
               const secondPayment = getPaymentRecord(client.id, 2, contract);
 
-              return (
+                            return (
+                <>
                 <tr key={client.id} style={{ borderBottom: '1px solid #dee2e6' }}>
+
                   <td style={{ padding: '15px' }}>
                     <div>
                       <strong style={{ color: '#1a4d1a' }}>{client.name}</strong>
@@ -6024,10 +6026,12 @@ Merci de votre patience!
                         </div>
                       )}
                     </td>
-                  </tr>
+                          </tr>
                 )}
+                </>
               );
             })}
+
         </tbody>
       </table>
     </div>
