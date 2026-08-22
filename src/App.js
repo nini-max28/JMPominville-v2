@@ -2519,7 +2519,8 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
  <p style="margin: Xpx 0;"><strong>4. Déplacement des Véhicules :</strong></p>
 <p style="margin: Xpx 0;">Après une tempête de neige, veuillez sortir votre/vos véhicule(s) de l'entrée avant 9h00 le lendemain matin, afin qu'on puisse déneiger au complet.</p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
-<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Si on doit revenir une 2e fois parce qu'un véhicule ou un objet bloque encore l'entrée, des frais supplémentaires de 30$ s'appliqueront.</strong></p>
+<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Si on doit revenir une 2e fois parce qu'un véhicule ou un objet bloque encore l'entrée — que ce soit constaté par notre équipe ou que vous nous rappeliez pour qu'on repasse — des frais supplémentaires de 30$ s'appliqueront.</strong></p>
+
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
 
 
@@ -3333,7 +3334,8 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
           <p style="margin: Xpx 0;"><strong>4. Déplacement des Véhicules :</strong></p>
 <p style="margin: Xpx 0;">Après une tempête de neige, veuillez sortir votre/vos véhicule(s) de l'entrée avant 9h00 le lendemain matin, afin qu'on puisse déneiger au complet.</p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
-<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Si on doit revenir une 2e fois parce qu'un véhicule ou un objet bloque encore l'entrée, des frais supplémentaires de 30$ s'appliqueront.</strong></p>
+<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Si on doit revenir une 2e fois parce qu'un véhicule ou un objet bloque encore l'entrée — que ce soit constaté par notre équipe ou que vous nous rappeliez pour qu'on repasse — des frais supplémentaires de 30$ s'appliqueront.</strong></p>
+
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
 
           <p style="margin: 2px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
