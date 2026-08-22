@@ -2516,8 +2516,8 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
           <p style="margin: 5px 0;"><strong>1. Déclenchement du Service :</strong> Le service de déneigement débutera lorsque l'accumulation de neige atteindra un minimum de cinq (5) centimètres.</p>
           <p style="margin: 5px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement.</p>
           <p style="margin: 5px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile avant chaque intervention de déneigement.</p>
- <p style="margin: Xpx 0;"><strong>4. Déplacement des Véhicules :</strong></p>
-<p style="margin: Xpx 0;">Après une tempête de neige, veuillez sortir votre/vos véhicule(s) de l'entrée avant 9h00 le lendemain matin afin que nous puissions déneiger au complet. Notez que 9h00 est seulement l'heure limite pour déplacer vos véhicules — ce n'est pas l'heure à laquelle notre équipe passe chez vous.</p>
+
+ <p style="margin: Xpx 0;"><strong>4. Déplacement des Véhicules :</strong> Après une tempête de neige, veuillez sortir votre/vos véhicule(s) de l'entrée avant 9h00 le lendemain matin afin que nous puissions déneiger au complet. Notez que 9h00 est seulement l'heure limite pour déplacer vos véhicules — ce n'est pas l'heure à laquelle notre équipe passe chez vous.</p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
 <p style="margin: Xpx 0; color: #d32f2f;"><strong>*Si vous nous appelez pour repasser et que nous devons revenir après avoir déjà terminé notre tournée, des frais supplémentaires de 30$ s'appliqueront.</strong></p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
