@@ -2517,17 +2517,17 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
           <p style="margin: 5px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement.</p>
           <p style="margin: 5px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile avant chaque intervention de déneigement.</p>
  <p style="margin: Xpx 0;"><strong>4. Déplacement des Véhicules :</strong></p>
-<p style="margin: Xpx 0;">Après une tempête de neige, veuillez sortir votre/vos véhicule(s) de l'entrée avant 9h00 le lendemain matin, afin qu'on puisse déneiger au complet.</p>
+<p style="margin: Xpx 0;">Après une tempête de neige, veuillez sortir votre/vos véhicule(s) de l'entrée avant 9h00 le lendemain matin afin que nous puissions déneiger au complet. Notez que 9h00 est seulement l'heure limite pour déplacer vos véhicules — ce n'est pas l'heure à laquelle notre équipe passe chez vous.</p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
-<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Si on doit revenir une 2e fois parce qu'un véhicule ou un objet bloque encore l'entrée — que ce soit constaté par notre équipe ou que vous nous rappeliez pour qu'on repasse — des frais supplémentaires de 30$ s'appliqueront.</strong></p>
-
+<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Si vous nous appelez pour repasser et que nous devons revenir après avoir déjà terminé notre tournée, des frais supplémentaires de 30$ s'appliqueront.</strong></p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
 
 
           <p style="margin: 5px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
  <p style="margin: Xpx 0;"><strong>6. Chèque sans provision :</strong></p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
-<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Des frais de 50$ seront facturés au client pour tout chèque retourné pour cause de fonds insuffisants (chèque sans provision).</strong></p>
+<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Des frais de 50$ seront facturés au client pour tout chèque retourné, que ce soit pour cause de fonds insuffisants (chèque sans provision) ou parce que le compte est fermé.</strong></p>
+
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
 
         </div>
@@ -3332,16 +3332,16 @@ ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnements
           <p style="margin: 2px 0;"><strong>2. Protection de la Propriété :</strong> Il est de la responsabilité exclusive du client de protéger adéquatement ses arbres, arbustes, ainsi que tout autre objet décoratif ou aménagement paysager situé dans la zone de déneigement. JM Pominville déneigement se dégage de toute responsabilité quant aux dommages causés aux arbustes, aménagements paysager ou autres éléments décoratifs qui n'auront pas été adéquatement protégés par le client.</p>
           <p style="margin: 2px 0;"><strong>3. Libération des Aires de Stationnement :</strong> Le client s'engage à libérer les aires de stationnement et d'accès de tout objet mobile(incluant, mais sans s'y limiter, les pelles, rallonges électriques, poubelles ou autres équipements) avant chaque intervention de déneigement. JM Pominville déneigement ne pourra en aucun cas être tenu responsable des dommages causés auxdits objets laissés dans l'aire à déneiger, ni des retards ou limitations dans la prestation du service qui pourraient en découler.</
           <p style="margin: Xpx 0;"><strong>4. Déplacement des Véhicules :</strong></p>
-<p style="margin: Xpx 0;">Après une tempête de neige, veuillez sortir votre/vos véhicule(s) de l'entrée avant 9h00 le lendemain matin, afin qu'on puisse déneiger au complet.</p>
+<p style="margin: Xpx 0;">Après une tempête de neige, veuillez sortir votre/vos véhicule(s) de l'entrée avant 9h00 le lendemain matin afin que nous puissions déneiger au complet. Notez que 9h00 est seulement l'heure limite pour déplacer vos véhicules — ce n'est pas l'heure à laquelle notre équipe passe chez vous.</p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
-<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Si on doit revenir une 2e fois parce qu'un véhicule ou un objet bloque encore l'entrée — que ce soit constaté par notre équipe ou que vous nous rappeliez pour qu'on repasse — des frais supplémentaires de 30$ s'appliqueront.</strong></p>
-
+<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Si vous nous appelez pour repasser et que nous devons revenir après avoir déjà terminé notre tournée, des frais supplémentaires de 30$ s'appliqueront.</strong></p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
 
           <p style="margin: 2px 0;"><strong>5. Installation des Piquets :</strong> Les piquets de délimitation seront installés uniquement après réception du paiement intégral ou du premier versement du contrat.</p>
           <p style="margin: Xpx 0;"><strong>6. Chèque sans provision :</strong></p>
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
-<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Des frais de 50$ seront facturés au client pour tout chèque retourné pour cause de fonds insuffisants (chèque sans provision).</strong></p>
+<p style="margin: Xpx 0; color: #d32f2f;"><strong>*Des frais de 50$ seront facturés au client pour tout chèque retourné, que ce soit pour cause de fonds insuffisants (chèque sans provision) ou parce que le compte est fermé.</strong></p>
+
 <p style="margin: Xpx 0 Xpx 20px;">Initiales du client : ______</p>
 
         </div>
