@@ -22,7 +22,8 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz
     paymentNumber: null,
     amount: 0,
     customAmount: undefined,
-    paymentDate: new Date().toISOString().split('T')[0]
+    paymentDate: new Date().toISOString().split('T')[0],
+    chequeNumber: ''
   });
   const [clientSearch, setClientSearch] = useState('');
   const [showClientSuggestions, setShowClientSuggestions] = useState(false);
@@ -2733,19 +2734,21 @@ const handlePaymentMethodSelect = (method) => {
   const activeContractForPayment = contracts.find(c => c.clientId === client.id && !c.archived);
 
   // Créer l'enregistrement de paiement
-  const payment = {
-    id: Date.now(),
-    clientId: paymentModal.clientId,
-    contractId: activeContractForPayment ? activeContractForPayment.id : null,
-    paymentNumber: paymentModal.paymentNumber,
-    amount: finalAmount,
-    date: paymentModal.paymentDate || new Date().toISOString().split('T')[0],
-    paymentMethod: method,
-    received: true,
-    deposited: false,
-    depositDate: null,
-    recordedAt: new Date().toISOString()
-  };
+    const payment = {
+      id: Date.now(),
+      clientId: paymentModal.clientId,
+      contractId: activeContractForPayment ? activeContractForPayment.id : null,
+      paymentNumber: paymentModal.paymentNumber,
+      amount: finalAmount,
+      date: paymentModal.paymentDate || new Date().toISOString().split('T')[0],
+      paymentMethod: method,
+      chequeNumber: method === 'cheque' ? (paymentModal.chequeNumber || '').trim() : '',
+      received: true,
+      deposited: false,
+      depositDate: null,
+      recordedAt: new Date().toISOString()
+    };
+
 
   const newPayments = [...payments, payment];
   setPayments(newPayments);
@@ -2794,14 +2797,16 @@ const handlePaymentMethodSelect = (method) => {
   alert(`✅ Paiement enregistré!\n\nMontant: ${finalAmount.toFixed(2)}$\nMéthode: ${method === 'cheque' ? 'Chèque' : 'Comptant'}${diffText}`);
 
   // Fermer le modal
-  setPaymentModal({ 
+   setPaymentModal({ 
     isOpen: false, 
     clientId: null, 
     paymentNumber: null, 
     amount: 0,
-    customAmount: undefined 
-  });
+    customAmount: undefined,
+    chequeNumber: ''
+   });
 };
+
   // FONCTIONS UTILITAIRES
   const isPaymentReceived = (clientId, paymentNumber, contractId = null) => {
     const contractForCheck = contractId ? contracts.find(c => c.id === contractId) : null;
@@ -4140,15 +4145,15 @@ Merci de votre patience!
           </div>
 
           <nav style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-            {[
+                   {[
               { id: 'dashboard', label: '📊 Tableau de bord' },
               { id: 'clients', label: '👥 Clients' },
-              { id: 'contracts', label: '📋 Contrats' },
               { id: 'accounting', label: '💰 Comptabilité' },
               { id: 'payments', label: '💳 Paiements' },
               { id: 'terrain', label: '🚛 Terrain' },
               { id: 'notifications', label: '📱 Notifications' }
             ].map(tab => (
+
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -5940,12 +5945,97 @@ Merci de votre patience!
                     </div>
                   </td>
                 </tr>
-                {expandedClientContract === client.id && (
-                  <tr key={`contract-${client.id}`}>
-                    <td colSpan={5} style={{ padding: '15px', background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
-                      {!contract ? (
-                        <div style={{ color: '#666' }}>Aucun contrat actif pour ce client.</div>
-                      ) : (
+                                       {expandedClientContract === client.id && (
+                   <tr key={`contract-${client.id}`}>
+                     <td colSpan={5} style={{ padding: '15px', background: '#f8f9fa', borderBottom: '2px solid #dee2e6' }}>
+                       {(() => {
+                         const expandedContract = contract || contracts
+                           .filter(c => c.clientId === client.id)
+                           .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))[0];
+                         if (!expandedContract) {
+                           return <div style={{ color: '#666' }}>Aucun contrat pour ce client.</div>;
+                         }
+                         const c = expandedContract;
+                         return (
+                           <div>
+                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '12px' }}>
+                               <div><strong>Type:</strong> {c.type}</div>
+                               <div><strong>Début:</strong> {c.startDate}</div>
+                               <div><strong>Fin:</strong> {c.endDate || 'Non définie'}</div>
+                               <div><strong>Montant:</strong> {c.amount.toFixed(2)} $</div>
+                               <div>
+                                 <strong>Statut:</strong>{' '}
+                                 <span style={{
+                                   padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold',
+                                   background: c.status === 'actif' ? '#d4edda' : 
+                                              c.status === 'suspendu' ? '#fff3cd' : '#f8d7da',
+                                   color: c.status === 'actif' ? '#155724' :
+                                         c.status === 'suspendu' ? '#856404' : '#721c24'
+                                 }}>
+                                   {c.status}
+                                 </span>
+                               </div>
+                             </div>
+                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                               {!c.archived && (
+                                 <button
+                                   onClick={() => renewContract(c.id)}
+                                   style={{ padding: '5px 10px', fontSize: '12px', background: '#ffc107', color: '#000', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}
+                                 >
+                                   🔄 Renouveler
+                                 </button>
+                               )}
+                               {!c.archived && (
+                                 <button
+                                   onClick={() => cancelContractNotRenewed(c.id)}
+                                   style={{ padding: '5px 10px', fontSize: '12px', background: '#6c757d', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                 >
+                                   🚫 Ne renouvelle pas
+                                 </button>
+                               )}
+                               <button
+                                 onClick={() => generateContract(c.id)}
+                                 style={{ padding: '5px 10px', fontSize: '12px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                               >
+                                 📄 Contrat PDF
+                               </button>
+                               <button
+                                 onClick={() => generateContract(c.id, 1)}
+                                 style={{ padding: '5px 10px', fontSize: '12px', background: '#20c997', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                               >
+                                 📄 1 copie (courriel)
+                               </button>
+                               <button
+                                 onClick={() => emailContractToClient(c.id)}
+                                 style={{ padding: '5px 10px', fontSize: '12px', background: '#6f42c1', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                               >
+                                 ✉️ Envoyer par courriel
+                               </button>
+                               <button
+                                 onClick={() => startEditContract(c)}
+                                 style={{ padding: '5px 10px', fontSize: '12px', background: '#007bff', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                               >
+                                 ✏️ Modifier contrat
+                               </button>
+                               <button
+                                 onClick={() => deleteContract(c.id)}
+                                 style={{ padding: '5px 10px', fontSize: '12px', background: '#dc3545', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                               >
+                                 🗑️ Supprimer contrat
+                               </button>
+                               {c.archived && c.notRenewed && (
+                                 <button
+                                   onClick={() => reactivateContract(c.id)}
+                                   style={{ padding: '5px 10px', fontSize: '12px', background: '#28a745', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
+                                 >
+                                   ↩️ Réactiver
+                                 </button>
+                               )}
+                             </div>
+                           </div>
+                         );
+                       })()}
+
                         <div>
                           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '10px', marginBottom: '12px' }}>
                             <div><strong>Type:</strong> {contract.type}</div>
@@ -7540,15 +7630,21 @@ Merci de votre patience!
                               {payment.amount.toFixed(2)} $
                             </td>
                             <td style={{ padding: '15px' }}>{payment.date}</td>
-                                                        <td style={{ padding: '15px' }}>
-                              <span style={{
-                                padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold',
-                                background: payment.paymentMethod === 'cheque' ? '#fff3cd' : '#d4edda',
-                                color: payment.paymentMethod === 'cheque' ? '#856404' : '#155724'
-                              }}>
-                                {payment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
-                              </span>
-                            </td>
+                                                                   <td style={{ padding: '15px' }}>
+                               <span style={{
+                                 padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold',
+                                 background: payment.paymentMethod === 'cheque' ? '#fff3cd' : '#d4edda',
+                                 color: payment.paymentMethod === 'cheque' ? '#856404' : '#155724'
+                               }}>
+                                 {payment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
+                               </span>
+                               {payment.paymentMethod === 'cheque' && payment.chequeNumber && (
+                                 <div style={{ fontSize: '11px', color: '#666', marginTop: '3px' }}>
+                                   N° {payment.chequeNumber}
+                                 </div>
+                               )}
+                             </td>
+                
                             <td style={{ padding: '15px' }}>
                               {payment.deposited ? (
                                 <div>
@@ -8637,15 +8733,28 @@ Merci de votre patience!
         />
       </div>
 
-      {/* Question méthode de paiement */}
-      <p style={{ 
-        color: '#666', 
-        marginBottom: '20px', 
-        fontSize: '14px',
-        textAlign: 'center'
-      }}>
-        Comment le paiement a-t-il été reçu ?
-      </p>
+          <div style={{ marginBottom: '20px' }}>
+         <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057', fontSize: '14px' }}>
+           Numéro de chèque (optionnel)
+         </label>
+         <input
+           type="text"
+           value={paymentModal.chequeNumber || ''}
+           onChange={(e) => setPaymentModal({ ...paymentModal, chequeNumber: e.target.value })}
+           placeholder="Ex: 1234"
+           style={{ width: '100%', padding: '10px 12px', fontSize: '14px', border: '2px solid #ced4da', borderRadius: '8px' }}
+         />
+       </div>
+
+       {/* Question méthode de paiement */}
+       <p style={{ 
+         color: '#666', 
+         marginBottom: '20px', 
+         fontSize: '14px',
+         textAlign: 'center'
+       }}>
+         Comment le paiement a-t-il été reçu ?
+       </p>
 
       {/* Boutons méthode */}
       <div style={{ 
