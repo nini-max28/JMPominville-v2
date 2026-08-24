@@ -2493,9 +2493,12 @@ const paymentAmount = contract.amount / numPayments;
   <p style="margin: 5px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
   <p style="margin: 5px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
   <p style="margin: 5px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
-  ${client.phone2 ? `<p style="margin: 5px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
-  ${client.email ? `<p style="margin: 5px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
-</div>        
+${client.phone2 ? `<p style="margin: 5px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
+${client.email 
+  ? `<p style="margin: 5px 0;"><strong>• Courriel :</strong> ${client.email}</p>` 
+  : `<p style="margin: 5px 0;"><strong>• Courriel :</strong> ________________________________</p>`
+}
+  </div>        
 ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnementsCommerciaux) ? `
 <hr style="border: 1px solid #a8c5a8; margin: 7px 0;">
 <div style="margin-bottom: 9px;">
@@ -2569,7 +2572,7 @@ ${paymentStructure === '1' ? `
   
   <!-- 1er versement -->
   <div style="margin: 5px 0;">
-    <p style="margin: 5px 0;"><strong>• 1er Versement :</strong></p>
+    <p style="margin: 5px 0;">• 1er Versement :</strong></p>
     <p style="margin: 4px 0; margin-left: 20px;">• Date : ${client.firstPaymentDate || contract.startDate}</p>
     <p style="margin: 4px 0; margin-left: 20px;">• Montant : ${paymentAmount.toFixed(2)} $</p>
   </div>
@@ -3308,9 +3311,12 @@ const paymentAmount = contract.amount / numPayments;
   <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Informations du Client :</h3>
   <p style="margin: 2px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
   <p style="margin: 2px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
-  <p style="margin: 2px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
-  ${client.phone2 ? `<p style="margin: 2px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
-  ${client.email ? `<p style="margin: 2px 0;"><strong>• Courriel :</strong> ${client.email}</p>` : ''}
+  <p style="margin: 5px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
+${client.phone2 ? `<p style="margin: 5px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
+${client.email 
+  ? `<p style="margin: 5px 0;"><strong>• Courriel :</strong> ${client.email}</p>` 
+  : `<p style="margin: 5px 0;"><strong>• Courriel :</strong> ________________________________</p>`
+}
 </div>        
 ${(contract.entreesCompletes || contract.devantsTempo || contract.stationnementsCommerciaux) ? `
 <hr style="border: 1px solid #a8c5a8; margin: 1px 0;">
@@ -7584,12 +7590,14 @@ Merci de votre patience!
                             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                             flexWrap: 'wrap', gap: '8px'
                           }}>
-                            <div>
-                              <strong>{client ? client.name : 'Client supprimé'}</strong>
-                              <div style={{ fontSize: '12px', color: '#666' }}>
-                                {payment.paymentNumber}{payment.paymentNumber === 1 ? 'er' : 'e'} versement — Reçu le {new Date(payment.date).toLocaleDateString('fr-CA')}
-                              </div>
-                            </div>
+                        <div>
+  <strong>{client ? client.name : 'Client supprimé'}</strong>
+  <div style={{ fontSize: '12px', color: '#666' }}>
+    {payment.paymentNumber}{payment.paymentNumber === 1 ? 'er' : 'e'} versement — Reçu le {new Date(payment.date).toLocaleDateString('fr-CA')}
+    {payment.chequeNumber && ` — N° ${payment.chequeNumber}`}
+  </div>
+</div>
+
                             <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                               <strong style={{ color: '#28a745' }}>{payment.amount.toFixed(2)}$</strong>
                               <button
@@ -7656,21 +7664,42 @@ Merci de votre patience!
                             <td style={{ padding: '15px', fontWeight: 'bold', color: '#28a745' }}>
                               {payment.amount.toFixed(2)} $
                             </td>
-                            <td style={{ padding: '15px' }}>{payment.date}</td>
-                                                                   <td style={{ padding: '15px' }}>
-                               <span style={{
-                                 padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold',
-                                 background: payment.paymentMethod === 'cheque' ? '#fff3cd' : '#d4edda',
-                                 color: payment.paymentMethod === 'cheque' ? '#856404' : '#155724'
-                               }}>
-                                 {payment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
-                               </span>
-                               {payment.paymentMethod === 'cheque' && payment.chequeNumber && (
-                                 <div style={{ fontSize: '11px', color: '#666', marginTop: '3px' }}>
-                                   N° {payment.chequeNumber}
-                                 </div>
-                               )}
-                             </td>
+                            <td style={{ padding: '15px' }}>
+  <span style={{
+    padding: '4px 8px', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold',
+    background: payment.paymentMethod === 'cheque' ? '#fff3cd' : '#d4edda',
+    color: payment.paymentMethod === 'cheque' ? '#856404' : '#155724'
+  }}>
+    {payment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
+  </span>
+  {payment.paymentMethod === 'cheque' && payment.chequeNumber && (
+    <div style={{ fontSize: '11px', color: '#666', marginTop: '3px' }}>
+      N° {payment.chequeNumber}
+    </div>
+  )}
+  {payment.paymentMethod === 'cheque' && !payment.chequeNumber && (
+    <button
+      onClick={() => {
+        const num = window.prompt('Numéro de chèque pour ce paiement:', '');
+        if (num && num.trim()) {
+          const updatedPayments = payments.map(p =>
+            p.id === payment.id ? { ...p, chequeNumber: num.trim() } : p
+          );
+          setPayments(updatedPayments);
+          saveToStorage('payments', updatedPayments);
+        }
+      }}
+      style={{
+        marginTop: '3px', padding: '2px 6px', fontSize: '10px',
+        background: '#e9ecef', color: '#495057', border: 'none',
+        borderRadius: '4px', cursor: 'pointer'
+      }}
+    >
+      + Ajouter N°
+    </button>
+  )}
+</td>
+
                 
                             <td style={{ padding: '15px' }}>
                               {payment.deposited ? (
