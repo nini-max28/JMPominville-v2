@@ -4504,15 +4504,15 @@ Merci de votre patience!
                                 <span style={{ color: '#aaa' }}>—</span>
                               )}
                             </td>
-                            <td style={{ 
-                              padding: '10px', border: '1px solid #333', textAlign: 'center'
+                                                 <td style={{ 
+                               padding: '10px', border: '1px solid #333', textAlign: 'center'
                             }}>
                               <div style={{ marginBottom: '8px' }}>
                                 <div style={{
                                   width: '20px', height: '20px', border: '2px solid #333',
                                   display: 'inline-block',
-                                  background: paymentStatus === 'Payé' ? '#28a745' : 
-                                             paymentStatus === 'Partiel' ? '#ffc107' : 'white',
+                                  background: paymentStatus === 'Payé' ? '#28a745' :
+                                              paymentStatus === 'Partiel' ? '#ffc107' : 'white',
                                   position: 'relative'
                                 }}>
                                   {paymentStatus === 'Payé' && (
@@ -4532,7 +4532,19 @@ Merci de votre patience!
                               <div style={{ fontSize: '10px', color: '#666' }}>
                                 {contract ? contract.amount.toFixed(0) + '$' : 'N/A'}
                               </div>
+                              {paymentStatus === 'Partiel' && contract && (() => {
+                                const receivedSoFar = payments
+                                  .filter(p => p.contractId === contract.id && p.received)
+                                  .reduce((sum, p) => sum + p.amount, 0);
+                                const remaining = contract.amount - receivedSoFar;
+                                return (
+                                  <div style={{ fontSize: '10px', color: '#856404', fontWeight: 'bold', marginTop: '4px' }}>
+                                    Reste: {remaining.toFixed(0)}$
+                                  </div>
+                                );
+                              })()}
                             </td>
+
                             <td style={{ 
                               padding: '10px', border: '1px solid #333', textAlign: 'center'
                             }}>
