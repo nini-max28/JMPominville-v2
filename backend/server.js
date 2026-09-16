@@ -352,9 +352,13 @@ app.post('/api/sync', async (req, res) => {
     const contracts = incoming.contracts || [];
     const invoices = incoming.invoices || [];
     const payments = incoming.payments || [];
+    const realLastModified = incoming.lastModified || new Date().toISOString();
+
+    await supabase.from('sync_meta').upsert({ id: 1, last_modified: realLastModified });
 
     // On remplace complètement chaque table par les données reçues
     await supabase.from('clients').delete().neq('id', -1);
+
     await supabase.from('contracts').delete().neq('id', -1);
     await supabase.from('payments').delete().neq('id', -1);
     await supabase.from('invoices').delete().neq('id', -1);
@@ -398,11 +402,12 @@ app.post('/api/sync', async (req, res) => {
 // Route pour récupérer les données depuis Supabase
 app.get('/api/sync', async (req, res) => {
   try {
-    const [clientsRes, contractsRes, paymentsRes, invoicesRes] = await Promise.all([
+    const [clientsRes, contractsRes, paymentsRes, invoicesRes, metaRes] = await Promise.all([
       supabase.from('clients').select('*'),
       supabase.from('contracts').select('*'),
       supabase.from('payments').select('*'),
-      supabase.from('invoices').select('*')
+      supabase.from('invoices').select('*'),
+      supabase.from('sync_meta').select('*').eq('id', 1).maybeSingle()
     ]);
 
     if (clientsRes.error) throw clientsRes.error;
@@ -410,13 +415,13 @@ app.get('/api/sync', async (req, res) => {
     if (paymentsRes.error) throw paymentsRes.error;
     if (invoicesRes.error) throw invoicesRes.error;
 
-    const data = {
+        const data = {
       clients: (clientsRes.data || []).map(clientFromDb),
       contracts: (contractsRes.data || []).map(contractFromDb),
       payments: (paymentsRes.data || []).map(paymentFromDb),
       invoices: (invoicesRes.data || []).map(invoiceFromDb),
       notificationsHistory: [],
-      lastModified: new Date().toISOString()
+      lastModified: (metaRes.data && metaRes.data.last_modified) || null
     };
 
     if (data.clients.length === 0 && data.contracts.length === 0) {
