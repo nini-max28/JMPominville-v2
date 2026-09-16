@@ -39,7 +39,8 @@ if (!BREVO_SENDER_EMAIL) {
 
 function clientToDb(c) {
   return {
-    id: c.id,
+    id: Math.round(c.id),
+
     name: c.name || '',
     phone: c.phone || '',
     phone2: c.phone2 || '',
@@ -95,7 +96,8 @@ function clientFromDb(c) {
 
 function contractToDb(c) {
   return {
-    id: c.id,
+    id: Math.round(c.id),
+
     client_id: c.clientId,
     type: c.type || '',
     start_date: c.startDate || '',
@@ -145,7 +147,8 @@ function contractFromDb(c) {
 
 function paymentToDb(p) {
   return {
-    id: p.id,
+    id: Math.round(p.id),
+
     client_id: p.clientId,
     contract_id: p.contractId || null,
     payment_number: p.paymentNumber,
@@ -181,7 +184,8 @@ function paymentFromDb(p) {
 
 function invoiceToDb(inv) {
   return {
-    id: inv.id,
+    id: Math.round(inv.id),
+
     client_id: inv.clientId || null,
     amount: inv.amount || 0,
     date: inv.date || '',
