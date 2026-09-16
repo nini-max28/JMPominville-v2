@@ -584,7 +584,8 @@ const checkAndMarkPaymentsReceived = () => {
         console.log(`  💰 Date atteinte! Marquage automatique de ${amount}$`);
         
         const payment = {
-          id: Date.now() + Math.random(),
+          id: Date.now() + Math.floor(Math.random() * 1000),
+
           clientId: client.id,
           contractId: contract.id,
           paymentNumber: 1,
@@ -598,7 +599,7 @@ const checkAndMarkPaymentsReceived = () => {
         newPayments.push(payment);
 
         const invoice = {
-          id: Date.now() + Math.random() + 1,
+         id: Date.now() + Math.floor(Math.random() * 1000) + 1,
           clientId: client.id,
           amount: parseFloat(amount),
           date: client.firstPaymentDate,
@@ -641,7 +642,7 @@ const checkAndMarkPaymentsReceived = () => {
         console.log(`  💰 Date du 2e paiement atteinte! Marquage automatique de ${amount}$`);
         
         const payment = {
-          id: Date.now() + Math.random() + 2,
+      id: Date.now() + Math.floor(Math.random() * 1000) + 2,
           clientId: client.id,
           contractId: contract.id,
           paymentNumber: 2,
@@ -655,7 +656,7 @@ const checkAndMarkPaymentsReceived = () => {
         newPayments.push(payment);
 
         const invoice = {
-          id: Date.now() + Math.random() + 3,
+    id: Date.now() + Math.floor(Math.random() * 1000) + 3,
           clientId: client.id,
           amount: parseFloat(amount),
           date: client.secondPaymentDate,
@@ -696,7 +697,7 @@ if ((client.paymentStructure === '3' || client.paymentStructure === '4') &&
     console.log(`  💰 Date du 3e paiement atteinte! Marquage automatique de ${amount}$`);
     
     const payment = {
-      id: Date.now() + Math.random() + 4,
+   id: Date.now() + Math.floor(Math.random() * 1000) + 4,
       clientId: client.id,
       contractId: contract.id,
       paymentNumber: 3,
@@ -710,7 +711,7 @@ if ((client.paymentStructure === '3' || client.paymentStructure === '4') &&
     newPayments.push(payment);
 
     const invoice = {
-      id: Date.now() + Math.random() + 5,
+    id: Date.now() + Math.floor(Math.random() * 1000) + 5,
       clientId: client.id,
       amount: parseFloat(amount),
       date: client.thirdPaymentDate,
@@ -751,7 +752,7 @@ if (client.paymentStructure === '4' &&
     console.log(`  💰 Date du 4e paiement atteinte! Marquage automatique de ${amount}$`);
     
     const payment = {
-      id: Date.now() + Math.random() + 6,
+id: Date.now() + Math.floor(Math.random() * 1000) + 6,
       clientId: client.id,
       contractId: contract.id,
       paymentNumber: 4,
@@ -765,7 +766,7 @@ if (client.paymentStructure === '4' &&
     newPayments.push(payment);
 
     const invoice = {
-      id: Date.now() + Math.random() + 7,
+id: Date.now() + Math.floor(Math.random() * 1000) + 7,
       clientId: client.id,
       amount: parseFloat(amount),
       date: client.fourthPaymentDate,
