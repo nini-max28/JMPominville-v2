@@ -79,7 +79,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
   const [contractSortMode, setContractSortMode] = useState('street'); // 'street' ou 'name'
   const [clientSearchFilters, setClientSearchFilters] = useState({
-    searchTerm: '',
+    searchTerm: ''
     type: '', 
     paymentStatus: '',
     streetName: ''
@@ -3105,7 +3105,7 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
     const file = event.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const importedData = JSON.parse(e.target.result);
         if (window.confirm('Remplacer les données actuelles?')) {
@@ -3115,21 +3115,35 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
             firstPaymentMethod: client.firstPaymentMethod || '',
             secondPaymentMethod: client.secondPaymentMethod || ''
           }));
-
+          const contractsData = importedData.contracts || [];
+          const invoicesData = importedData.invoices || [];
           const paymentsData = (importedData.payments || []).map(payment => ({
             ...payment,
             paymentMethod: payment.paymentMethod || 'comptant'
           }));
 
           setClients(clientsData);
-          setContracts(importedData.contracts || []);
-          setInvoices(importedData.invoices || []);
+          setContracts(contractsData);
+          setInvoices(invoicesData);
           setPayments(paymentsData);
 
-          saveToStorage('clients', clientsData);
-          saveToStorage('contracts', importedData.contracts || []);
-          saveToStorage('invoices', importedData.invoices || []);
-          saveToStorage('payments', paymentsData);
+          localStorage.setItem('clients', JSON.stringify(clientsData));
+          localStorage.setItem('contracts', JSON.stringify(contractsData));
+          localStorage.setItem('invoices', JSON.stringify(invoicesData));
+          localStorage.setItem('payments', JSON.stringify(paymentsData));
+          localStorage.setItem('lastModified', new Date().toISOString());
+
+          try {
+            await pushDirectToBackend({
+              clients: clientsData,
+              contracts: contractsData,
+              invoices: invoicesData,
+              payments: paymentsData
+            });
+          } catch (syncError) {
+            console.log('Sync après import échoué (sera réessayé automatiquement plus tard):', syncError.message);
+          }
+
           alert('Données importées avec succès!');
         }
       } catch (error) {
@@ -3139,6 +3153,7 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
     reader.readAsText(file);
     event.target.value = '';
   };
+
 
   // FONCTIONS DE RECHERCHE ET FILTRAGE
   const getFilteredContracts = () => {
