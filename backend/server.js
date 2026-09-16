@@ -2,22 +2,13 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const twilio = require('twilio');
-const fs = require('fs');
-const path = require('path');
+const { createClient } = require('@supabase/supabase-js');
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// Dossier de sauvegarde des données. Si tu ajoutes un "Persistent Disk" sur Render,
-// pointe DATA_DIR vers son chemin de montage (ex: /data) pour que les données
-// survivent aux redéploiements. Sans ça, ce dossier est effacé à chaque déploiement.
-const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
-const DATA_FILE = path.join(DATA_DIR, 'sync-data.json');
-const BACKUP_FILE = path.join(DATA_DIR, 'sync-data-backup.json');
-
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
+// Connexion Supabase
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 // Configuration Twilio
 const twilioClient = twilio(
@@ -44,7 +35,174 @@ if (!BREVO_SENDER_EMAIL) {
   console.log(`📧 Adresse expéditeur Brevo utilisée: ${BREVO_SENDER_EMAIL}`);
 }
 
-// Test route
+// ========== CONVERSION ENTRE LE FORMAT DE L'APP (camelCase) ET SUPABASE (snake_case) ==========
+
+function clientToDb(c) {
+  return {
+    id: c.id,
+    name: c.name || '',
+    phone: c.phone || '',
+    phone2: c.phone2 || '',
+    email: c.email || '',
+    type: c.type || '',
+    address: c.address || '',
+    payment_structure: c.paymentStructure || '2',
+    first_payment_date: c.firstPaymentDate || '',
+    first_payment_method: c.firstPaymentMethod || '',
+    first_payment_received: !!c.firstPaymentReceived,
+    second_payment_date: c.secondPaymentDate || '',
+    second_payment_method: c.secondPaymentMethod || '',
+    second_payment_received: !!c.secondPaymentReceived,
+    third_payment_date: c.thirdPaymentDate || '',
+    third_payment_method: c.thirdPaymentMethod || '',
+    third_payment_received: !!c.thirdPaymentReceived,
+    fourth_payment_date: c.fourthPaymentDate || '',
+    fourth_payment_method: c.fourthPaymentMethod || '',
+    fourth_payment_received: !!c.fourthPaymentReceived,
+    notes: c.notes || '',
+    payment_reminder_sent_at: c.paymentReminderSentAt || null,
+    late_payment_warning_sent_at: c.latePaymentWarningSentAt || null
+  };
+}
+
+function clientFromDb(c) {
+  return {
+    id: c.id,
+    name: c.name,
+    phone: c.phone,
+    phone2: c.phone2,
+    email: c.email,
+    type: c.type,
+    address: c.address,
+    paymentStructure: c.payment_structure,
+    firstPaymentDate: c.first_payment_date,
+    firstPaymentMethod: c.first_payment_method,
+    firstPaymentReceived: c.first_payment_received,
+    secondPaymentDate: c.second_payment_date,
+    secondPaymentMethod: c.second_payment_method,
+    secondPaymentReceived: c.second_payment_received,
+    thirdPaymentDate: c.third_payment_date,
+    thirdPaymentMethod: c.third_payment_method,
+    thirdPaymentReceived: c.third_payment_received,
+    fourthPaymentDate: c.fourth_payment_date,
+    fourthPaymentMethod: c.fourth_payment_method,
+    fourthPaymentReceived: c.fourth_payment_received,
+    notes: c.notes,
+    paymentReminderSentAt: c.payment_reminder_sent_at,
+    latePaymentWarningSentAt: c.late_payment_warning_sent_at
+  };
+}
+
+function contractToDb(c) {
+  return {
+    id: c.id,
+    client_id: c.clientId,
+    type: c.type || '',
+    start_date: c.startDate || '',
+    end_date: c.endDate || '',
+    amount: c.amount || 0,
+    status: c.status || 'actif',
+    notes: c.notes || '',
+    entrees_completes: c.entreesCompletes || 0,
+    devants_tempo: c.devantsTempo || 0,
+    stationnements_commerciaux: c.stationnementsCommerciaux || 0,
+    instructions_entrees: c.instructionsEntrees || '',
+    instructions_tempo: c.instructionsTempo || '',
+    instructions_commercial: c.instructionsCommercial || '',
+    created_at: c.createdAt || null,
+    renewed_from: c.renewedFrom || null,
+    archived: !!c.archived,
+    not_renewed: !!c.notRenewed,
+    year_archived: c.yearArchived || null,
+    archived_date: c.archivedDate || null
+  };
+}
+
+function contractFromDb(c) {
+  return {
+    id: c.id,
+    clientId: c.client_id,
+    type: c.type,
+    startDate: c.start_date,
+    endDate: c.end_date,
+    amount: c.amount,
+    status: c.status,
+    notes: c.notes,
+    entreesCompletes: c.entrees_completes,
+    devantsTempo: c.devants_tempo,
+    stationnementsCommerciaux: c.stationnements_commerciaux,
+    instructionsEntrees: c.instructions_entrees,
+    instructionsTempo: c.instructions_tempo,
+    instructionsCommercial: c.instructions_commercial,
+    createdAt: c.created_at,
+    renewedFrom: c.renewed_from,
+    archived: c.archived,
+    notRenewed: c.not_renewed,
+    yearArchived: c.year_archived,
+    archivedDate: c.archived_date
+  };
+}
+
+function paymentToDb(p) {
+  return {
+    id: p.id,
+    client_id: p.clientId,
+    contract_id: p.contractId || null,
+    payment_number: p.paymentNumber,
+    amount: p.amount || 0,
+    date: p.date || '',
+    payment_method: p.paymentMethod || '',
+    cheque_number: p.chequeNumber || '',
+    received: p.received !== false,
+    deposited: !!p.deposited,
+    deposit_date: p.depositDate || null,
+    recorded_at: p.recordedAt || null,
+    auto_marked: !!p.autoMarked
+  };
+}
+
+function paymentFromDb(p) {
+  return {
+    id: p.id,
+    clientId: p.client_id,
+    contractId: p.contract_id,
+    paymentNumber: p.payment_number,
+    amount: p.amount,
+    date: p.date,
+    paymentMethod: p.payment_method,
+    chequeNumber: p.cheque_number,
+    received: p.received,
+    deposited: p.deposited,
+    depositDate: p.deposit_date,
+    recordedAt: p.recorded_at,
+    autoMarked: p.auto_marked
+  };
+}
+
+function invoiceToDb(inv) {
+  return {
+    id: inv.id,
+    client_id: inv.clientId || null,
+    amount: inv.amount || 0,
+    date: inv.date || '',
+    type: inv.type || '',
+    description: inv.description || ''
+  };
+}
+
+function invoiceFromDb(inv) {
+  return {
+    id: inv.id,
+    clientId: inv.client_id,
+    amount: inv.amount,
+    date: inv.date,
+    type: inv.type,
+    description: inv.description
+  };
+}
+
+// ========== ROUTES ==========
+
 app.get('/api/test', (req, res) => {
   console.log('✅ Route /api/test appelée');
   res.json({ 
@@ -119,7 +277,6 @@ app.post('/api/notifications/send', async (req, res) => {
   let smsResult = { success: false, error: null, skipped: !sendSms };
   let emailResult = { success: false, error: null, skipped: !sendEmail };
 
-  // Messages prédéfinis
   const messages = {
     enroute: `🚛 JM Pominville - Notre équipe est en route vers votre secteur. Merci de libérer votre entrée!`,
     arrived: `📍 JM Pominville - Notre équipe est arrivée dans votre secteur et commence le déneigement.`,
@@ -131,7 +288,6 @@ app.post('/api/notifications/send', async (req, res) => {
 
   const message = messages[type] || messages.custom;
 
-  // 1. Envoi SMS (si demandé ET numéro valide)
   if (sendSms && clientPhone) {
     try {
       console.log(`Tentative envoi SMS à ${clientPhone}...`);
@@ -148,19 +304,18 @@ app.post('/api/notifications/send', async (req, res) => {
 
       console.log(`✅ SMS envoyé avec succès à ${clientPhone}`);
       smsResult.success = true;
-
+      
     } catch (error) {
       console.error('❌ Erreur envoi SMS:', error.message);
       smsResult.error = error.message;
     }
   }
 
-  // 2. Envoi Email via Brevo (si demandé ET email valide)
   if (sendEmail && clientEmail) {
     try {
       console.log(`Tentative envoi Email (Brevo) à ${clientEmail}...`);
 
-      const subject = type === 'late_payment'
+      const subject = type === 'late_payment' 
         ? 'JM Pominville - Retard de paiement - Action requise'
         : type === 'payment_due_reminder'
           ? 'JM Pominville - Rappel de paiement'
@@ -170,14 +325,13 @@ app.post('/api/notifications/send', async (req, res) => {
 
       console.log(`✅ Email envoyé avec succès à ${clientEmail}`);
       emailResult.success = true;
-
+      
     } catch (error) {
       console.error('❌ Erreur envoi Email:', error.message);
       emailResult.error = error.message;
     }
   }
 
-  // Réponse finale
   const overallSuccess = smsResult.success || emailResult.success;
 
   res.json({
@@ -190,39 +344,50 @@ app.post('/api/notifications/send', async (req, res) => {
   });
 });
 
-// Route de synchronisation : sauvegarde les données de l'app côté serveur
-app.post('/api/sync', (req, res) => {
+// Route de synchronisation : sauvegarde les données de l'app dans Supabase
+app.post('/api/sync', async (req, res) => {
   try {
     const incoming = req.body || {};
-    const payload = {
-      clients: incoming.clients || [],
-      contracts: incoming.contracts || [],
-      invoices: incoming.invoices || [],
-      payments: incoming.payments || [],
-      notificationsHistory: incoming.notificationsHistory || [],
-      lastModified: incoming.lastModified || new Date().toISOString(),
-      savedAt: new Date().toISOString()
-    };
+    const clients = incoming.clients || [];
+    const contracts = incoming.contracts || [];
+    const invoices = incoming.invoices || [];
+    const payments = incoming.payments || [];
 
-    // Garder une copie de l'ancienne version comme filet de sécurité avant d'écraser
-    if (fs.existsSync(DATA_FILE)) {
-      fs.copyFileSync(DATA_FILE, BACKUP_FILE);
+    // On remplace complètement chaque table par les données reçues
+    await supabase.from('clients').delete().neq('id', -1);
+    await supabase.from('contracts').delete().neq('id', -1);
+    await supabase.from('payments').delete().neq('id', -1);
+    await supabase.from('invoices').delete().neq('id', -1);
+
+    if (clients.length > 0) {
+      const { error } = await supabase.from('clients').insert(clients.map(clientToDb));
+      if (error) throw error;
+    }
+    if (contracts.length > 0) {
+      const { error } = await supabase.from('contracts').insert(contracts.map(contractToDb));
+      if (error) throw error;
+    }
+    if (payments.length > 0) {
+      const { error } = await supabase.from('payments').insert(payments.map(paymentToDb));
+      if (error) throw error;
+    }
+    if (invoices.length > 0) {
+      const { error } = await supabase.from('invoices').insert(invoices.map(invoiceToDb));
+      if (error) throw error;
     }
 
-    fs.writeFileSync(DATA_FILE, JSON.stringify(payload, null, 2), 'utf8');
-
-    console.log(`✅ Synchronisation reçue et sauvegardée (${payload.clients.length} clients, ${payload.contracts.length} contrats)`);
+    console.log(`✅ Synchronisation Supabase réussie (${clients.length} clients, ${contracts.length} contrats)`);
 
     res.json({
       success: true,
-      message: 'Données synchronisées avec succès',
+      message: 'Données synchronisées avec succès (Supabase)',
       counts: {
-        clients: payload.clients.length,
-        contracts: payload.contracts.length,
-        invoices: payload.invoices.length,
-        payments: payload.payments.length
+        clients: clients.length,
+        contracts: contracts.length,
+        invoices: invoices.length,
+        payments: payments.length
       },
-      savedAt: payload.savedAt
+      savedAt: new Date().toISOString()
     });
   } catch (error) {
     console.error('❌ Erreur /api/sync (POST):', error.message);
@@ -230,13 +395,34 @@ app.post('/api/sync', (req, res) => {
   }
 });
 
-// Route pour récupérer la dernière sauvegarde du serveur (utile pour restaurer sur un autre appareil)
-app.get('/api/sync', (req, res) => {
+// Route pour récupérer les données depuis Supabase
+app.get('/api/sync', async (req, res) => {
   try {
-    if (!fs.existsSync(DATA_FILE)) {
+    const [clientsRes, contractsRes, paymentsRes, invoicesRes] = await Promise.all([
+      supabase.from('clients').select('*'),
+      supabase.from('contracts').select('*'),
+      supabase.from('payments').select('*'),
+      supabase.from('invoices').select('*')
+    ]);
+
+    if (clientsRes.error) throw clientsRes.error;
+    if (contractsRes.error) throw contractsRes.error;
+    if (paymentsRes.error) throw paymentsRes.error;
+    if (invoicesRes.error) throw invoicesRes.error;
+
+    const data = {
+      clients: (clientsRes.data || []).map(clientFromDb),
+      contracts: (contractsRes.data || []).map(contractFromDb),
+      payments: (paymentsRes.data || []).map(paymentFromDb),
+      invoices: (invoicesRes.data || []).map(invoiceFromDb),
+      notificationsHistory: [],
+      lastModified: new Date().toISOString()
+    };
+
+    if (data.clients.length === 0 && data.contracts.length === 0) {
       return res.status(404).json({ success: false, error: 'Aucune donnée sauvegardée trouvée sur le serveur.' });
     }
-    const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
+
     res.json({ success: true, data });
   } catch (error) {
     console.error('❌ Erreur /api/sync (GET):', error.message);
@@ -254,13 +440,14 @@ app.listen(PORT, '0.0.0.0', () => {
 ✅ Serveur: http://localhost:${PORT}
 ✅ Route test: /api/test
 ✅ Notifications: /api/notifications/send
-✅ Synchronisation: /api/sync (POST pour sauvegarder, GET pour récupérer)
+✅ Synchronisation: /api/sync (Supabase)
 
 📋 Configuration:
    - Twilio: ${process.env.TWILIO_ACCOUNT_SID ? '✅' : '❌'}
    - Brevo (Email): ${BREVO_API_KEY ? '✅' : '❌ (ajouter BREVO_API_KEY dans les variables environnement)'}
-   - Dossier de données: ${DATA_DIR}${process.env.DATA_DIR ? '' : ' ⚠️ (pas de Persistent Disk configuré — les données seront perdues au prochain déploiement)'}
+   - Supabase: ${process.env.SUPABASE_URL ? '✅' : '❌ (ajouter SUPABASE_URL et SUPABASE_KEY)'}
 
 En attente de requêtes...
   `);
 });
+
