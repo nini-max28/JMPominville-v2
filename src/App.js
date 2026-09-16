@@ -79,7 +79,7 @@ const [notificationLogs, setNotificationLogs] = useState([]);
   const [clientSortMode, setClientSortMode] = useState('street'); // 'street' ou 'name'
   const [contractSortMode, setContractSortMode] = useState('street'); // 'street' ou 'name'
   const [clientSearchFilters, setClientSearchFilters] = useState({
-    searchTerm: ''
+    searchTerm: '',
     type: '', 
     paymentStatus: '',
     streetName: ''
