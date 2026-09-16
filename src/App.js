@@ -499,10 +499,8 @@ const checkBackendConnection = async () => {
     }
     setIsManualSyncing(true);
     try {
-      // D'abord, on va chercher ce que le serveur a de plus récent (au cas où un autre appareil aurait changé des choses)
-      await pullFromBackend();
-
-      // Puis on pousse cet appareil vers le serveur, pour être sûr qu'il a bien la version la plus à jour
+      // On envoie D'ABORD cet appareil vers le serveur, pour ne jamais risquer d'écraser
+      // les données locales avec une version du serveur avant d'avoir sauvegardé les nôtres.
       const freshClients = loadFromStorage('clients');
       const freshContracts = loadFromStorage('contracts');
       const freshInvoices = loadFromStorage('invoices');
@@ -521,6 +519,7 @@ const checkBackendConnection = async () => {
       setIsManualSyncing(false);
     }
   };
+
 // FONCTION SIMPLIFIÉE - COMME AVANT
 const checkAndMarkPaymentsReceived = () => {
   // Éviter les doubles exécutions
