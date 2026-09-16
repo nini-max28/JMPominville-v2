@@ -352,33 +352,27 @@ app.post('/api/sync', async (req, res) => {
     const contracts = incoming.contracts || [];
     const invoices = incoming.invoices || [];
     const payments = incoming.payments || [];
-    const realLastModified = incoming.lastModified || new Date().toISOString();
+        const realLastModified = incoming.lastModified || new Date().toISOString();
 
     await supabase.from('sync_meta').upsert({ id: 1, last_modified: realLastModified });
 
-    // On remplace complètement chaque table par les données reçues
-    await supabase.from('clients').delete().neq('id', -1);
-
-    await supabase.from('contracts').delete().neq('id', -1);
-    await supabase.from('payments').delete().neq('id', -1);
-    await supabase.from('invoices').delete().neq('id', -1);
-
     if (clients.length > 0) {
-      const { error } = await supabase.from('clients').insert(clients.map(clientToDb));
+      const { error } = await supabase.from('clients').upsert(clients.map(clientToDb), { onConflict: 'id' });
       if (error) throw error;
     }
     if (contracts.length > 0) {
-      const { error } = await supabase.from('contracts').insert(contracts.map(contractToDb));
+      const { error } = await supabase.from('contracts').upsert(contracts.map(contractToDb), { onConflict: 'id' });
       if (error) throw error;
     }
     if (payments.length > 0) {
-      const { error } = await supabase.from('payments').insert(payments.map(paymentToDb));
+      const { error } = await supabase.from('payments').upsert(payments.map(paymentToDb), { onConflict: 'id' });
       if (error) throw error;
     }
     if (invoices.length > 0) {
-      const { error } = await supabase.from('invoices').insert(invoices.map(invoiceToDb));
+      const { error } = await supabase.from('invoices').upsert(invoices.map(invoiceToDb), { onConflict: 'id' });
       if (error) throw error;
     }
+
 
     console.log(`✅ Synchronisation Supabase réussie (${clients.length} clients, ${contracts.length} contrats)`);
 
