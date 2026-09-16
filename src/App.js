@@ -154,9 +154,9 @@ useEffect(() => {
     // Vérification initiale du backend
     await checkBackendConnection();
 
-    // Récupère automatiquement les données les plus récentes du serveur (sync multi-appareils)
-    await pullFromBackend();
-    
+       // ⏸️ Récupération automatique désactivée temporairement pendant la récupération de données
+    // await pullFromBackend();
+ 
     setTimeout(() => { 
       archiveOldContracts();
       checkAndMarkPaymentsReceived();
@@ -174,9 +174,11 @@ useEffect(() => {
   const handleOffline = () => setIsOnline(false);
   
   // Configuration des intervals et event listeners
+    // Configuration des intervals et event listeners
   const backendInterval = setInterval(checkBackendConnection, 60000);
-  const pullInterval = setInterval(pullFromBackend, 120000); // vérifie les MAJ d'un autre appareil toutes les 2 min
-  
+  // ⏸️ Synchronisation automatique temporairement désactivée pendant la récupération de données
+  // const pullInterval = setInterval(pullFromBackend, 120000);
+
   window.addEventListener('online', handleOnline);
   window.addEventListener('offline', handleOffline);
     
