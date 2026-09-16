@@ -183,12 +183,12 @@ useEffect(() => {
   window.addEventListener('offline', handleOffline);
     
   // Fonction de nettoyage retournée par useEffect
-  return () => {
+    return () => {
     clearInterval(backendInterval);
-    clearInterval(pullInterval);
     window.removeEventListener('online', handleOnline);
     window.removeEventListener('offline', handleOffline);
   };
+
 }, []); // ← Fermez le premier useEffect ici
 
 // ✅ Second useEffect séparé
