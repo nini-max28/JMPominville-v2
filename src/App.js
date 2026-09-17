@@ -5195,7 +5195,7 @@ Merci de votre patience!
         📅 Corriger dates sélection ({selectedContracts.length})
       </button>
 
-      <button
+            <button
         onClick={() => bulkSetStartDate()}
         disabled={selectedContracts.length === 0}
         style={{
@@ -5211,7 +5211,75 @@ Merci de votre patience!
       </button>
     </div>
   )}
+
+  {!showArchived && (() => {
+    const currentSeason = getSeasonLabel(new Date().toISOString());
+    const notYetRenewed = getRenewableContracts().filter(c => getSeasonLabel(c.startDate) !== currentSeason);
+
+    if (notYetRenewed.length === 0) return null;
+
+    return (
+      <div style={{
+        background: '#f8d7da', border: '2px solid #dc3545', borderRadius: '12px',
+        padding: '15px', marginTop: '10px'
+      }}>
+        <h4 style={{ color: '#721c24', marginBottom: '10px' }}>
+          ⚠️ {notYetRenewed.length} client(s) pas encore renouvelé(s) pour {currentSeason}
+        </h4>
+        <div style={{ fontSize: '12px', color: '#721c24', marginBottom: '12px' }}>
+          Ces clients ont un contrat actif, mais rien n'indique s'ils continuent ou non — pense à les contacter.
+        </div>
+        <div style={{ maxHeight: '300px', overflowY: 'auto', display: 'grid', gap: '8px' }}>
+          {notYetRenewed
+            .sort((a, b) => {
+              const clientA = clients.find(c => c.id === a.clientId);
+              const clientB = clients.find(c => c.id === b.clientId);
+              return (clientA?.name || '').localeCompare(clientB?.name || '');
+            })
+            .map(contract => {
+              const client = clients.find(c => c.id === contract.clientId);
+              if (!client) return null;
+              return (
+                <div key={contract.id} style={{
+                  background: 'white', padding: '10px 12px', borderRadius: '8px',
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  flexWrap: 'wrap', gap: '8px'
+                }}>
+                  <div>
+                    <strong>{client.name}</strong>
+                    <div style={{ fontSize: '12px', color: '#666' }}>
+                      📞 {client.phone} · {client.address}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <button
+                      onClick={() => renewContract(contract.id)}
+                      style={{
+                        padding: '5px 10px', fontSize: '12px', background: '#ffc107', color: '#000',
+                        border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold'
+                      }}
+                    >
+                      🔄 Renouveler
+                    </button>
+                    <button
+                      onClick={() => cancelContractNotRenewed(contract.id)}
+                      style={{
+                        padding: '5px 10px', fontSize: '12px', background: '#6c757d', color: 'white',
+                        border: 'none', borderRadius: '4px', cursor: 'pointer'
+                      }}
+                    >
+                      🚫 Ne renouvelle pas
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+        </div>
+      </div>
+    );
+  })()}
 </div>
+
 
 {/* Modal d'ajout de client */}
 {showAddClientModal && (
