@@ -5415,21 +5415,46 @@ Merci de votre patience!
             />
           </div>
 
-          <div>
-            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type *</label>
-            <select
-              value={clientForm.type}
-              onChange={(e) => setClientForm({ ...clientForm, type: e.target.value })}
+                     <div>
+              <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Type *</label>
+              <select
+                value={clientForm.type}
+                onChange={(e) => setClientForm({ ...clientForm, type: e.target.value })}
+                style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+              >
+                <option value="">Sélectionner...</option>
+                <option value="résidentiel">Résidentiel</option>
+                <option value="commercial">Commercial</option>
+                <option value="industriel">Industriel</option>
+              </select>
+            </div>
+          </div>
+          
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Adresse complète *</label>
+            <textarea
+              rows="2" 
+              value={clientForm.address}
+              onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })}
+              placeholder="123 Rue Example, Ville, Province, Code postal"
               style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-            >
-              <option value="">Sélectionner...</option>
-              <option value="résidentiel">Résidentiel</option>
-              <option value="commercial">Commercial</option>
-              <option value="industriel">Industriel</option>
-            </select>
+            />
+          </div>
+
+          <div style={{ marginBottom: '15px' }}>
+            <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Adresse de facturation (si différente, optionnel)</label>
+            <textarea
+              rows="2" 
+              value={clientForm.billingAddress || ''}
+              onChange={(e) => setClientForm({ ...clientForm, billingAddress: e.target.value })}
+              placeholder="Laisse vide si identique à l'adresse du service"
+              style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
+            />
           </div>
         </div>
-        
+
+        {/* SECTION 2: Contrat */}
+
        
 
       {/* SECTION 2: Contrat */}
