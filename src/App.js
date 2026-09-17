@@ -1197,7 +1197,7 @@ const addClient = () => {
   const clientId = Date.now();
 
   // ✅ CRÉER LE CLIENT
-  const client = {
+            const client = {
     id: clientId,
     name: clientForm.name,
     phone: clientForm.phone,
@@ -1205,8 +1205,9 @@ const addClient = () => {
     email: clientForm.email,
     type: clientForm.type,
     address: clientForm.address,
-    paymentStructure: clientForm.paymentStructure,
-    
+    billingAddress: clientForm.billingAddress || '',
+
+
     // 1er paiement
     firstPaymentDate: clientForm.firstPaymentDate,
     firstPaymentMethod: clientForm.firstPaymentMethod,
@@ -1372,8 +1373,10 @@ const saveEditClient = () => {
           phone2: editClientForm.phone2 || '',
           email: editClientForm.email || '',
           type: editClientForm.type || client.type,
-          address: editClientForm.address,
+                 address: editClientForm.address,
+          billingAddress: editClientForm.billingAddress || '',
           paymentStructure: editClientForm.paymentStructure || client.paymentStructure,
+
           firstPaymentDate: editClientForm.firstPaymentDate || client.firstPaymentDate,
           firstPaymentMethod: editClientForm.firstPaymentMethod || client.firstPaymentMethod,
           secondPaymentDate: editClientForm.secondPaymentDate || client.secondPaymentDate,
@@ -2493,7 +2496,9 @@ const paymentAmount = contract.amount / numPayments;
         <div style="margin-bottom: 9px;">
   <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 5px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 3px;">Informations du Client :</h3>
   <p style="margin: 5px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
-  <p style="margin: 5px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
+  <p style="margin: Xpx 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
+${client.billingAddress ? `<p style="margin: Xpx 0;"><strong>• Adresse de Facturation :</strong> ${client.billingAddress}</p>` : ''}
+
   <p style="margin: 5px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
 ${client.phone2 ? `<p style="margin: 5px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
 ${client.email 
@@ -3327,7 +3332,9 @@ const paymentAmount = contract.amount / numPayments;
      <div style="margin-bottom: 3px;">
   <h3 style="color: #1a4d1a; font-size: 12px; margin-bottom: 4px; font-weight: bold; border-bottom: 2px solid #1a4d1a; padding-bottom: 2px;">Informations du Client :</h3>
   <p style="margin: 2px 0;"><strong>• Prénom et Nom :</strong> ${client.name}</p>
-  <p style="margin: 2px 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
+  <p style="margin: Xpx 0;"><strong>• Adresse du Service :</strong> ${client.address}</p>
+${client.billingAddress ? `<p style="margin: Xpx 0;"><strong>• Adresse de Facturation :</strong> ${client.billingAddress}</p>` : ''}
+
   <p style="margin: 5px 0;"><strong>• Numéro de Téléphone :</strong> ${client.phone}</p>
 ${client.phone2 ? `<p style="margin: 5px 0;"><strong>• Téléphone 2 :</strong> ${client.phone2}</p>` : ''}
 ${client.email 
@@ -9194,7 +9201,7 @@ Merci de votre patience!
           />
         </div>
 
-        {/* Adresse */}
+         {/* Adresse */}
         <div style={{ gridColumn: '1 / -1' }}>
           <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
             Adresse *
@@ -9203,6 +9210,28 @@ Merci de votre patience!
             type="text" 
             value={editClientForm.address}
             onChange={(e) => setEditClientForm({ ...editClientForm, address: e.target.value })}
+            style={{ 
+              width: '100%', 
+              padding: '10px 12px', 
+              borderRadius: '6px', 
+              border: '1px solid #ced4da',
+              fontSize: '14px'
+            }}
+            onFocus={(e) => e.target.style.borderColor = '#1a4d1a'}
+            onBlur={(e) => e.target.style.borderColor = '#ced4da'}
+          />
+        </div>
+
+        {/* Adresse de facturation */}
+        <div style={{ gridColumn: '1 / -1' }}>
+          <label style={{ display: 'block', marginBottom: '8px', fontWeight: 'bold', color: '#495057' }}>
+            Adresse de facturation (si différente, optionnel)
+          </label>
+          <input
+            type="text" 
+            value={editClientForm.billingAddress || ''}
+            onChange={(e) => setEditClientForm({ ...editClientForm, billingAddress: e.target.value })}
+            placeholder="Laisse vide si identique à l'adresse du service"
             style={{ 
               width: '100%', 
               padding: '10px 12px', 
