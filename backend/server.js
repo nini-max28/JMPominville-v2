@@ -368,12 +368,20 @@ app.post('/api/sync', async (req, res) => {
       const { error } = await supabase.from('contracts').upsert(contracts.map(contractToDb), { onConflict: 'id' });
       if (error) throw error;
     }
-    if (payments.length > 0) {
-      const { error } = await supabase.from('payments').upsert(payments.map(paymentToDb), { onConflict: 'id' });
+        if (payments.length > 0) {
+      const paymentsMapped = payments.map(paymentToDb);
+      const paymentsDeduped = Array.from(
+        new Map(paymentsMapped.map(p => [p.id, p])).values()
+      );
+      const { error } = await supabase.from('payments').upsert(paymentsDeduped, { onConflict: 'id' });
       if (error) throw error;
     }
     if (invoices.length > 0) {
-      const { error } = await supabase.from('invoices').upsert(invoices.map(invoiceToDb), { onConflict: 'id' });
+      const invoicesMapped = invoices.map(invoiceToDb);
+      const invoicesDeduped = Array.from(
+        new Map(invoicesMapped.map(inv => [inv.id, inv])).values()
+      );
+      const { error } = await supabase.from('invoices').upsert(invoicesDeduped, { onConflict: 'id' });
       if (error) throw error;
     }
 
