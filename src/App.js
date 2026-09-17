@@ -5430,15 +5430,7 @@ Merci de votre patience!
           </div>
         </div>
         
-          const client = {
-    id: clientId,
-    name: clientForm.name,
-    phone: clientForm.phone,
-    phone2: clientForm.phone2 || '',
-    email: clientForm.email,
-    type: clientForm.type,
-    address: clientForm.address,
-
+       
 
       {/* SECTION 2: Contrat */}
       <div style={{ 
