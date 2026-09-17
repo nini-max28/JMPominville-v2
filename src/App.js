@@ -5423,17 +5423,15 @@ Merci de votre patience!
           </div>
         </div>
         
-        <div style={{ marginBottom: '15px' }}>
-          <label style={{ display: 'block', marginBottom: '5px', fontWeight: 'bold' }}>Adresse complète *</label>
-          <textarea
-            rows="2" 
-            value={clientForm.address}
-            onChange={(e) => setClientForm({ ...clientForm, address: e.target.value })}
-            placeholder="123 Rue Example, Ville, Province, Code postal"
-            style={{ width: '100%', padding: '8px 12px', borderRadius: '6px', border: '1px solid #ddd' }}
-          />
-        </div>
-      </div>
+          const client = {
+    id: clientId,
+    name: clientForm.name,
+    phone: clientForm.phone,
+    phone2: clientForm.phone2 || '',
+    email: clientForm.email,
+    type: clientForm.type,
+    address: clientForm.address,
+
 
       {/* SECTION 2: Contrat */}
       <div style={{ 
