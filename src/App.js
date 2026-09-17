@@ -4088,7 +4088,7 @@ Merci de votre patience!
                 <span style={{ fontSize: '14px', opacity: 0.8 }}>
                   Dernière sync: {lastSync}
                 </span>
-                <button
+                                <button
                   onClick={() => manualSync()}
                   disabled={isManualSyncing}
                   style={{
@@ -4100,8 +4100,37 @@ Merci de votre patience!
                     fontSize: '13px', fontWeight: 'bold'
                   }}
                 >
-                  {isManualSyncing ? '⏳ Synchronisation...' : '🔄 Synchroniser maintenant'}
+                  {isManualSyncing ? '⏳ Synchronisation...' : '📤 Envoyer vers le serveur'}
                 </button>
+                <button
+                  onClick={async () => {
+                    if (!window.confirm('⚠️ Ceci va REMPLACER les données de CET appareil par celles du serveur.\n\nContinuer seulement si tu es sûr que le serveur a la bonne version.')) {
+                      return;
+                    }
+                    setIsManualSyncing(true);
+                    try {
+                      await pullFromBackend();
+                      alert('✅ Données récupérées du serveur avec succès!');
+                    } catch (error) {
+                      alert(`❌ Échec de la récupération: ${error.message}`);
+                    } finally {
+                      setIsManualSyncing(false);
+                    }
+                  }}
+                  disabled={isManualSyncing}
+                  style={{
+                    padding: '6px 14px', 
+                    background: isManualSyncing ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.2)', 
+                    color: 'white',
+                    border: '1px solid rgba(255,255,255,0.5)', borderRadius: '6px', 
+                    cursor: isManualSyncing ? 'not-allowed' : 'pointer', 
+                    fontSize: '13px', fontWeight: 'bold',
+                    marginLeft: '8px'
+                  }}
+                >
+                  📥 Récupérer du serveur
+                </button>
+
               </div>
             </div>
             
