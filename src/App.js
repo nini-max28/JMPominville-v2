@@ -2832,7 +2832,7 @@ const handlePaymentMethodSelect = (method) => {
 };
 
   // FONCTIONS UTILITAIRES
-  const isPaymentReceived = (clientId, paymentNumber, contractId = null) => {
+    const isPaymentReceived = (clientId, paymentNumber, contractId = null) => {
     const contractForCheck = contractId ? contracts.find(c => c.id === contractId) : null;
 
     if (contractForCheck) {
@@ -2844,10 +2844,8 @@ const handlePaymentMethodSelect = (method) => {
         payment.received
       );
       if (matchForContract) return true;
-
-           // 2) Repli pour les paiements enregistrés AVANT ce correctif (pas de contractId) :
-      // on ne les compte pour CE contrat que si leur date tombe après le début de celui-ci,
-      // pour éviter qu'un paiement de la saison précédente soit compté pour la nouvelle saison.
+      
+      // 2) Repli pour les paiements enregistrés AVANT ce correctif (pas de contractId) :
       const legacyMatch = payments.some(payment =>
         payment.clientId === clientId &&
         payment.paymentNumber === paymentNumber &&
@@ -2855,7 +2853,19 @@ const handlePaymentMethodSelect = (method) => {
         !payment.contractId &&
         (!contractForCheck.startDate || !payment.date || new Date(payment.date) >= new Date(contractForCheck.startDate))
       );
-      return legacyMatch;
+      if (legacyMatch) return true;
+
+      // 3) Repli supplémentaire : un contractId présent mais qui ne correspond à AUCUN contrat
+      // existant (lien brisé, probablement dû à un changement d'identifiant). On accepte quand
+      // même le paiement s'il correspond au bon client/versement et tombe après le début du contrat.
+      const brokenLinkMatch = payments.some(payment => {
+        if (payment.clientId !== clientId || payment.paymentNumber !== paymentNumber || !payment.received) return false;
+        if (!payment.contractId) return false;
+        const linkedContractStillExists = contracts.some(c => c.id === payment.contractId);
+        if (linkedContractStillExists) return false; // lien valide vers un AUTRE contrat, on ne le vole pas
+        return !contractForCheck.startDate || !payment.date || new Date(payment.date) >= new Date(contractForCheck.startDate);
+      });
+      return brokenLinkMatch;
     }
 
     return payments.some(payment =>
@@ -2864,6 +2874,7 @@ const handlePaymentMethodSelect = (method) => {
       payment.received
     );
   };
+
 
 
   // Retourne le détail des paiements réellement reçus pour la SAISON EN COURS uniquement
