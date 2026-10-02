@@ -5016,20 +5016,18 @@ Merci de votre patience!
       </div>
       <div style={{ fontSize: '13px', color: '#155724' }}>Contrats Actifs</div>
     </div>
-
-    <div style={{ background: '#e3f2fd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
-      <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#1976d2' }}>
-        {(() => {
-          const currentSeason = getSeasonLabel(new Date().toISOString());
-          return contracts.filter(c => 
-            !c.archived && 
-            getSeasonLabel(c.startDate) === currentSeason && 
-            isPaymentReceived(c.clientId, 1, c.id)
-          ).length;
-        })()}
+              <div style={{ background: '#e3f2fd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
+        <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#1976d2' }}>
+          {(() => {
+            return contracts.filter(c => 
+              !c.archived && 
+              isPaymentReceived(c.clientId, 1, c.id)
+            ).length;
+          })()}
+        </div>
+        <div style={{ fontSize: '13px', color: '#1976d2' }}>Confirmés par paiement ({getSeasonLabel(new Date().toISOString())})</div>
       </div>
-      <div style={{ fontSize: '13px', color: '#1976d2' }}>Confirmés par paiement ({getSeasonLabel(new Date().toISOString())})</div>
-    </div>
+
       
     <div style={{ background: '#fff3cd', padding: '15px', borderRadius: '8px', textAlign: 'center' }}>
       <div style={{ fontSize: '1.8em', fontWeight: 'bold', color: '#856404' }}>
