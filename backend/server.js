@@ -406,7 +406,7 @@ app.post('/api/sync', async (req, res) => {
 });
 
 // Route pour récupérer les données depuis Supabase
-app.get('/api/sync', async (req, res) => {
+('/api/sync', async (req, res) => {
   try {
     const [clientsRes, contractsRes, paymentsRes, invoicesRes, metaRes] = await Promise.all([
       supabase.from('clients').select('*'),
@@ -441,8 +441,37 @@ app.get('/api/sync', async (req, res) => {
   }
 });
 
+// Route d'export pour la migration vers l'app native (CloudKit)
+app.get('/api/export-for-migration', async (req, res) => {
+  try {
+    const [clientsRes, contractsRes, paymentsRes, invoicesRes] = await Promise.all([
+      supabase.from('clients').select('*'),
+      supabase.from('contracts').select('*'),
+      supabase.from('payments').select('*'),
+      supabase.from('invoices').select('*')
+    ]);
+
+    if (clientsRes.error) throw clientsRes.error;
+    if (contractsRes.error) throw contractsRes.error;
+    if (paymentsRes.error) throw paymentsRes.error;
+    if (invoicesRes.error) throw invoicesRes.error;
+
+    res.json({
+      success: true,
+      clients: clientsRes.data || [],
+      contracts: contractsRes.data || [],
+      payments: paymentsRes.data || [],
+      invoices: invoicesRes.data || []
+    });
+  } catch (error) {
+    console.error('❌ Erreur /api/export-for-migration:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Démarrage serveur
 app.listen(PORT, '0.0.0.0', () => {
+
   console.log(`
 ╔════════════════════════════════════════╗
 ║   🚀 BACKEND JM POMINVILLE DÉMARRÉ    ║
