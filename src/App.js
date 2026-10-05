@@ -3054,8 +3054,12 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
     const manualRevenueCurrentSeason = invoices
       .filter(inv => inv.type === 'revenu' && getSeasonLabel(inv.date) === currentSeason)
       .reduce((sum, inv) => sum + inv.amount, 0);
-    return manualRevenueCurrentSeason + getClientPaymentsTotal(true);
+    const clientPaymentsCurrentSeason = payments
+      .filter(p => getSeasonLabel(p.date) === currentSeason)
+      .reduce((sum, p) => sum + p.amount, 0);
+    return manualRevenueCurrentSeason + clientPaymentsCurrentSeason;
   };
+
 
   // Bénéfice net = revenus totaux - dépenses
   const getNetProfit = (ignoreFilter = false) => getTotalRevenue(ignoreFilter) - getManualExpenses(ignoreFilter);
