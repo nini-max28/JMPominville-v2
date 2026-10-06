@@ -2870,9 +2870,21 @@ const handlePaymentMethodSelect = (method) => {
 
   // FONCTIONS UTILITAIRES
     const isPaymentReceived = (clientId, paymentNumber, contractId = null) => {
-    const contractForCheck = contractId ? contracts.find(c => c.id === contractId) : null;
+    if (contractId) {
+      return payments.some(payment =>
+        payment.clientId === clientId &&
+        payment.paymentNumber === paymentNumber &&
+        payment.contractId === contractId &&
+        payment.received
+      );
+    }
+    return payments.some(payment =>
+      payment.clientId === clientId &&
+      payment.paymentNumber === paymentNumber &&
+      payment.received
+    );
+  };
 
-    if (contractForCheck) {
       // 1) Paiement explicitement lié à CE contrat (nouvelle méthode, la plus fiable)
       const matchForContract = payments.some(payment =>
         payment.clientId === clientId &&
