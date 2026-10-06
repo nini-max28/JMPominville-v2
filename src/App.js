@@ -2883,21 +2883,7 @@ const handlePaymentMethodSelect = (method) => {
       payment.paymentNumber === paymentNumber &&
       payment.received
     );
-    const isPaymentReceived = (clientId, paymentNumber, contractId = null) => {
-    if (contractId) {
-      return payments.some(payment =>
-        payment.clientId === clientId &&
-        payment.paymentNumber === paymentNumber &&
-        payment.contractId === contractId &&
-        payment.received
-      );
-    }
-    return payments.some(payment =>
-      payment.clientId === clientId &&
-      payment.paymentNumber === paymentNumber &&
-      payment.received
-    );
-  };
+    };
 
 
 
