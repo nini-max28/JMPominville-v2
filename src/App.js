@@ -2883,46 +2883,22 @@ const handlePaymentMethodSelect = (method) => {
       payment.paymentNumber === paymentNumber &&
       payment.received
     );
-  };
-
-      // 1) Paiement explicitement lié à CE contrat (nouvelle méthode, la plus fiable)
-      const matchForContract = payments.some(payment =>
+    const isPaymentReceived = (clientId, paymentNumber, contractId = null) => {
+    if (contractId) {
+      return payments.some(payment =>
         payment.clientId === clientId &&
         payment.paymentNumber === paymentNumber &&
         payment.contractId === contractId &&
         payment.received
       );
-      if (matchForContract) return true;
-      
-      // 2) Repli pour les paiements enregistrés AVANT ce correctif (pas de contractId) :
-      const legacyMatch = payments.some(payment =>
-        payment.clientId === clientId &&
-        payment.paymentNumber === paymentNumber &&
-        payment.received &&
-        !payment.contractId &&
-        (!contractForCheck.startDate || !payment.date || new Date(payment.date) >= new Date(contractForCheck.startDate))
-      );
-      if (legacyMatch) return true;
-
-      // 3) Repli supplémentaire : un contractId présent mais qui ne correspond à AUCUN contrat
-      // existant (lien brisé, probablement dû à un changement d'identifiant). On accepte quand
-      // même le paiement s'il correspond au bon client/versement et tombe après le début du contrat.
-      const brokenLinkMatch = payments.some(payment => {
-        if (payment.clientId !== clientId || payment.paymentNumber !== paymentNumber || !payment.received) return false;
-        if (!payment.contractId) return false;
-        const linkedContractStillExists = contracts.some(c => c.id === payment.contractId);
-        if (linkedContractStillExists) return false; // lien valide vers un AUTRE contrat, on ne le vole pas
-        return !contractForCheck.startDate || !payment.date || new Date(payment.date) >= new Date(contractForCheck.startDate);
-      });
-      return brokenLinkMatch;
     }
-
     return payments.some(payment =>
       payment.clientId === clientId &&
       payment.paymentNumber === paymentNumber &&
       payment.received
     );
   };
+
 
 
 
