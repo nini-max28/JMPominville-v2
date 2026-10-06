@@ -441,6 +441,7 @@ app.post('/api/sync', async (req, res) => {
     }
   });
 
+
 // Route pour récupérer les données depuis Supabase
 app.get('/api/sync', async (req, res) => {
   try {
