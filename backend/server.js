@@ -511,8 +511,100 @@ app.get('/api/export-for-migration', async (req, res) => {
   }
 });
 
+// Route de réparation unique : relie chaque paiement à son vrai contrat,
+// en se basant sur le client et la date du paiement par rapport aux dates du contrat.
+app.get('/api/repair-payment-links', async (req, res) => {
+  try {
+    const [clientsRes, contractsRes, paymentsRes] = await Promise.all([
+      supabase.from('clients').select('*').range(0, 49999),
+      supabase.from('contracts').select('*').range(0, 49999),
+      supabase.from('payments').select('*').range(0, 49999)
+    ]);
+
+    if (clientsRes.error) throw clientsRes.error;
+    if (contractsRes.error) throw contractsRes.error;
+    if (paymentsRes.error) throw paymentsRes.error;
+
+    const contracts = contractsRes.data || [];
+    const payments = paymentsRes.data || [];
+
+    let repaired = 0;
+    let alreadyLinked = 0;
+    let unmatched = 0;
+    const updates = [];
+
+    for (const payment of payments) {
+      // Vérifie si le lien actuel pointe vers un contrat qui existe vraiment
+      const currentLinkValid = payment.contract_id &&
+        contracts.some(c => c.id === payment.contract_id);
+
+      if (currentLinkValid) {
+        alreadyLinked++;
+        continue;
+      }
+
+      // Cherche tous les contrats de ce client
+      const clientContracts = contracts.filter(c => c.client_id === payment.client_id);
+
+      if (clientContracts.length === 0) {
+        unmatched++;
+        continue;
+      }
+
+      // Cherche celui dont la plage de dates contient la date du paiement
+      const paymentDate = payment.date ? new Date(payment.date) : null;
+      let bestMatch = null;
+
+      if (paymentDate) {
+        bestMatch = clientContracts.find(c => {
+          if (!c.start_date || !c.end_date) return false;
+          const start = new Date(c.start_date);
+          const end = new Date(c.end_date);
+          return paymentDate >= start && paymentDate <= end;
+        });
+      }
+
+      // Si aucune plage ne correspond, prend le contrat actif (non archivé) s'il y en a un seul
+      if (!bestMatch) {
+        const activeOnes = clientContracts.filter(c => !c.archived);
+        if (activeOnes.length === 1) {
+          bestMatch = activeOnes[0];
+        }
+      }
+
+      if (bestMatch) {
+        updates.push({ id: payment.id, contract_id: bestMatch.id });
+        repaired++;
+      } else {
+        unmatched++;
+      }
+    }
+
+    // Applique les mises à jour en petits lots
+    for (let i = 0; i < updates.length; i += 200) {
+      const batch = updates.slice(i, i + 200);
+      for (const u of batch) {
+        const { error } = await supabase.from('payments').update({ contract_id: u.contract_id }).eq('id', u.id);
+        if (error) console.error('Erreur mise à jour paiement', u.id, error.message);
+      }
+    }
+
+    res.json({
+      success: true,
+      totalPayments: payments.length,
+      alreadyLinked,
+      repaired,
+      unmatched
+    });
+  } catch (error) {
+    console.error('❌ Erreur /api/repair-payment-links:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Démarrage serveur
 app.listen(PORT, '0.0.0.0', () => {
+
 
   console.log(`
 ╔════════════════════════════════════════╗
