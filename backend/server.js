@@ -34,6 +34,31 @@ if (!BREVO_SENDER_EMAIL) {
 } else {
   console.log(`📧 Adresse expéditeur Brevo utilisée: ${BREVO_SENDER_EMAIL}`);
 }
+// Récupère TOUTES les lignes d'une table, peu importe combien il y en a,
+// en contournant la limite de 1000 lignes par requête de Supabase.
+async function fetchAllRows(tableName) {
+  let allRows = [];
+  let from = 0;
+  const pageSize = 1000;
+
+  while (true) {
+    const { data, error } = await supabase
+      .from(tableName)
+      .select('*')
+      .range(from, from + pageSize - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    allRows = allRows.concat(data);
+
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+
+  return allRows;
+}
+
 
 // ========== CONVERSION ENTRE LE FORMAT DE L'APP (camelCase) ET SUPABASE (snake_case) ==========
 
@@ -445,28 +470,23 @@ app.post('/api/sync', async (req, res) => {
 // Route pour récupérer les données depuis Supabase
 app.get('/api/sync', async (req, res) => {
   try {
-    const [clientsRes, contractsRes, paymentsRes, invoicesRes, metaRes] = await Promise.all([
-      supabase.from('clients').select('*').range(0, 49999),
-      supabase.from('contracts').select('*').range(0, 49999),
-      supabase.from('payments').select('*').range(0, 49999),
-      supabase.from('invoices').select('*').range(0, 49999),
+        const [allClients, allContracts, allPayments, allInvoices, metaRes] = await Promise.all([
+      fetchAllRows('clients'),
+      fetchAllRows('contracts'),
+      fetchAllRows('payments'),
+      fetchAllRows('invoices'),
       supabase.from('sync_meta').select('*').eq('id', 1).maybeSingle()
     ]);
 
-
-    if (clientsRes.error) throw clientsRes.error;
-    if (contractsRes.error) throw contractsRes.error;
-    if (paymentsRes.error) throw paymentsRes.error;
-    if (invoicesRes.error) throw invoicesRes.error;
-
     const data = {
-      clients: (clientsRes.data || []).map(clientFromDb),
-      contracts: (contractsRes.data || []).map(contractFromDb),
-      payments: (paymentsRes.data || []).map(paymentFromDb),
-      invoices: (invoicesRes.data || []).map(invoiceFromDb),
+      clients: allClients.map(clientFromDb),
+      contracts: allContracts.map(contractFromDb),
+      payments: allPayments.map(paymentFromDb),
+      invoices: allInvoices.map(invoiceFromDb),
       notificationsHistory: [],
       lastModified: (metaRes.data && metaRes.data.last_modified) || null
     };
+
 
     if (data.clients.length === 0 && data.contracts.length === 0) {
       return res.status(404).json({ success: false, error: 'Aucune donnée sauvegardée trouvée sur le serveur.' });
@@ -485,26 +505,21 @@ app.get('/api/sync', async (req, res) => {
 // Route d'export pour la migration vers l'app native (CloudKit)
 app.get('/api/export-for-migration', async (req, res) => {
   try {
-    const [clientsRes, contractsRes, paymentsRes, invoicesRes] = await Promise.all([
-      supabase.from('clients').select('*').range(0, 49999),
-      supabase.from('contracts').select('*').range(0, 49999),
-      supabase.from('payments').select('*').range(0, 49999),
-      supabase.from('invoices').select('*').range(0, 49999)
+    const [allClients, allContracts, allPayments, allInvoices] = await Promise.all([
+      fetchAllRows('clients'),
+      fetchAllRows('contracts'),
+      fetchAllRows('payments'),
+      fetchAllRows('invoices')
     ]);
-
-
-    if (clientsRes.error) throw clientsRes.error;
-    if (contractsRes.error) throw contractsRes.error;
-    if (paymentsRes.error) throw paymentsRes.error;
-    if (invoicesRes.error) throw invoicesRes.error;
 
     res.json({
       success: true,
-      clients: clientsRes.data || [],
-      contracts: contractsRes.data || [],
-      payments: paymentsRes.data || [],
-      invoices: invoicesRes.data || []
+      clients: allClients,
+      contracts: allContracts,
+      payments: allPayments,
+      invoices: allInvoices
     });
+
   } catch (error) {
     console.error('❌ Erreur /api/export-for-migration:', error.message);
     res.status(500).json({ success: false, error: error.message });
@@ -515,18 +530,12 @@ app.get('/api/export-for-migration', async (req, res) => {
 // en se basant sur le client et la date du paiement par rapport aux dates du contrat.
 app.get('/api/repair-payment-links', async (req, res) => {
   try {
-    const [clientsRes, contractsRes, paymentsRes] = await Promise.all([
-      supabase.from('clients').select('*').range(0, 49999),
-      supabase.from('contracts').select('*').range(0, 49999),
-      supabase.from('payments').select('*').range(0, 49999)
+    const [clients, contracts, payments] = await Promise.all([
+      fetchAllRows('clients'),
+      fetchAllRows('contracts'),
+      fetchAllRows('payments')
     ]);
 
-    if (clientsRes.error) throw clientsRes.error;
-    if (contractsRes.error) throw contractsRes.error;
-    if (paymentsRes.error) throw paymentsRes.error;
-
-    const contracts = contractsRes.data || [];
-    const payments = paymentsRes.data || [];
 
     let repaired = 0;
     let alreadyLinked = 0;
