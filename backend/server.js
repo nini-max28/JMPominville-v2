@@ -440,6 +440,42 @@ app.post('/api/sync', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+// Route pour récupérer les données depuis Supabase
+app.get('/api/sync', async (req, res) => {
+  try {
+    const [clientsRes, contractsRes, paymentsRes, invoicesRes, metaRes] = await Promise.all([
+      supabase.from('clients').select('*'),
+      supabase.from('contracts').select('*'),
+      supabase.from('payments').select('*'),
+      supabase.from('invoices').select('*'),
+      supabase.from('sync_meta').select('*').eq('id', 1).maybeSingle()
+    ]);
+
+    if (clientsRes.error) throw clientsRes.error;
+    if (contractsRes.error) throw contractsRes.error;
+    if (paymentsRes.error) throw paymentsRes.error;
+    if (invoicesRes.error) throw invoicesRes.error;
+
+    const data = {
+      clients: (clientsRes.data || []).map(clientFromDb),
+      contracts: (contractsRes.data || []).map(contractFromDb),
+      payments: (paymentsRes.data || []).map(paymentFromDb),
+      invoices: (invoicesRes.data || []).map(invoiceFromDb),
+      notificationsHistory: [],
+      lastModified: (metaRes.data && metaRes.data.last_modified) || null
+    };
+
+    if (data.clients.length === 0 && data.contracts.length === 0) {
+      return res.status(404).json({ success: false, error: 'Aucune donnée sauvegardée trouvée sur le serveur.' });
+    }
+
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('❌ Erreur /api/sync (GET):', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 
 // Route d'export pour la migration vers l'app native (CloudKit)
 app.get('/api/export-for-migration', async (req, res) => {
