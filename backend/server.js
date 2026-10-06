@@ -441,6 +441,48 @@ app.post('/api/sync', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+    } catch (error) {
+      console.log('ℹ️ Récupération depuis le serveur impossible pour le moment (hors ligne?):', error.message);
+    }
+  };
+
+  // Récupération FORCÉE depuis le serveur : toujours appliquer les données du serveur,
+  // sans comparer les dates. Utilisé uniquement par le bouton "Récupérer du serveur",
+  // où l'utilisateur demande explicitement à remplacer les données locales.
+  const forcePullFromBackend = async () => {
+    const response = await fetch(`${API_BASE_URL}/api/sync`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    if (!response.ok) {
+      throw new Error(`Erreur HTTP: ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (!result.success || !result.data) {
+      throw new Error(result.error || 'Aucune donnée disponible sur le serveur');
+    }
+
+    const serverData = result.data;
+    const newClients = serverData.clients || [];
+    const newContracts = serverData.contracts || [];
+    const newInvoices = serverData.invoices || [];
+    const newPayments = serverData.payments || [];
+
+    setClients(newClients);
+    setContracts(newContracts);
+    setInvoices(newInvoices);
+    setPayments(newPayments);
+
+    localStorage.setItem('clients', JSON.stringify(newClients));
+    localStorage.setItem('contracts', JSON.stringify(newContracts));
+    localStorage.setItem('invoices', JSON.stringify(newInvoices));
+    localStorage.setItem('payments', JSON.stringify(newPayments));
+    localStorage.setItem('lastModified', serverData.lastModified || new Date().toISOString());
+  };
+
+  // Synchronisation manuelle déclenchée par l'utilisateur (bouton "🔄 Synchroniser maintenant")
 
 
 
