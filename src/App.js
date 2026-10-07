@@ -6242,14 +6242,14 @@ Merci de votre patience!
                           )}
                         </div>
                       )}
-                    </div>
+                                       </div>
                     )}
+                  </td>
+                    <td style={{ padding: '15px' }}>
+                      <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
+                        <button
+                          onClick={() => setExpandedClientContract(expandedClientContract === client.id ? null : client.id)}
 
-
-                           <td style={{ padding: '15px' }}>
-                    <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
-                      <button
-                        onClick={() => setExpandedClientContract(expandedClientContract === client.id ? null : client.id)}
                         style={{ padding: '5px 10px', fontSize: '12px', background: '#17a2b8', color: 'white', border: 'none', borderRadius: '4px', cursor: 'pointer' }}
                       >
                         {expandedClientContract === client.id ? '▲ Fermer' : '📋 Contrat'}
