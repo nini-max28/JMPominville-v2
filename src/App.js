@@ -12,6 +12,24 @@ const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz
   const [contracts, setContracts] = useState([]);  
   const [invoices, setInvoices] = useState([]);  
   const [payments, setPayments] = useState([]);  
+
+  // Montant d'un versement en attente : le solde restant du contrat
+  // réparti entre les versements pas encore reçus.
+  const getInstallmentAmount = (client, contract, paymentList) => {
+    if (!client || !contract) return 0;
+    const list = paymentList || payments;
+    const nb = parseInt(client.paymentStructure || '2', 10) || 1;
+    const received = list.filter(p =>
+      p.clientId === client.id && p.contractId === contract.id && p.received &&
+      p.paymentNumber >= 1 && p.paymentNumber <= nb
+    );
+    const receivedNumbers = new Set(received.map(p => p.paymentNumber));
+    const paidTotal = received.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0);
+    const remainingCount = nb - receivedNumbers.size;
+    if (remainingCount <= 0) return 0;
+    const remaining = Math.max(0, contract.amount - paidTotal);
+    return Math.round((remaining / remainingCount) * 100) / 100;
+  };
   const [showContractModal, setShowContractModal] = useState(false);  
   const [contractContent, setContractContent] = useState('');  
   const [isOnline, setIsOnline] = useState(navigator.onLine);  
@@ -615,7 +633,7 @@ const checkAndMarkPaymentsReceived = () => {
       console.log(`  ✓ Déjà marqué reçu? ${alreadyReceived}`);  
   
       if (firstPaymentDate <= today && !alreadyReceived) {  
-        const amount = contract.amount / (client.paymentStructure === '1' ? 1 : 2);  
+        const amount = getInstallmentAmount(client, contract, newPayments);  
           
         console.log(`  💰 Date atteinte! Marquage automatique de ${amount}$`);  
           
@@ -659,7 +677,7 @@ const checkAndMarkPaymentsReceived = () => {
     }  
   
     // ✅ VÉRIFIER 2E PAIEMENT - VERSION SIMPLIFIÉE  
-    if (client.paymentStructure === '2' && client.secondPaymentDate && client.secondPaymentDate !== 'À venir' && client.secondPaymentMethod === 'cheque') {  
+    if (client.paymentStructure !== '1' && client.secondPaymentDate && client.secondPaymentDate !== 'À venir' && client.secondPaymentMethod === 'cheque') {  
       const secondPaymentDate = new Date(client.secondPaymentDate);  
       secondPaymentDate.setHours(0, 0, 0, 0);  
         
@@ -673,7 +691,7 @@ const checkAndMarkPaymentsReceived = () => {
       );  
   
       if (secondPaymentDate <= today && !alreadyReceived) {  
-        const amount = contract.amount / 2;  
+        const amount = getInstallmentAmount(client, contract, newPayments);  
           
         console.log(`  💰 Date du 2e paiement atteinte! Marquage automatique de ${amount}$`);  
           
@@ -728,7 +746,7 @@ if ((client.paymentStructure === '3' || client.paymentStructure === '4') &&
   );  
   
   if (thirdPaymentDate <= today && !alreadyReceived) {  
-    const amount = contract.amount / parseInt(client.paymentStructure);  
+    const amount = getInstallmentAmount(client, contract);  
       
     console.log(`  💰 Date du 3e paiement atteinte! Marquage automatique de ${amount}$`);  
       
@@ -783,7 +801,7 @@ if (client.paymentStructure === '4' &&
   );  
   
   if (fourthPaymentDate <= today && !alreadyReceived) {  
-    const amount = contract.amount / 4;  
+    const amount = getInstallmentAmount(client, contract);  
       
     console.log(`  💰 Date du 4e paiement atteinte! Marquage automatique de ${amount}$`);  
       
@@ -3091,20 +3109,20 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
           alerts.push({  
             type: 'overdue', client: client.name,  
             message: `1er versement en retard de ${daysLate} jour(s)`,  
-            amount: (contract.amount / (client.paymentStructure === '1' ? 1 : 2)).toFixed(2),  
+            amount: (getInstallmentAmount(client, contract)).toFixed(2),  
             priority: 'high'  
           });  
         }  
       }  
   
-      if (client.paymentStructure === '2' && client.secondPaymentDate && !secondPaymentReceived) {  
+      if (client.paymentStructure !== '1' && client.secondPaymentDate && !secondPaymentReceived) {  
         const secondPaymentDate = new Date(client.secondPaymentDate);  
         if (secondPaymentDate < today) {  
           const daysLate = Math.floor((today - secondPaymentDate) / (1000 * 60 * 60 * 24));  
           alerts.push({  
             type: 'overdue', client: client.name,  
             message: `2e versement en retard de ${daysLate} jour(s)`,  
-            amount: (contract.amount / 2).toFixed(2), priority: 'high'  
+            amount: (getInstallmentAmount(client, contract)).toFixed(2), priority: 'high'  
           });  
         }  
       }  
@@ -3265,13 +3283,15 @@ const getPaymentRecord = (clientId, paymentNumber, contract) => {
         const firstPaid = isPaymentReceived(client.id, 1, activeContractForFilter?.id);  
         const secondPaid = isPaymentReceived(client.id, 2, activeContractForFilter?.id);  
         const paymentStructure = client.paymentStructure || '2';  
+        const nbFilter = parseInt(paymentStructure, 10);  
+        const allPaidFilter = [1, 2, 3, 4].slice(0, nbFilter).every(n => isPaymentReceived(client.id, n, activeContractForFilter?.id));  
   
         switch (clientSearchFilters.paymentStatus) {  
           case 'paid_full':  
-            matchesPaymentStatus = paymentStructure === '1' ? firstPaid : (firstPaid && secondPaid);  
+            matchesPaymentStatus = allPaidFilter;  
             break;  
           case 'paid_partial':  
-            matchesPaymentStatus = paymentStructure === '2' && firstPaid && !secondPaid;  
+            matchesPaymentStatus = paymentStructure !== '1' && firstPaid && !allPaidFilter;  
             break;  
           case 'unpaid':  
             matchesPaymentStatus = !firstPaid;  
@@ -4525,8 +4545,8 @@ Merci de votre patience!
                         let paymentStatus = 'Non payé';  
                         if (paymentStructure === '1' && firstPaymentReceived) {  
                           paymentStatus = 'Payé';  
-                        } else if (paymentStructure === '2') {  
-                          if (firstPaymentReceived && secondPaymentReceived) {  
+                        } else if (paymentStructure !== '1') {  
+                          if ([1, 2, 3, 4].slice(0, parseInt(paymentStructure, 10)).every(n => isPaymentReceived(client.id, n, contract?.id))) {  
                             paymentStatus = 'Payé';  
                           } else if (firstPaymentReceived) {  
                             paymentStatus = 'Partiel';  
@@ -5789,7 +5809,7 @@ Merci de votre patience!
     if (!contract) return false;  
       
     const paymentStructure = client.paymentStructure || '2';  
-    if (paymentStructure !== '2') return false;  
+    if (paymentStructure === '1') return false;  
       
     const firstPaid = isPaymentReceived(client.id, 1, contract.id);  
     const secondPaid = isPaymentReceived(client.id, 2, contract.id);  
@@ -5846,13 +5866,13 @@ Merci de votre patience!
                   }}  
                   onClick={() => {  
                     if (contract) {  
-                      showPaymentModalFunc(client.id, 2, contract.amount / 2);  
+                      showPaymentModalFunc(client.id, 2, getInstallmentAmount(client, contract));  
                     }  
                   }}  
                   onTouchEnd={(e) => {  
                     e.preventDefault();  
                     if (contract) {  
-                      showPaymentModalFunc(client.id, 2, contract.amount / 2);  
+                      showPaymentModalFunc(client.id, 2, getInstallmentAmount(client, contract));  
                     }  
                   }}  
                   onMouseEnter={(e) => {  
@@ -6033,7 +6053,7 @@ Merci de votre patience!
                           if (firstPaymentReceived) {  
                             undoPayment(client.id, 1);  
                           } else {  
-                            showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));  
+                            showPaymentModalFunc(client.id, 1, getInstallmentAmount(client, contract));  
                           }  
                         }}  
                         onTouchEnd={(e) => {  
@@ -6042,7 +6062,7 @@ Merci de votre patience!
                           if (firstPaymentReceived) {  
                             undoPayment(client.id, 1);  
                           } else {  
-                            showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));  
+                            showPaymentModalFunc(client.id, 1, getInstallmentAmount(client, contract));  
                           }  
                         }}  
                         onMouseEnter={(e) => {  
@@ -6054,7 +6074,8 @@ Merci de votre patience!
                           e.currentTarget.style.transform = 'scale(1)';  
                         }}  
                       >  
-                        <div>1er: {firstPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>  
+                        <div>1er: {firstPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {contract && (<div style={{ fontWeight: 'bold' }}>{(firstPaymentReceived && firstPayment ? parseFloat(firstPayment.amount) || 0 : getInstallmentAmount(client, contract)).toFixed(2)} $</div>)}  
                         {!firstPaymentReceived && contract && (  
                           <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>  
                             👆 Cliquez pour marquer  
@@ -6072,7 +6093,7 @@ Merci de votre patience!
                         )}  
                       </div>  
                         
-                      {client.paymentStructure === '2' && (  
+                      {client.paymentStructure !== '1' && (  
                         <div   
                           style={{  
                             padding: '4px 8px',   
@@ -6089,7 +6110,7 @@ Merci de votre patience!
                             if (secondPaymentReceived) {  
                               undoPayment(client.id, 2);  
                             } else if (firstPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 2, contract.amount / 2);  
+                              showPaymentModalFunc(client.id, 2, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onTouchEnd={(e) => {  
@@ -6098,7 +6119,7 @@ Merci de votre patience!
                             if (secondPaymentReceived) {  
                               undoPayment(client.id, 2);  
                             } else if (firstPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 2, contract.amount / 2);  
+                              showPaymentModalFunc(client.id, 2, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onMouseEnter={(e) => {  
@@ -6110,7 +6131,8 @@ Merci de votre patience!
                             e.currentTarget.style.transform = 'scale(1)';  
                           }}  
                         >  
-                          <div>2e: {secondPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>  
+                          <div>2e: {secondPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {contract && (<div style={{ fontWeight: 'bold' }}>{(secondPaymentReceived && secondPayment ? parseFloat(secondPayment.amount) || 0 : getInstallmentAmount(client, contract)).toFixed(2)} $</div>)}  
                           {!secondPaymentReceived && firstPaymentReceived && contract && (  
                             <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>  
                               👆 Cliquez pour marquer  
@@ -6146,7 +6168,7 @@ Merci de votre patience!
                             if (thirdPaymentReceived) {  
                               undoPayment(client.id, 3);  
                             } else if (secondPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 3, contract.amount / parseInt(client.paymentStructure));  
+                              showPaymentModalFunc(client.id, 3, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onTouchEnd={(e) => {  
@@ -6155,7 +6177,7 @@ Merci de votre patience!
                             if (thirdPaymentReceived) {  
                               undoPayment(client.id, 3);  
                             } else if (secondPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 3, contract.amount / parseInt(client.paymentStructure));  
+                              showPaymentModalFunc(client.id, 3, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onMouseEnter={(e) => {  
@@ -6167,7 +6189,8 @@ Merci de votre patience!
                             e.currentTarget.style.transform = 'scale(1)';  
                           }}  
                         >  
-                          <div>3e: {thirdPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>  
+                          <div>3e: {thirdPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {contract && (<div style={{ fontWeight: 'bold' }}>{(thirdPaymentReceived && thirdPayment ? parseFloat(thirdPayment.amount) || 0 : getInstallmentAmount(client, contract)).toFixed(2)} $</div>)}  
                           {!thirdPaymentReceived && secondPaymentReceived && contract && (  
                             <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>  
                               👆 Cliquez pour marquer  
@@ -6203,7 +6226,7 @@ Merci de votre patience!
                             if (fourthPaymentReceived) {  
                               undoPayment(client.id, 4);  
                             } else if (thirdPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 4, contract.amount / 4);  
+                              showPaymentModalFunc(client.id, 4, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onTouchEnd={(e) => {  
@@ -6212,7 +6235,7 @@ Merci de votre patience!
                             if (fourthPaymentReceived) {  
                               undoPayment(client.id, 4);  
                             } else if (thirdPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 4, contract.amount / 4);  
+                              showPaymentModalFunc(client.id, 4, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onMouseEnter={(e) => {  
@@ -6224,7 +6247,8 @@ Merci de votre patience!
                             e.currentTarget.style.transform = 'scale(1)';  
                           }}  
                         >  
-                          <div>4e: {fourthPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>  
+                          <div>4e: {fourthPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {contract && (<div style={{ fontWeight: 'bold' }}>{(fourthPaymentReceived && fourthPayment ? parseFloat(fourthPayment.amount) || 0 : getInstallmentAmount(client, contract)).toFixed(2)} $</div>)}  
                           {!fourthPaymentReceived && thirdPaymentReceived && contract && (  
                             <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>  
                               👆 Cliquez pour marquer  
@@ -6480,7 +6504,7 @@ Merci de votre patience!
                                     if (firstPaymentReceived) {  
                                       undoPayment(client.id, 1);  
                                     } else {  
-                                      showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));  
+                                      showPaymentModalFunc(client.id, 1, getInstallmentAmount(client, contract));  
                                     }  
                                   }}  
                                   onTouchEnd={(e) => {  
@@ -6489,7 +6513,7 @@ Merci de votre patience!
                                     if (firstPaymentReceived) {  
                                       undoPayment(client.id, 1);  
                                     } else {  
-                                      showPaymentModalFunc(client.id, 1, contract.amount / (client.paymentStructure === '1' ? 1 : 2));  
+                                      showPaymentModalFunc(client.id, 1, getInstallmentAmount(client, contract));  
                                     }  
                                   }}  
                                   onMouseEnter={(e) => {  
@@ -6501,7 +6525,8 @@ Merci de votre patience!
                                     e.currentTarget.style.transform = 'scale(1)';  
                                   }}  
                                 >  
-                                  <div>1er: {firstPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>  
+                                  <div>1er: {firstPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {contract && (<div style={{ fontWeight: 'bold' }}>{(firstPaymentReceived && firstPayment ? parseFloat(firstPayment.amount) || 0 : getInstallmentAmount(client, contract)).toFixed(2)} $</div>)}  
                                   {!firstPaymentReceived && contract && (  
                                     <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>  
                                       👆 Cliquez pour marquer  
@@ -6519,7 +6544,7 @@ Merci de votre patience!
                                   )}  
                                 </div>  
                                   
-                                {client.paymentStructure === '2' && (  
+                                {client.paymentStructure !== '1' && (  
                                   <div   
                                     style={{  
                                       padding: '4px 8px',   
@@ -6536,7 +6561,7 @@ Merci de votre patience!
                                       if (secondPaymentReceived) {  
                                         undoPayment(client.id, 2);  
                                       } else if (firstPaymentReceived) {  
-                                        showPaymentModalFunc(client.id, 2, contract.amount / 2);  
+                                        showPaymentModalFunc(client.id, 2, getInstallmentAmount(client, contract));  
                                       }  
                                     }}  
                                     onTouchEnd={(e) => {  
@@ -6545,7 +6570,7 @@ Merci de votre patience!
                                       if (secondPaymentReceived) {  
                                         undoPayment(client.id, 2);  
                                       } else if (firstPaymentReceived) {  
-                                        showPaymentModalFunc(client.id, 2, contract.amount / 2);  
+                                        showPaymentModalFunc(client.id, 2, getInstallmentAmount(client, contract));  
                                       }  
                                     }}  
                                     onMouseEnter={(e) => {  
@@ -6557,7 +6582,8 @@ Merci de votre patience!
                                       e.currentTarget.style.transform = 'scale(1)';  
                                     }}  
                                   >  
-                                    <div>2e: {secondPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>  
+                                    <div>2e: {secondPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {contract && (<div style={{ fontWeight: 'bold' }}>{(secondPaymentReceived && secondPayment ? parseFloat(secondPayment.amount) || 0 : getInstallmentAmount(client, contract)).toFixed(2)} $</div>)}  
                                     {!secondPaymentReceived && firstPaymentReceived && contract && (  
                                       <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>  
                                         👆 Cliquez pour marquer  
@@ -6593,7 +6619,7 @@ Merci de votre patience!
                             if (thirdPaymentReceived) {  
                               undoPayment(client.id, 3);  
                             } else if (secondPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 3, contract.amount / parseInt(client.paymentStructure));  
+                              showPaymentModalFunc(client.id, 3, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onTouchEnd={(e) => {  
@@ -6602,7 +6628,7 @@ Merci de votre patience!
                             if (thirdPaymentReceived) {  
                               undoPayment(client.id, 3);  
                             } else if (secondPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 3, contract.amount / parseInt(client.paymentStructure));  
+                              showPaymentModalFunc(client.id, 3, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onMouseEnter={(e) => {  
@@ -6614,7 +6640,8 @@ Merci de votre patience!
                             e.currentTarget.style.transform = 'scale(1)';  
                           }}  
                         >  
-                          <div>3e: {thirdPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>  
+                          <div>3e: {thirdPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {contract && (<div style={{ fontWeight: 'bold' }}>{(thirdPaymentReceived && thirdPayment ? parseFloat(thirdPayment.amount) || 0 : getInstallmentAmount(client, contract)).toFixed(2)} $</div>)}  
                           {!thirdPaymentReceived && secondPaymentReceived && contract && (  
                             <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>  
                               👆 Cliquez pour marquer  
@@ -6650,7 +6677,7 @@ Merci de votre patience!
                             if (fourthPaymentReceived) {  
                               undoPayment(client.id, 4);  
                             } else if (thirdPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 4, contract.amount / 4);  
+                              showPaymentModalFunc(client.id, 4, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onTouchEnd={(e) => {  
@@ -6659,7 +6686,7 @@ Merci de votre patience!
                             if (fourthPaymentReceived) {  
                               undoPayment(client.id, 4);  
                             } else if (thirdPaymentReceived) {  
-                              showPaymentModalFunc(client.id, 4, contract.amount / 4);  
+                              showPaymentModalFunc(client.id, 4, getInstallmentAmount(client, contract));  
                             }  
                           }}  
                           onMouseEnter={(e) => {  
@@ -6671,7 +6698,8 @@ Merci de votre patience!
                             e.currentTarget.style.transform = 'scale(1)';  
                           }}  
                         >  
-                          <div>4e: {fourthPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>  
+                          <div>4e: {fourthPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {contract && (<div style={{ fontWeight: 'bold' }}>{(fourthPaymentReceived && fourthPayment ? parseFloat(fourthPayment.amount) || 0 : getInstallmentAmount(client, contract)).toFixed(2)} $</div>)}  
                           {!fourthPaymentReceived && thirdPaymentReceived && contract && (  
                             <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>  
                               👆 Cliquez pour marquer  
