@@ -5969,10 +5969,15 @@ Merci de votre patience!
             .sort((a, b) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()))
             .map(client => {
               const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-              const firstPaymentReceived = isPaymentReceived(client.id, 1, contract?.id);
+                            const firstPaymentReceived = isPaymentReceived(client.id, 1, contract?.id);
               const secondPaymentReceived = isPaymentReceived(client.id, 2, contract?.id);
+              const thirdPaymentReceived = isPaymentReceived(client.id, 3, contract?.id);
+              const fourthPaymentReceived = isPaymentReceived(client.id, 4, contract?.id);
               const firstPayment = getPaymentRecord(client.id, 1, contract);
               const secondPayment = getPaymentRecord(client.id, 2, contract);
+              const thirdPayment = getPaymentRecord(client.id, 3, contract);
+              const fourthPayment = getPaymentRecord(client.id, 4, contract);
+
 
                             return (
                 <>
@@ -6116,16 +6121,130 @@ Merci de votre patience!
                               👆 Cliquez pour annuler
                             </div>
                           )}
-                          {secondPayment && (
+                                                    {secondPayment && (
                             <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
                               {secondPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
                             </div>
                           )}
                         </div>
                       )}
+
+                      {(client.paymentStructure === '3' || client.paymentStructure === '4') && (
+                        <div
+                           style={{
+                            padding: '4px 8px', 
+                            borderRadius: '8px',
+                            background: thirdPaymentReceived ? '#d4edda' : '#f8d7da',
+                            fontSize: '11px', 
+                            textAlign: 'center',
+                            cursor: (thirdPaymentReceived || secondPaymentReceived) && contract ? 'pointer' : 'default',
+                            transition: 'transform 0.2s',
+                            opacity: !secondPaymentReceived ? 0.5 : 1
+                          }}
+                          onClick={() => {
+                            if (!contract) return;
+                            if (thirdPaymentReceived) {
+                              undoPayment(client.id, 3);
+                            } else if (secondPaymentReceived) {
+                              showPaymentModalFunc(client.id, 3, contract.amount / parseInt(client.paymentStructure));
+                            }
+                          }}
+                          onTouchEnd={(e) => {
+                            if (!contract) return;
+                            e.preventDefault();
+                            if (thirdPaymentReceived) {
+                              undoPayment(client.id, 3);
+                            } else if (secondPaymentReceived) {
+                              showPaymentModalFunc(client.id, 3, contract.amount / parseInt(client.paymentStructure));
+                            }
+                          }}
+                          onMouseEnter={(e) => {
+                            if ((thirdPaymentReceived || secondPaymentReceived) && contract) {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        >
+                          <div>3e: {thirdPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {!thirdPaymentReceived && secondPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
+                              👆 Cliquez pour marquer
+                            </div>
+                          )}
+                          {thirdPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#dc3545' }}>
+                              👆 Cliquez pour annuler
+                            </div>
+                          )}
+                          {thirdPayment && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+                              {thirdPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {client.paymentStructure === '4' && (
+                        <div
+                           style={{
+                            padding: '4px 8px', 
+                            borderRadius: '8px',
+                            background: fourthPaymentReceived ? '#d4edda' : '#f8d7da',
+                            fontSize: '11px', 
+                            textAlign: 'center',
+                            cursor: (fourthPaymentReceived || thirdPaymentReceived) && contract ? 'pointer' : 'default',
+                            transition: 'transform 0.2s',
+                            opacity: !thirdPaymentReceived ? 0.5 : 1
+                          }}
+                          onClick={() => {
+                            if (!contract) return;
+                            if (fourthPaymentReceived) {
+                              undoPayment(client.id, 4);
+                            } else if (thirdPaymentReceived) {
+                              showPaymentModalFunc(client.id, 4, contract.amount / 4);
+                            }
+                          }}
+                          onTouchEnd={(e) => {
+                            if (!contract) return;
+                            e.preventDefault();
+                            if (fourthPaymentReceived) {
+                              undoPayment(client.id, 4);
+                            } else if (thirdPaymentReceived) {
+                              showPaymentModalFunc(client.id, 4, contract.amount / 4);
+                            }
+                          }}
+                          onMouseEnter={(e) => {
+                            if ((fourthPaymentReceived || thirdPaymentReceived) && contract) {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        >
+                          <div>4e: {fourthPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {!fourthPaymentReceived && thirdPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
+                              👆 Cliquez pour marquer
+                            </div>
+                          )}
+                          {fourthPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#dc3545' }}>
+                              👆 Cliquez pour annuler
+                            </div>
+                          )}
+                          {fourthPayment && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+                              {fourthPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                     )}
-                  </td>
+
 
                            <td style={{ padding: '15px' }}>
                     <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
@@ -6386,10 +6505,14 @@ Merci de votre patience!
                     {streetGroups[street]
                       .map(client => {
                         const contract = contracts.find(c => c.clientId === client.id && !c.archived);
-                        const firstPaymentReceived = isPaymentReceived(client.id, 1, contract?.id);
-                        const secondPaymentReceived = isPaymentReceived(client.id, 2, contract?.id);
-                        const firstPayment = getPaymentRecord(client.id, 1, contract);
-                        const secondPayment = getPaymentRecord(client.id, 2, contract);
+                                      const firstPaymentReceived = isPaymentReceived(client.id, 1, contract?.id);
+              const secondPaymentReceived = isPaymentReceived(client.id, 2, contract?.id);
+              const thirdPaymentReceived = isPaymentReceived(client.id, 3, contract?.id);
+              const fourthPaymentReceived = isPaymentReceived(client.id, 4, contract?.id);
+              const firstPayment = getPaymentRecord(client.id, 1, contract);
+              const secondPayment = getPaymentRecord(client.id, 2, contract);
+              const thirdPayment = getPaymentRecord(client.id, 3, contract);
+              const fourthPayment = getPaymentRecord(client.id, 4, contract);
 
                         return (
                           <>
@@ -6524,15 +6647,130 @@ Merci de votre patience!
                                         👆 Cliquez pour annuler
                                       </div>
                                     )}
-                                    {secondPayment && (
-                                      <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
-                                        {secondPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
+                                                              {secondPayment && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+                              {secondPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {(client.paymentStructure === '3' || client.paymentStructure === '4') && (
+                        <div
+                           style={{
+                            padding: '4px 8px', 
+                            borderRadius: '8px',
+                            background: thirdPaymentReceived ? '#d4edda' : '#f8d7da',
+                            fontSize: '11px', 
+                            textAlign: 'center',
+                            cursor: (thirdPaymentReceived || secondPaymentReceived) && contract ? 'pointer' : 'default',
+                            transition: 'transform 0.2s',
+                            opacity: !secondPaymentReceived ? 0.5 : 1
+                          }}
+                          onClick={() => {
+                            if (!contract) return;
+                            if (thirdPaymentReceived) {
+                              undoPayment(client.id, 3);
+                            } else if (secondPaymentReceived) {
+                              showPaymentModalFunc(client.id, 3, contract.amount / parseInt(client.paymentStructure));
+                            }
+                          }}
+                          onTouchEnd={(e) => {
+                            if (!contract) return;
+                            e.preventDefault();
+                            if (thirdPaymentReceived) {
+                              undoPayment(client.id, 3);
+                            } else if (secondPaymentReceived) {
+                              showPaymentModalFunc(client.id, 3, contract.amount / parseInt(client.paymentStructure));
+                            }
+                          }}
+                          onMouseEnter={(e) => {
+                            if ((thirdPaymentReceived || secondPaymentReceived) && contract) {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        >
+                          <div>3e: {thirdPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {!thirdPaymentReceived && secondPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
+                              👆 Cliquez pour marquer
+                            </div>
+                          )}
+                          {thirdPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#dc3545' }}>
+                              👆 Cliquez pour annuler
+                            </div>
+                          )}
+                          {thirdPayment && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+                              {thirdPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {client.paymentStructure === '4' && (
+                        <div
+                           style={{
+                            padding: '4px 8px', 
+                            borderRadius: '8px',
+                            background: fourthPaymentReceived ? '#d4edda' : '#f8d7da',
+                            fontSize: '11px', 
+                            textAlign: 'center',
+                            cursor: (fourthPaymentReceived || thirdPaymentReceived) && contract ? 'pointer' : 'default',
+                            transition: 'transform 0.2s',
+                            opacity: !thirdPaymentReceived ? 0.5 : 1
+                          }}
+                          onClick={() => {
+                            if (!contract) return;
+                            if (fourthPaymentReceived) {
+                              undoPayment(client.id, 4);
+                            } else if (thirdPaymentReceived) {
+                              showPaymentModalFunc(client.id, 4, contract.amount / 4);
+                            }
+                          }}
+                          onTouchEnd={(e) => {
+                            if (!contract) return;
+                            e.preventDefault();
+                            if (fourthPaymentReceived) {
+                              undoPayment(client.id, 4);
+                            } else if (thirdPaymentReceived) {
+                              showPaymentModalFunc(client.id, 4, contract.amount / 4);
+                            }
+                          }}
+                          onMouseEnter={(e) => {
+                            if ((fourthPaymentReceived || thirdPaymentReceived) && contract) {
+                              e.currentTarget.style.transform = 'scale(1.05)';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }}
+                        >
+                          <div>4e: {fourthPaymentReceived ? '✅ Reçu' : '❌ En attente'}</div>
+                          {!fourthPaymentReceived && thirdPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#28a745' }}>
+                              👆 Cliquez pour marquer
+                            </div>
+                          )}
+                          {fourthPaymentReceived && contract && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold', color: '#dc3545' }}>
+                              👆 Cliquez pour annuler
+                            </div>
+                          )}
+                          {fourthPayment && (
+                            <div style={{ fontSize: '9px', marginTop: '2px', fontWeight: 'bold' }}>
+                              {fourthPayment.paymentMethod === 'cheque' ? '📄 Chèque' : '💰 Comptant'}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    )}
+
 
                                                        <td style={{ padding: '15px' }}>
                               <div style={{ display: 'flex', gap: '5px', flexDirection: 'column' }}>
