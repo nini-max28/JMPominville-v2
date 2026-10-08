@@ -585,11 +585,23 @@ app.get('/api/unmatched-payments', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+// Calcule l'étiquette de saison (ex: "2025-2026") pour une date donnée,
+// avec le même point de bascule que l'app (mai) : janvier-avril appartient
+// à la saison qui a commencé l'année précédente.
+function getSeasonLabelServer(dateStr) {
+  if (!dateStr) return null;
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return null;
+  const month = d.getMonth() + 1;
+  const year = d.getFullYear();
+  return month >= 5 ? `${year}-${year + 1}` : `${year - 1}-${year}`;
+}
 
-// Route de réparation unique : relie chaque paiement à son vrai contrat,
 // Route de correction : ré-aligne les paiements qui ont été liés par erreur
-// à un contrat de la MAUVAISE saison (le repair précédent liait trop vite
-// au seul contrat actif disponible, même si la date du paiement ne correspondait pas).
+// à un contrat de la MAUVAISE saison. Compare les ÉTIQUETTES DE SAISON
+// (pas les dates exactes), pour accepter les paiements faits avant le
+// début officiel du contrat (ex: payer en septembre pour un contrat
+// qui commence le 15 octobre).
 app.get('/api/fix-wrong-season-links', async (req, res) => {
   try {
     const [contracts, payments] = await Promise.all([
@@ -598,6 +610,7 @@ app.get('/api/fix-wrong-season-links', async (req, res) => {
     ]);
 
     let fixed = 0;
+    let alreadyCorrect = 0;
     let stillWrong = 0;
     const updates = [];
 
@@ -605,22 +618,22 @@ app.get('/api/fix-wrong-season-links', async (req, res) => {
       if (!payment.contract_id || !payment.date) continue;
 
       const linkedContract = contracts.find(c => c.id === payment.contract_id);
-      if (!linkedContract || !linkedContract.start_date || !linkedContract.end_date) continue;
+      if (!linkedContract || !linkedContract.start_date) continue;
 
-      const paymentDate = new Date(payment.date);
-      const linkedStart = new Date(linkedContract.start_date);
-      const linkedEnd = new Date(linkedContract.end_date);
+      const paymentSeason = getSeasonLabelServer(payment.date);
+      const linkedSeason = getSeasonLabelServer(linkedContract.start_date);
 
-      // Si le paiement tombe déjà dans la bonne plage, rien à faire
-      if (paymentDate >= linkedStart && paymentDate <= linkedEnd) continue;
+      // Si le paiement est déjà dans la bonne saison, rien à faire
+      if (paymentSeason === linkedSeason) {
+        alreadyCorrect++;
+        continue;
+      }
 
-      // Cherche le VRAI contrat de ce client dont la plage couvre cette date
+      // Cherche le contrat de ce client dont la SAISON correspond à celle du paiement
       const clientContracts = contracts.filter(c => c.client_id === payment.client_id);
       const correctContract = clientContracts.find(c => {
-        if (!c.start_date || !c.end_date) return false;
-        const start = new Date(c.start_date);
-        const end = new Date(c.end_date);
-        return paymentDate >= start && paymentDate <= end;
+        if (!c.start_date) return false;
+        return getSeasonLabelServer(c.start_date) === paymentSeason;
       });
 
       if (correctContract && correctContract.id !== payment.contract_id) {
@@ -639,7 +652,7 @@ app.get('/api/fix-wrong-season-links', async (req, res) => {
       }
     }
 
-    res.json({ success: true, totalPayments: payments.length, fixed, stillWrong });
+    res.json({ success: true, totalPayments: payments.length, alreadyCorrect, fixed, stillWrong });
   } catch (error) {
     console.error('❌ Erreur /api/fix-wrong-season-links:', error.message);
     res.status(500).json({ success: false, error: error.message });
