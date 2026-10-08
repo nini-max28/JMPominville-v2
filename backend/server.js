@@ -393,14 +393,33 @@ app.post('/api/sync', async (req, res) => {
       const { error } = await supabase.from('contracts').upsert(contracts.map(contractToDb), { onConflict: 'id' });
       if (error) throw error;
     }
-        if (payments.length > 0) {
+     if (payments.length > 0) {
       const paymentsMapped = payments.map(paymentToDb);
       const paymentsDeduped = Array.from(
         new Map(paymentsMapped.map(p => [p.id, p])).values()
       );
-      const { error } = await supabase.from('payments').upsert(paymentsDeduped, { onConflict: 'id' });
+
+      // Récupère les contract_id déjà enregistrés dans Supabase pour ces paiements,
+      // pour ne jamais écraser un lien correct par un "null" venant d'un appareil
+      // dont les données locales sont plus anciennes.
+      const paymentIds = paymentsDeduped.map(p => p.id);
+      const { data: existingPayments } = await supabase
+        .from('payments')
+        .select('id, contract_id')
+        .in('id', paymentIds);
+      const existingContractIds = new Map((existingPayments || []).map(p => [p.id, p.contract_id]));
+
+      const paymentsProtected = paymentsDeduped.map(p => {
+        if (!p.contract_id && existingContractIds.has(p.id) && existingContractIds.get(p.id)) {
+          return { ...p, contract_id: existingContractIds.get(p.id) };
+        }
+        return p;
+      });
+
+      const { error } = await supabase.from('payments').upsert(paymentsProtected, { onConflict: 'id' });
       if (error) throw error;
     }
+
     if (invoices.length > 0) {
       const invoicesMapped = invoices.map(invoiceToDb);
       const invoicesDeduped = Array.from(
