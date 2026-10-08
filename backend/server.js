@@ -399,15 +399,11 @@ app.post('/api/sync', async (req, res) => {
         new Map(paymentsMapped.map(p => [p.id, p])).values()
       );
 
-      // Récupère les contract_id déjà enregistrés dans Supabase pour ces paiements,
-      // pour ne jamais écraser un lien correct par un "null" venant d'un appareil
-      // dont les données locales sont plus anciennes.
-      const paymentIds = paymentsDeduped.map(p => p.id);
-      const { data: existingPayments } = await supabase
-        .from('payments')
-        .select('id, contract_id')
-        .in('id', paymentIds);
-      const existingContractIds = new Map((existingPayments || []).map(p => [p.id, p.contract_id]));
+           // Récupère les contract_id déjà enregistrés dans Supabase pour TOUS les paiements
+      // (pas seulement 1000), pour ne jamais écraser un lien correct par un "null" venant
+      // d'un appareil dont les données locales sont plus anciennes.
+      const existingPayments = await fetchAllRows('payments');
+      const existingContractIds = new Map(existingPayments.map(p => [p.id, p.contract_id]));
 
       const paymentsProtected = paymentsDeduped.map(p => {
         if (!p.contract_id && existingContractIds.has(p.id) && existingContractIds.get(p.id)) {
