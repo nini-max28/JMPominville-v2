@@ -587,6 +587,66 @@ app.get('/api/unmatched-payments', async (req, res) => {
 });
 
 // Route de réparation unique : relie chaque paiement à son vrai contrat,
+// Route de correction : ré-aligne les paiements qui ont été liés par erreur
+// à un contrat de la MAUVAISE saison (le repair précédent liait trop vite
+// au seul contrat actif disponible, même si la date du paiement ne correspondait pas).
+app.get('/api/fix-wrong-season-links', async (req, res) => {
+  try {
+    const [contracts, payments] = await Promise.all([
+      fetchAllRows('contracts'),
+      fetchAllRows('payments')
+    ]);
+
+    let fixed = 0;
+    let stillWrong = 0;
+    const updates = [];
+
+    for (const payment of payments) {
+      if (!payment.contract_id || !payment.date) continue;
+
+      const linkedContract = contracts.find(c => c.id === payment.contract_id);
+      if (!linkedContract || !linkedContract.start_date || !linkedContract.end_date) continue;
+
+      const paymentDate = new Date(payment.date);
+      const linkedStart = new Date(linkedContract.start_date);
+      const linkedEnd = new Date(linkedContract.end_date);
+
+      // Si le paiement tombe déjà dans la bonne plage, rien à faire
+      if (paymentDate >= linkedStart && paymentDate <= linkedEnd) continue;
+
+      // Cherche le VRAI contrat de ce client dont la plage couvre cette date
+      const clientContracts = contracts.filter(c => c.client_id === payment.client_id);
+      const correctContract = clientContracts.find(c => {
+        if (!c.start_date || !c.end_date) return false;
+        const start = new Date(c.start_date);
+        const end = new Date(c.end_date);
+        return paymentDate >= start && paymentDate <= end;
+      });
+
+      if (correctContract && correctContract.id !== payment.contract_id) {
+        updates.push({ id: payment.id, contract_id: correctContract.id });
+        fixed++;
+      } else {
+        stillWrong++;
+      }
+    }
+
+    for (let i = 0; i < updates.length; i += 200) {
+      const batch = updates.slice(i, i + 200);
+      for (const u of batch) {
+        const { error } = await supabase.from('payments').update({ contract_id: u.contract_id }).eq('id', u.id);
+        if (error) console.error('Erreur correction paiement', u.id, error.message);
+      }
+    }
+
+    res.json({ success: true, totalPayments: payments.length, fixed, stillWrong });
+  } catch (error) {
+    console.error('❌ Erreur /api/fix-wrong-season-links:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Route de réparation unique : relie chaque paiement à son vrai contrat,
 
 // Route de réparation unique : relie chaque paiement à son vrai contrat,
 // en se basant sur le client et la date du paiement par rapport aux dates du contrat.
