@@ -525,6 +525,53 @@ app.get('/api/export-for-migration', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+// Route de diagnostic : liste le détail des paiements qui n'ont pas pu être liés à un contrat
+app.get('/api/unmatched-payments', async (req, res) => {
+  try {
+    const [clients, contracts, payments] = await Promise.all([
+      fetchAllRows('clients'),
+      fetchAllRows('contracts'),
+      fetchAllRows('payments')
+    ]);
+
+    const unmatched = [];
+
+    for (const payment of payments) {
+      const currentLinkValid = payment.contract_id &&
+        contracts.some(c => c.id === payment.contract_id);
+
+      if (currentLinkValid) continue;
+
+      const client = clients.find(c => c.id === payment.client_id);
+      const clientContracts = contracts.filter(c => c.client_id === payment.client_id);
+
+      unmatched.push({
+        paymentId: payment.id,
+        clientId: payment.client_id,
+        clientName: client ? client.name : '⚠️ Client introuvable',
+        amount: payment.amount,
+        date: payment.date,
+        paymentNumber: payment.payment_number,
+        received: payment.received,
+        oldContractId: payment.contract_id || null,
+        nombreContratsDuClient: clientContracts.length,
+        contratsDuClient: clientContracts.map(c => ({
+          id: c.id,
+          startDate: c.start_date,
+          endDate: c.end_date,
+          archived: c.archived
+        }))
+      });
+    }
+
+    res.json({ success: true, totalUnmatched: unmatched.length, details: unmatched });
+  } catch (error) {
+    console.error('❌ Erreur /api/unmatched-payments:', error.message);
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Route de réparation unique : relie chaque paiement à son vrai contrat,
 
 // Route de réparation unique : relie chaque paiement à son vrai contrat,
 // en se basant sur le client et la date du paiement par rapport aux dates du contrat.
