@@ -3,7 +3,10 @@ import './App.css';
   
 function App() {   
   // TOUS LES ÉTATS  
-const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz7.onrender.com';  
+  const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || 'https://backend-1-ohz7.onrender.com';
+  const SUPABASE_FUNCTIONS_URL = 'https://lgduqlcebtasmfwafhwm.supabase.co/functions/v1';
+  const SUPABASE_ANON_KEY = 'sb_publishable_nm3F2326eRjQ8MIzGSJUZw_VL9zaTpj';
+
   console.log('https://backend-1-ohz7.onrender.com:' ,API_BASE_URL);  
   
   const [backendConnected, setBackendConnected] = useState(false);  
@@ -378,13 +381,15 @@ const checkBackendConnection = async () => {
         lastModified: new Date().toISOString()  
       };  
   
-      const response = await fetch(`${API_BASE_URL}/api/sync`, {  
-        method: 'POST',  
-        headers: {  
-          'Content-Type': 'application/json',  
-        },  
-        body: JSON.stringify(allCurrentData)  
-      });  
+            const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        },
+        body: JSON.stringify(allCurrentData)
+      });
+
   
       if (!response.ok) {  
         throw new Error(`Erreur HTTP: ${response.status}`);  
@@ -404,10 +409,11 @@ const checkBackendConnection = async () => {
   // recevoir automatiquement les dernières données sauvegardées, sans AirDrop manuel.  
   // Envoie directement des données précises au serveur, sans dépendre des états React  
   // (utilisé au démarrage, où les états React peuvent ne pas être encore à jour).  
-  const pushDirectToBackend = async (dataToPush) => {  
-    const response = await fetch(`${API_BASE_URL}/api/sync`, {  
-      method: 'POST',  
-      headers: { 'Content-Type': 'application/json' },  
+    const pushDirectToBackend = async (dataToPush) => {
+    const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+
       body: JSON.stringify({  
         clients: dataToPush.clients || [],  
         contracts: dataToPush.contracts || [],  
@@ -433,11 +439,11 @@ const checkBackendConnection = async () => {
     const hasLocalData = freshClients.length > 0 || freshContracts.length > 0;  
   
     try {  
-      const response = await fetch(`${API_BASE_URL}/api/sync`, {  
-        method: 'GET',  
-        headers: { 'Content-Type': 'application/json' }  
-      });  
-  
+      const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+      });
+
       if (!response.ok) {  
         console.log('ℹ️ Aucune donnée disponible sur le serveur pour le moment.');  
         // Si cet appareil a des données locales mais que le serveur est vide,  
@@ -513,10 +519,11 @@ const checkBackendConnection = async () => {
   // sans comparer les dates. Utilisé uniquement par le bouton "Récupérer du serveur",  
   // où l'utilisateur demande explicitement à remplacer les données locales.  
   const forcePullFromBackend = async () => {  
-    const response = await fetch(`${API_BASE_URL}/api/sync`, {  
-      method: 'GET',  
-      headers: { 'Content-Type': 'application/json' }  
-    });  
+        const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+    });
+
   
     if (!response.ok) {  
       throw new Error(`Erreur HTTP: ${response.status}`);  
