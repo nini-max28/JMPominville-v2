@@ -583,7 +583,9 @@ const checkBackendConnection = async () => {
   };  
   
 // FONCTION SIMPLIFIÉE - COMME AVANT  
-const checkAndMarkPaymentsReceived = () => {  
+const AUTO_MARK_PAYMENTS_ENABLED = false;
+const checkAndMarkPaymentsReceived = () => {
+if (!AUTO_MARK_PAYMENTS_ENABLED) return false;
   // Éviter les doubles exécutions  
   if (sessionStorage.getItem('checkingPayments') === 'true') {  
     return false;  
