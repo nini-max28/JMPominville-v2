@@ -387,7 +387,8 @@ const checkBackendConnection = async () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+         'Authorization': `Bearer ${await getAccessToken()}`
+
         },
         body: JSON.stringify(allCurrentData)
       });
@@ -414,7 +415,8 @@ const checkBackendConnection = async () => {
     const pushDirectToBackend = async (dataToPush) => {
     const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await getAccessToken()}`;
+
 
       body: JSON.stringify({  
         clients: dataToPush.clients || [],  
@@ -443,7 +445,8 @@ const checkBackendConnection = async () => {
     try {  
       const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await getAccessToken()}`
+
       });
 
       if (!response.ok) {  
@@ -523,7 +526,8 @@ const checkBackendConnection = async () => {
   const forcePullFromBackend = async () => {  
         const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await getAccessToken()}`
+
     });
 
   
