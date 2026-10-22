@@ -415,7 +415,7 @@ const checkBackendConnection = async () => {
     const pushDirectToBackend = async (dataToPush) => {
     const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await getAccessToken()}`;
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await getAccessToken()}`
 
 
       body: JSON.stringify({  
