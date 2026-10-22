@@ -447,7 +447,11 @@ const checkBackendConnection = async () => {
     try {  
       const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
         method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await getAccessToken()}`
+       headers: {
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${await getAccessToken()}`
+},
+ 
 
       });
 
@@ -528,7 +532,11 @@ const checkBackendConnection = async () => {
   const forcePullFromBackend = async () => {  
         const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await getAccessToken()}`
+      headers: {
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${await getAccessToken()}`
+},
+
 
     });
 
