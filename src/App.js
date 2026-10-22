@@ -412,29 +412,26 @@ const checkBackendConnection = async () => {
   // recevoir automatiquement les dernières données sauvegardées, sans AirDrop manuel.  
   // Envoie directement des données précises au serveur, sans dépendre des états React  
   // (utilisé au démarrage, où les états React peuvent ne pas être encore à jour).  
-    const pushDirectToBackend = async (dataToPush) => {
+      const pushDirectToBackend = async (dataToPush) => {
     const response = await fetch(`${SUPABASE_FUNCTIONS_URL}/sync`, {
       method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await getAccessToken()}` },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${await getAccessToken()}` },
       body: JSON.stringify({
+        clients: dataToPush.clients || [],
+        contracts: dataToPush.contracts || [],
+        invoices: dataToPush.invoices || [],
+        payments: dataToPush.payments || [],
+        notificationsHistory: dataToPush.notificationsHistory || [],
+        lastModified: new Date().toISOString()
+      })
+    });
+    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);
+    const result = await response.json();
+    if (!result.success) throw new Error(result.error || 'Échec de la synchronisation');
+    localStorage.setItem('lastModified', new Date().toISOString());
+    return result;
+  };
 
-
-
-      body: JSON.stringify({  
-        clients: dataToPush.clients || [],  
-        contracts: dataToPush.contracts || [],  
-        invoices: dataToPush.invoices || [],  
-        payments: dataToPush.payments || [],  
-        notificationsHistory: dataToPush.notificationsHistory || [],  
-        lastModified: new Date().toISOString()  
-      })  
-    });  
-    if (!response.ok) throw new Error(`Erreur HTTP: ${response.status}`);  
-    const result = await response.json();  
-    if (!result.success) throw new Error(result.error || 'Échec de la synchronisation');  
-    localStorage.setItem('lastModified', new Date().toISOString());  
-    return result;  
-  };  
   
   const pullFromBackend = async () => {  
     // Toujours lire depuis localStorage directement (données les plus fraîches, peu importe l'état React)  
